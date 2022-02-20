@@ -13,22 +13,18 @@ localhost = ChrisURL('http://localhost:8010/api/v1/')
 
 async def main():
     print('started main')
-
-    # async with AnonymousChrisStoreClient.from_url('https://chrisstore.co/api/v1/') as c:
+    # cm = await AnonymousChrisStoreClient.from_url('https://chrisstore.co/api/v1/')
+    # async with cm as c:
     #     print(await c.get_first_plugin(name_exact='pl-lungct'))
-    cm = ChrisStoreClient.from_login(
+
+    cm = await ChrisStoreClient.from_login(
         url='http://localhost:8010/api/v1/',
         username='aaaa3',
         password='aaa12345'
     )
-    # cm2 = ChrisStoreClient.from_token(
-    #     url=localhost,
-    #     token=ChrisToken('whatver')
-    # )
 
     async with cm as client:
-        print('client created')
-        r = await client.upload_plugin(name='pl-dypi0',
+        r = await client.upload_plugin(name='pl-dypi1',
                                        dock_image='localhost/rudolph/pl-dypi:1.2.1',
                                        public_repo='https://github.com/FNNDSC/pl-dypi',
                                        descriptor_file=desc_json)

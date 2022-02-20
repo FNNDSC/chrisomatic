@@ -15,15 +15,26 @@ to use the same
 import aiohttp
 from chris import ChrisStoreClient, ChrisClient
 
+
+
 with aiohttp.TCPConnector() as connector:
-    ...  # TODO EXAMPLE
+    store_client = await ChrisStoreClient.from_url(
+        url='https://example.com/cube/api/v1/'
+    )
+    cube_client = await ChrisClient.from_login(
+        url='https://example.com/cube/api/v1/',
+        username='storeuser',
+        password='storepassword',
+        connector=connector,
+        connector_owner=False
+    )
+    ...
 ```
 """
 
 import abc
 from dataclasses import dataclass
 import aiohttp
-from contextlib import asynccontextmanager
 from typing import Optional, TypeVar, Generic, AsyncContextManager, Type, ForwardRef, Callable
 import typing_inspect
 from serde import from_dict
@@ -33,7 +44,6 @@ from chris.common.errors import IncorrectLoginError, BadRequestError
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 from chris.common.atypes import AbstractCollectionLinks, AbstractNewUser
 
-_W = TypeVar('_W', bound='_SessionWrapper')
 _B = TypeVar('_B', bound='BaseClient')
 _A = TypeVar('_A', bound='AnonymousClient')
 _C = TypeVar('_C', bound='AuthenticatedClient')
@@ -42,7 +52,14 @@ _U = TypeVar('_U', bound=AbstractNewUser)
 
 
 @dataclass(frozen=True)
-class _SessionWrapper:
+class AbstractClient(Generic[_L], abc.ABC):
+    """
+    Common data between clients for the _ChRIS_ backend and _ChRIS_ store backend.
+    It is simply a wrapper around a
+    [aiohttp.ClientSession](https://docs.aiohttp.org/en/stable/client_advanced.html#client-session)
+    and also has the `collection_links` object from the base URL.
+    """
+    collection_links: _L
     s: aiohttp.ClientSession
     url: ChrisURL
 
@@ -53,39 +70,25 @@ class _SessionWrapper:
         await self.s.close()
 
 
-class _CreatableSessionWrapper(_SessionWrapper, Generic[_W], abc.ABC):
-    @classmethod
-    @abc.abstractmethod
-    def new(cls, url: ChrisURL,
-            connector: Optional[aiohttp.BaseConnector] = None,
-            connector_owner: bool = True,
-            session_modifier: Optional[Callable[[aiohttp.ClientSession], None]] = None
-            ) -> AsyncContextManager[_B]:
-        ...
-
-
-@dataclass(frozen=True)
-class AbstractClient(_SessionWrapper, Generic[_L], abc.ABC):
-    collection_links: _L
-
-
-@dataclass(frozen=True)
-class BaseClient(AbstractClient[_L], _CreatableSessionWrapper[_B], Generic[_B, _L], abc.ABC):
+class BaseClient(AbstractClient[_L], AsyncContextManager[_B], Generic[_B, _L], abc.ABC):
     """
-    An `BaseClient` wraps a
-    [`aiohttp.ClientSession`](https://docs.aiohttp.org/en/stable/client_advanced.html#client-session),
+    Provides the `BaseClient.new` constructor. Subclasses which make
+    use of `BaseClient.new` may not have any extra fields.
     """
 
     @classmethod
-    @asynccontextmanager
     async def new(cls, url: ChrisURL,
                   connector: Optional[aiohttp.BaseConnector] = None,
                   connector_owner: bool = True,
                   session_modifier: Optional[Callable[[aiohttp.ClientSession], None]] = None
-                  ) -> AsyncContextManager[_B]:
+                  ) -> _B:
         """
-        Constructor.
+        A constructor which creates the session for the `AbstractClient`
+        and makes an initial request to populate `collection_links`.
 
+        If this `BaseClient` is working with an API that requires authentication,
+        then it is necessary to define `session_modifier` to add authentication
+        headers to the session.
         """
         accept_json = {
             'Accept': 'application/json',
@@ -94,46 +97,49 @@ class BaseClient(AbstractClient[_L], _CreatableSessionWrapper[_B], Generic[_B, _
         # TODO maybe we want to wrap the session:
         # - status == 4XX --> print response text
         # - content-type: application/vnd.collection+json
-        s = aiohttp.ClientSession(headers=accept_json, raise_for_status=True,
-                                  connector=connector, connector_owner=connector_owner)
+        session = aiohttp.ClientSession(headers=accept_json, raise_for_status=True,
+                                        connector=connector, connector_owner=connector_owner)
         if session_modifier is not None:
-            session_modifier(s)
-        async with s as session:
-            res = await session.get(url)
-            body = await res.json()
-            links_type = _generic_of(cls, AbstractCollectionLinks)
-            links = from_dict(links_type, body['collection_links'])
-            # calling subclass constructor is an anti-pattern,
-            # but we need to pass subclass initvars to subclass __post_init__
-            # noinspection PyArgumentList
-            yield cls(url=url, s=session, collection_links=links)
+            session_modifier(session)
+
+        res = await session.get(url)
+        body = await res.json()
+        links_type = _generic_of(cls, AbstractCollectionLinks)
+        links = from_dict(links_type, body['collection_links'])
+
+        return cls(url=url, s=session, collection_links=links)
+
+    async def __aenter__(self) -> _B:
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
 
 
 class AnonymousClient(BaseClient[_A, _L], Generic[_A, _L]):
     @classmethod
-    def from_url(cls, url: str | ChrisURL) -> AsyncContextManager[_A]:
-        return cls.new(url)
+    async def from_url(cls, url: str | ChrisURL) -> _A:
+        """
+        Create an anonymous client for the given backend URL.
+        """
+        return await cls.new(url)
 
 
 class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
 
     @classmethod
-    def from_login(cls,
-                   url: str | ChrisURL,
-                   username: str | ChrisUsername,
-                   password: str | ChrisPassword,
-                   connector: Optional[aiohttp.TCPConnector] = None,
-                   connector_owner: bool = True) -> AsyncContextManager[_C]:
-        @asynccontextmanager
-        async def pycharm_workaround():
-            """
-            https://youtrack.jetbrains.com/issue/PY-29891
-            """
-            async with aiohttp.ClientSession(connector=connector, connector_owner=False) as session:
-                c = await cls.__from_login_with(url, username, password, session, connector_owner)
-            async with c as client:
-                yield client
-        return pycharm_workaround()
+    async def from_login(cls,
+                         url: str | ChrisURL,
+                         username: str | ChrisUsername,
+                         password: str | ChrisPassword,
+                         connector: Optional[aiohttp.TCPConnector] = None,
+                         connector_owner: bool = True) -> _C:
+        """
+        Get authentication token using username and password, then construct the client.
+        """
+        async with aiohttp.ClientSession(connector=connector, connector_owner=False) as session:
+            c = await cls.__from_login_with(url, username, password, session, connector_owner)
+        return c
 
     @classmethod
     async def __from_login_with(cls,
@@ -141,7 +147,10 @@ class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
                                 username: ChrisUsername,
                                 password: ChrisPassword,
                                 session: aiohttp.ClientSession,
-                                connector_owner: bool) -> AsyncContextManager[_C]:
+                                connector_owner: bool) -> _C:
+        """
+        Get authentication token using the given session, and then construct the client.
+        """
         payload = {
             'username': username,
             'password': password
@@ -151,17 +160,20 @@ class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
             raise IncorrectLoginError(await login.text())
 
         data = await login.json()
-        return cls.from_token(url=url, token=data['token'],
-                              connector=session.connector,
-                              connector_owner=connector_owner)
+        return await cls.from_token(url=url, token=data['token'],
+                                    connector=session.connector,
+                                    connector_owner=connector_owner)
 
     @classmethod
-    def from_token(cls, url: ChrisURL,
-                   token: ChrisToken,
-                   connector: Optional[aiohttp.TCPConnector] = None,
-                   connector_owner: Optional[bool] = True) -> AsyncContextManager[_C]:
-        return cls.new(url, connector, connector_owner,
-                       session_modifier=cls.__curry_token(token))
+    async def from_token(cls, url: ChrisURL,
+                         token: ChrisToken,
+                         connector: Optional[aiohttp.TCPConnector] = None,
+                         connector_owner: Optional[bool] = True) -> _C:
+        """
+        Construct an authenticated client using the given token.
+        """
+        return await cls.new(url, connector, connector_owner,
+                             session_modifier=cls.__curry_token(token))
 
     @staticmethod
     def __curry_token(token: ChrisToken) -> Callable[[aiohttp.ClientSession], None]:
@@ -175,7 +187,7 @@ class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
                           username: ChrisUsername | str,
                           password: ChrisPassword | str,
                           email: str,
-                          session: aiohttp.ClientSession) -> AsyncContextManager[_U]:
+                          session: aiohttp.ClientSession) -> _U:
         payload = {
             'template': {
                 'data': [
