@@ -1,0 +1,139 @@
+= _ChRIS_ Configuration YAML Spec
+Jennings <Jennings.Zhang@childrens.harvard.edu>
+:version: 1.0
+:toc:
+
+A _ChRIS_ configuration file is a https://yaml.org/[YAML] file which describes the state of a _ChRIS_ system.
+
+== File Specification
+
+Not all fields are required. Most of them can be guessed or inferred.
+
+=== version
+
+Type: Literal[1.0]
+
+=== on
+
+Information about the _ChRIS_ system.
+
+==== on.cube_url
+
+Type: string
+
+URL of _ChRIS_ backend.
+
+==== on.chris_store_url
+
+Type: string
+
+URL of _ChRIS_ store backend.
+
+==== on.chris_superuser
+
+Type: <<User>>
+
+Admin user of _ChRIS_ backend, i.e.
+user who is able to register plugins to _ChRIS_.
+
+=== chris_store
+
+_ChRIS_ store description.
+
+==== chris_store.users:
+
+Type: list[<<User>>]
+
+=== cube
+
+_ChRIS_ backend description.
+
+==== cube.users
+
+Type: list[<<User>>]
+
+[#cube_computeresource]
+==== cube.computeresource
+
+Type: list[<<ComputeResource,ComputeResource>>]
+
+[#ComputeResource]
+===== cube.computeresource[*] (ComputeResource)
+
+====== cube.computeresource[*].name
+
+Type: string
+
+====== cube.computeresource[*].url
+
+Type: string
+
+====== cube.computeresource[*].username
+
+Type: string
+
+====== cube.computeresource[*].password
+
+Type: string
+
+====== cube.computeresource[*].description
+
+Type: string
+
+==== cube.plugins
+
+Type: list[string | <<Plugin>>]
+
+If value is a string, then try to guess whether it represents
+a <<plugin_url,ChRIS store url>>, <<plugin_name,plugin name>>,
+<<plugin_dock_image,image tag>>, or
+<<plugin_public_repo,code repository URL>>.
+
+[#plugin_url]
+===== cube.plugins[*].url
+
+Type: str
+
+A ChRIS store URL, e.g. `https://chrisstore.co/api/v1/plugins/99/`
+
+[#plugin_name]
+===== cube.plugins[*].name
+
+Type: str
+
+Name of a plugin in the ChRIS store, e.g. `pl-dircopy`
+
+[#plugin_dock_image]
+===== cube.plugins[*].dock_image
+
+Type: str
+
+Container image manifest, e.g. `docker.io/fnndsc/pl-dircopy:latest`
+
+[#plugin_public_repo]
+===== cube.plugins[*].public_repo
+
+Type: str
+
+URL of a source code repository, e.g. `https://github.com/FNNDSC/pl-dircopy`
+
+===== cube.plugins[*].computeresource
+
+Type: list[str]
+
+Names of which compute environments to register this plugin to.
+
+If unspecified, use <<cube_computeresource,cube.computeresource[0]>>.
+
+====== cube.plugins[*].owner
+
+Type: str
+
+Username of user which, if it is necessary to first upload the specified
+plugin to a _ChRIS store_, will own this plugin.
+
+== Common Types
+
+=== User
+
+An object `{username: string, password: string}`
