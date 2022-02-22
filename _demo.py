@@ -6,18 +6,18 @@ from chrisomatic.framework.taskset import TaskSet
 
 
 @dataclass
-class DemoTask(ChrisomaticTask):
+class DemoTask(ChrisomaticTask[str]):
     name: str
     stuff: Sequence[float | str]
     result: Outcome
 
-    async def run(self, emit: State) -> Outcome:
+    async def run(self, emit: State) -> tuple[Outcome, str]:
         for i in self.stuff:
             if isinstance(i, (int, float)):
                 await asyncio.sleep(i)
             else:
                 emit.status = i
-        return self.result
+        return self.result, self.stuff[-1]
 
     def initial_state(self) -> State:
         return State(self.name, 'resolving info...')
@@ -56,7 +56,8 @@ tasks = (
 
 async def demo():
     ts = TaskSet(title='ChRIS Ultron Backend', tasks=tasks)
-    await ts.apply()
+    results = await ts.apply()
+    print(results)
 
 
 def main():

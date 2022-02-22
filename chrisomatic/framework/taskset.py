@@ -9,15 +9,17 @@ from rich.live import Live
 from rich.table import Table, Column
 from rich.panel import Panel
 from rich.spinner import Spinner
-from typing import Sequence, ClassVar
+from typing import Sequence, ClassVar, TypeVar, Generic
 from dataclasses import dataclass, InitVar
 from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
+_R = TypeVar('_R')
+
 
 @dataclass
-class _RunningTask:
+class _RunningTask(Generic[_R]):
 
-    chrisomatic_task: InitVar[ChrisomaticTask]
+    chrisomatic_task: InitVar[ChrisomaticTask[_R]]
     task: ClassVar[asyncio.Task]
     state: ClassVar[State]
     spinner: ClassVar[RenderableType] = Spinner('dots')
@@ -26,24 +28,27 @@ class _RunningTask:
         self.state = chrisomatic_task.initial_state()
         self.task = asyncio.create_task(chrisomatic_task.run(self.state))
 
-    def done(self) -> bool:
-        return self.task.done()
-
     def to_row(self) -> tuple[RenderableType, RenderableType, RenderableType]:
         return self.__get_icon(), self.__get_title(), self.state.status
 
-    def __get_icon(self) -> RenderableType:
-        if self.done():
-            return self.__outcome.emoji
-        return self.spinner
+    def done(self) -> bool:
+        return self.task.done()
+
+    def result(self) -> tuple[Outcome, _R]:
+        return self.task.result()
 
     @property
-    def __outcome(self) -> Outcome:
-        return self.task.result()
+    def outcome(self) -> Outcome:
+        return self.result()[0]
+
+    def __get_icon(self) -> RenderableType:
+        if self.done():
+            return self.outcome.emoji
+        return self.spinner
 
     def __get_title(self) -> RenderableType:
         return Text(self.state.title,
-                    style=self.__outcome.style if self.done() else None)
+                    style=self.outcome.style if self.done() else None)
 
 
 @dataclass(frozen=True)
@@ -59,15 +64,15 @@ _DEFAULT_DISPLAY_CONFIG = TableDisplayConfig()
 
 
 @dataclass
-class TaskSet:
+class TaskSet(Generic[_R]):
     """
     A `TaskSet` executes multiple `ChrisomaticTask` concurrently.
     """
     title: str
-    tasks: Sequence[ChrisomaticTask]
+    tasks: Sequence[ChrisomaticTask[_R]]
     config: TableDisplayConfig = _DEFAULT_DISPLAY_CONFIG
 
-    async def apply(self):
+    async def apply(self) -> Sequence[tuple[Outcome, _R]]:
         """
         Execute all tasks in parallel while displaying a table that shows their live statuses.
         """
@@ -77,6 +82,7 @@ class TaskSet:
             while not self._all_done(running_tasks):
                 await asyncio.sleep(self.config.polling_interval)
                 live.update(self._render(running_tasks))
+        return tuple(t.result() for t in running_tasks)
 
     def _render(self, tasks: Sequence[_RunningTask]) -> ConsoleRenderable:
         table = Table.grid(

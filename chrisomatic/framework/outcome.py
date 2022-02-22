@@ -4,9 +4,9 @@ from rich.style import Style
 
 
 class Outcome(enum.Enum):
-    FAILED = enum.auto()
-    NO_CHANGE = enum.auto()
-    CHANGE = enum.auto()
+    FAILED = 'failed'
+    NO_CHANGE = 'no change'
+    CHANGE = 'changed'
 
     @property
     def emoji(self) -> Emoji:
