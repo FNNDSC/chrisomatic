@@ -1,8 +1,8 @@
 import asyncio
 from typing import Sequence
 from dataclasses import dataclass
-from chrisomatic.task import Outcome, ChrisomaticTask, State
-from chrisomatic.taskset import TaskSet
+from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
+from chrisomatic.framework.taskset import TaskSet
 
 
 @dataclass

@@ -11,7 +11,7 @@ from rich.panel import Panel
 from rich.spinner import Spinner
 from typing import Sequence, ClassVar
 from dataclasses import dataclass, InitVar
-from chrisomatic.task import State, ChrisomaticTask, Outcome
+from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
 
 @dataclass

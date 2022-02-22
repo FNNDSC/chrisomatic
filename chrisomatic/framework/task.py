@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from chrisomatic.outcome import Outcome
+from chrisomatic.framework.outcome import Outcome
 from rich.console import RenderableType
 
 
