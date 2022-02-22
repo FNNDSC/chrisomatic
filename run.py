@@ -24,7 +24,7 @@ async def main():
     )
 
     async with cm as client:
-        r = await client.upload_plugin(name='pl-dypi1',
+        r = await client.upload_plugin(name='pl-dypi2',
                                        dock_image='localhost/rudolph/pl-dypi:1.2.1',
                                        public_repo='https://github.com/FNNDSC/pl-dypi',
                                        descriptor_file=desc_json)

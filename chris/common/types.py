@@ -1,3 +1,8 @@
+"""
+Be careful: types between _CUBE_ and _ChRIS_ store are not interoperable.
+For instance, a `PluginId` from the _ChRIS_ store is meaningless in _CUBE_.
+"""
+
 from typing import NewType
 
 ChrisUsername = NewType('ChrisUsername', str)
@@ -12,3 +17,10 @@ PluginName = NewType('PluginName', str)
 ImageTag = NewType('ImageTag', str)
 PluginVersion = NewType('PluginVersion', str)
 
+PluginUrl = NewType('PluginUrl', str)
+PluginSearchUrl = NewType('PluginSearchUrl', str)
+
+PluginId = NewType('PluginId', int)
+
+UserUrl = NewType('UserUrl', str)
+UserId = NewType('UserId', int)

@@ -1,27 +1,13 @@
 from serde import deserialize
 from chris.common.types import (
-    ApiUrl, PluginName, ImageTag, PluginVersion,
-    ChrisUsername
+    ApiUrl, PluginUrl, PluginId
 )
-from chris.common.atypes import AbstractCollectionLinks, AbstractNewUser
-from chris.store.types import StorePluginId, StorePluginUrl, StorePluginSearchUrl, StoreUserId, StoreUserUrl
-from typing import Optional
-
-
-@deserialize
-class NewStoreUser(AbstractNewUser):
-    url: StoreUserUrl
-    id: StoreUserId
-    username: ChrisUsername
-    email: str
-    favorite_plugin_metas: ApiUrl
-    collab_plugin_metas: ApiUrl
+from chris.common.atypes import AbstractCollectionLinks
 
 
 @deserialize
 class AnonymousCollectionLinks(AbstractCollectionLinks):
     plugin_stars: ApiUrl
-    plugins: ApiUrl
     pipelines: ApiUrl
 
 
@@ -37,8 +23,8 @@ class AnonymousHome:
 
 @deserialize
 class PluginUpload:
-    url: StorePluginUrl
-    id: StorePluginId
+    url: PluginUrl
+    id: PluginId
 
 
 # {
@@ -73,60 +59,3 @@ class PluginUpload:
 #     "meta": "http://localhost:8010/api/v1/1/"
 # }
 
-
-@deserialize
-class Plugin:
-    url: StorePluginUrl
-    id: StorePluginId
-    name: PluginName
-    dock_image: ImageTag
-    version: PluginVersion
-
-
-# I wonder if this can be generic?
-@deserialize
-class PluginSearch:
-    count: int
-    next: Optional[StorePluginSearchUrl]
-    previous: Optional[StorePluginSearchUrl]
-    results: list[Plugin]
-
-
-# {
-#     "count": 1,
-#     "next": null,
-#     "previous": null,
-#     "results": [
-#         {
-#             "url": "https://chrisstore.co/api/v1/plugins/124/",
-#             "id": 124,
-#             "creation_date": "2022-01-14T10:59:52.034082-05:00",
-#             "name": "pl-smoothness-error",
-#             "version": "1.0.0",
-#             "dock_image": "fnndsc/pl-smoothness-error:1.0.0",
-#             "public_repo": "https://github.com/FNNDSC/pl-smoothness-error",
-#             "icon": "",
-#             "type": "ds",
-#             "stars": 0,
-#             "authors": "Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>",
-#             "title": "Surface Mesh Smoothness Error",
-#             "category": "Surface Analysis",
-#             "description": "Calculate vertex-wise smoothness error of a .obj surface mesh",
-#             "documentation": "https://github.com/FNNDSC/pl-smoothness-error",
-#             "license": "MIT",
-#             "execshell": "/opt/conda/bin/python",
-#             "selfpath": "/opt/conda/bin",
-#             "selfexec": "smoothness_error",
-#             "min_number_of_workers": 1,
-#             "max_number_of_workers": 1,
-#             "min_cpu_limit": 1000,
-#             "max_cpu_limit": 2147483647,
-#             "min_memory_limit": 200,
-#             "max_memory_limit": 2147483647,
-#             "min_gpu_limit": 0,
-#             "max_gpu_limit": 0,
-#             "parameters": "https://chrisstore.co/api/v1/plugins/124/parameters/",
-#             "meta": "https://chrisstore.co/api/v1/72/"
-#         }
-#     ]
-# }

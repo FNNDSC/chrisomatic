@@ -34,21 +34,23 @@ with aiohttp.TCPConnector() as connector:
 
 import abc
 from dataclasses import dataclass
+from functools import cache
 import aiohttp
-from typing import Optional, TypeVar, Generic, AsyncContextManager, Type, ForwardRef, Callable
+from typing import Optional, TypeVar, Generic, AsyncContextManager, AsyncIterable, Type, ForwardRef, Callable
 import typing_inspect
 from serde import from_dict
 from serde.json import from_json
 
-from chris.common.errors import IncorrectLoginError, BadRequestError
+from chris.common.deserialization import Plugin, CreatedUser
+from chris.common._search import get_paginated, peek, PaginatedUrl
+from chris.common.errors import IncorrectLoginError, BadRequestError, EmptySearchError
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
-from chris.common.atypes import AbstractCollectionLinks, AbstractNewUser
+from chris.common.atypes import AbstractCollectionLinks
 
 _B = TypeVar('_B', bound='BaseClient')
 _A = TypeVar('_A', bound='AnonymousClient')
 _C = TypeVar('_C', bound='AuthenticatedClient')
 _L = TypeVar('_L', bound=AbstractCollectionLinks)
-_U = TypeVar('_U', bound=AbstractNewUser)
 
 
 @dataclass(frozen=True)
@@ -68,6 +70,35 @@ class AbstractClient(Generic[_L], abc.ABC):
         Close the HTTP session used by this client.
         """
         await self.s.close()
+
+    async def get_first_plugin(self, **query) -> Plugin:
+        """
+        Get the first plugin from a search.
+
+        Parameters are not documented, and possible key-value pairs are different
+        between the _ChRIS_ store and _CUBE_.
+
+        - https://github.com/FNNDSC/ChRIS_store/blob/8f4fc98b3d87dc9aa3f7fbb314684021680a5945/store_backend/plugins/models.py#L203-L261
+        - https://github.com/FNNDSC/ChRIS_ultron_backEnd/blob/1ea8fc0ce6c6c1be6d67be21cf235ea07d8a9aa7/chris_backend/plugins/models.py#L212-L248
+        """
+        search_results = self.__search_plugins(**query)
+        try:
+            return await peek(search_results)
+        except ValueError:
+            raise EmptySearchError(f'No results on {self.url} for: {query}')
+
+    def __search_plugins(self, **query) -> AsyncIterable[Plugin]:
+        return get_paginated(session=self.s,
+                             url=self._plugins_search_url(**query),
+                             element_type=Plugin)
+
+    @staticmethod
+    def _join_qs(**kwargs) -> str:
+        return '&'.join([f'{k}={v}' for k, v in kwargs.items() if v])
+
+    def _plugins_search_url(self, **query) -> PaginatedUrl:
+        qs = self._join_qs(**query)
+        return PaginatedUrl(f'{self.collection_links.plugins}search/?{qs}')
 
 
 class BaseClient(AbstractClient[_L], AsyncContextManager[_B], Generic[_B, _L], abc.ABC):
@@ -125,7 +156,7 @@ class AnonymousClient(BaseClient[_A, _L], Generic[_A, _L]):
         return await cls.new(url)
 
 
-class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
+class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L], abc.ABC):
 
     @classmethod
     async def from_login(cls,
@@ -187,7 +218,7 @@ class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
                           username: ChrisUsername | str,
                           password: ChrisPassword | str,
                           email: str,
-                          session: aiohttp.ClientSession) -> _U:
+                          session: aiohttp.ClientSession) -> CreatedUser:
         payload = {
             'template': {
                 'data': [
@@ -205,13 +236,13 @@ class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L, _U], abc.ABC):
         if res.status == 400:
             raise BadRequestError(await res.text())
         res.raise_for_status()
-        user_type = _generic_of(cls, AbstractNewUser)
-        return from_json(user_type, await res.text())
+        return from_json(CreatedUser, await res.text())
 
 
 _T = TypeVar('_T')
 
 
+@cache
 def _generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
     """
     Get the actual class represented by a bound TypeVar of a generic.
