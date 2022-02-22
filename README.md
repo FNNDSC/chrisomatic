@@ -81,7 +81,7 @@ This behavior can be changed by specifying plugins in object form:
 cube:
   plugins:
     - name: pl-fastsurfer_inference
-      computeresource:
+      compute_resource:
         - host
         - moc
 ```

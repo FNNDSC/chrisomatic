@@ -1,27 +1,32 @@
+from dataclasses import dataclass
 from serde import deserialize
 from chris.common.types import (
     ApiUrl, PluginUrl, PluginId
 )
-from chris.common.atypes import AbstractCollectionLinks
+from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
 
 @deserialize
-class AnonymousCollectionLinks(AbstractCollectionLinks):
+@dataclass(frozen=True)
+class AnonymousCollectionLinks(CommonCollectionLinks):
     plugin_stars: ApiUrl
-    pipelines: ApiUrl
 
 
 @deserialize
-class StoreCollectionLinks(AnonymousCollectionLinks):
-    pass
+@dataclass(frozen=True)
+class StoreCollectionLinks(AuthenticatedCollectionLinks):
+    favorite_plugin_metas: ApiUrl
+    collab_plugin_metas: ApiUrl
 
 
 @deserialize
+@dataclass(frozen=True)
 class AnonymousHome:
     collection_links: AnonymousCollectionLinks
 
 
 @deserialize
+@dataclass(frozen=True)
 class PluginUpload:
     url: PluginUrl
     id: PluginId

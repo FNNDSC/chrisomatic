@@ -13,6 +13,7 @@ rich = "^11.2.0"
 pyserde = {extras = ["yaml"], version = "^0.7.0"}
 
 [tool.poetry.dev-dependencies]
+pytest-asyncio = "^0.18.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -20,3 +21,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 chrisomatic = "chrisomatic.cli.typer:app"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

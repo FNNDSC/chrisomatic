@@ -7,7 +7,7 @@ and `https://cube.chrisproject.org/api/v1/plugins/search/`
 are analogous but one wouldn't make sense in the context
 of the other.
 """
-from typing import NewType, Optional, TypeVar, Generic, AsyncGenerator, Type, AsyncIterable
+from typing import NewType, Optional, TypeVar, Any, AsyncGenerator, Type, AsyncIterable
 
 import aiohttp
 from serde import deserialize, from_dict
@@ -19,11 +19,11 @@ T = TypeVar('T')
 
 
 @deserialize
-class _Paginated(Generic[T]):
+class _Paginated:
     count: int
     next: Optional[PaginatedUrl]
     previous: Optional[PaginatedUrl]
-    results: list[T]
+    results: list[Any]
 
 
 async def get_paginated(session: aiohttp.ClientSession, url: PaginatedUrl,

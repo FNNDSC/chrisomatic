@@ -62,31 +62,31 @@ _ChRIS_ backend description.
 
 Type: list[<<User>>]
 
-[#cube_computeresource]
-==== cube.computeresource
+[#cube_compute_resource]
+==== cube.compute_resource
 
 Type: list[<<ComputeResource,ComputeResource>>]
 
 [#ComputeResource]
-===== cube.computeresource[*] (ComputeResource)
+===== cube.compute_resource[*] (ComputeResource)
 
-====== cube.computeresource[*].name
-
-Type: string
-
-====== cube.computeresource[*].url
+====== cube.compute_resource[*].name
 
 Type: string
 
-====== cube.computeresource[*].username
+====== cube.compute_resource[*].url
 
 Type: string
 
-====== cube.computeresource[*].password
+====== cube.compute_resource[*].username
 
 Type: string
 
-====== cube.computeresource[*].description
+====== cube.compute_resource[*].password
+
+Type: string
+
+====== cube.compute_resource[*].description
 
 Type: string
 
@@ -133,13 +133,13 @@ Type: str
 
 URL of a source code repository, e.g. `https://github.com/FNNDSC/pl-dircopy`
 
-===== cube.plugins[*].computeresource
+===== cube.plugins[*].compute_resource
 
 Type: list[str]
 
 Names of which compute environments to register this plugin to.
 
-If unspecified, use <<cube_computeresource,cube.computeresource[0]>>.
+If unspecified, use <<cube_compute_resource,cube.compute_resource[0]>>.
 
 ====== cube.plugins[*].owner
 

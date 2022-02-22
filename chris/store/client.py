@@ -22,8 +22,8 @@ class AnonymousChrisStoreClient(_AnonymousChrisStoreClient[AnonymousCollectionLi
     pass
 
 
-class ChrisStoreClient(_AnonymousChrisStoreClient[StoreCollectionLinks],
-                       AuthenticatedClient['ChrisStoreClient', StoreCollectionLinks]):
+class ChrisStoreClient(AuthenticatedClient['ChrisStoreClient', StoreCollectionLinks],
+                       _AnonymousChrisStoreClient[StoreCollectionLinks]):
     async def upload_plugin(self, name: str, dock_image: str,
                             public_repo: str,
                             descriptor_file: Path) -> PluginUpload:

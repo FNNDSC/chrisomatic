@@ -42,15 +42,16 @@ from serde import from_dict
 from serde.json import from_json
 
 from chris.common.deserialization import Plugin, CreatedUser
-from chris.common._search import get_paginated, peek, PaginatedUrl
+from chris.common.search import get_paginated, peek, PaginatedUrl
 from chris.common.errors import IncorrectLoginError, BadRequestError, EmptySearchError
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
-from chris.common.atypes import AbstractCollectionLinks
+from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
 _B = TypeVar('_B', bound='BaseClient')
 _A = TypeVar('_A', bound='AnonymousClient')
 _C = TypeVar('_C', bound='AuthenticatedClient')
-_L = TypeVar('_L', bound=AbstractCollectionLinks)
+_L = TypeVar('_L', bound=CommonCollectionLinks)
+_UL = TypeVar('_UL', bound=AuthenticatedCollectionLinks)
 
 
 @dataclass(frozen=True)
@@ -135,7 +136,7 @@ class BaseClient(AbstractClient[_L], AsyncContextManager[_B], Generic[_B, _L], a
 
         res = await session.get(url)
         body = await res.json()
-        links_type = _generic_of(cls, AbstractCollectionLinks)
+        links_type = generic_of(cls, CommonCollectionLinks)
         links = from_dict(links_type, body['collection_links'])
 
         return cls(url=url, s=session, collection_links=links)
@@ -149,14 +150,17 @@ class BaseClient(AbstractClient[_L], AsyncContextManager[_B], Generic[_B, _L], a
 
 class AnonymousClient(BaseClient[_A, _L], Generic[_A, _L]):
     @classmethod
-    async def from_url(cls, url: str | ChrisURL) -> _A:
+    async def from_url(cls, url: str | ChrisURL,
+                       connector: Optional[aiohttp.BaseConnector] = None,
+                       connector_owner: bool = True
+                       ) -> _A:
         """
         Create an anonymous client for the given backend URL.
         """
-        return await cls.new(url)
+        return await cls.new(url, connector, connector_owner)
 
 
-class AuthenticatedClient(BaseClient[_C, _L], Generic[_C, _L], abc.ABC):
+class AuthenticatedClient(BaseClient[_C, _UL], Generic[_C, _UL], abc.ABC):
 
     @classmethod
     async def from_login(cls,
@@ -243,20 +247,19 @@ _T = TypeVar('_T')
 
 
 @cache
-def _generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
+def generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
     """
     Get the actual class represented by a bound TypeVar of a generic.
     """
-
     for generic_type in typing_inspect.get_args(c):
-        if isinstance(generic_type, ForwardRef):
+        if isinstance(generic_type, (str, ForwardRef)):
             continue
         if issubclass(generic_type, t):
             return generic_type
 
     if hasattr(c, '__orig_bases__'):
         for subclass in c.__orig_bases__:
-            subclass_generic = _generic_of(subclass, t, subclass=True)
+            subclass_generic = generic_of(subclass, t, subclass=True)
             if subclass_generic is not None:
                 return subclass_generic
     if not subclass:

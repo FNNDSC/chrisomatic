@@ -23,7 +23,7 @@ cube:
       password: dubrovnik
     - username: banu
       password: oxford
-  computeresource:
+  compute_resource:
     - name: host
       url: http://localhost:5005/api/v1/
       username: pfcon
@@ -51,10 +51,10 @@ cube:
 
       # or, be more specific
     - name: pl-dircopy
-      computeresource:
+      compute_resource:
         - host
 
     - public_repo: https://github.com/FNNDSC/dbg-nvidia-smi/
-      computeresource:
+      compute_resource:
         - host
         - moc
