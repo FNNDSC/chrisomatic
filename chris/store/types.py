@@ -1,9 +1,9 @@
 from typing import NewType
 
-PluginUrl = NewType('PluginUrl', str)
-PluginSearchUrl = NewType('PluginSearchUrl', str)
+StorePluginUrl = NewType('StorePluginUrl', str)
+StorePluginSearchUrl = NewType('StorePluginSearchUrl', str)
 
-PluginId = NewType('PluginId', int)
+StorePluginId = NewType('StorePluginId', int)
 
-UserUrl = NewType('UserUrl', str)
-UserId = NewType('UserId', int)
+StoreUserUrl = NewType('StoreUserUrl', str)
+StoreUserId = NewType('StoreUserId', int)

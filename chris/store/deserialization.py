@@ -4,14 +4,14 @@ from chris.common.types import (
     ChrisUsername
 )
 from chris.common.atypes import AbstractCollectionLinks, AbstractNewUser
-from chris.store.types import PluginId, PluginUrl, PluginSearchUrl, UserId, UserUrl
+from chris.store.types import StorePluginId, StorePluginUrl, StorePluginSearchUrl, StoreUserId, StoreUserUrl
 from typing import Optional
 
 
 @deserialize
 class NewStoreUser(AbstractNewUser):
-    url: UserUrl
-    id: UserId
+    url: StoreUserUrl
+    id: StoreUserId
     username: ChrisUsername
     email: str
     favorite_plugin_metas: ApiUrl
@@ -37,8 +37,8 @@ class AnonymousHome:
 
 @deserialize
 class PluginUpload:
-    url: PluginUrl
-    id: PluginId
+    url: StorePluginUrl
+    id: StorePluginId
 
 
 # {
@@ -76,8 +76,8 @@ class PluginUpload:
 
 @deserialize
 class Plugin:
-    url: PluginUrl
-    id: PluginId
+    url: StorePluginUrl
+    id: StorePluginId
     name: PluginName
     dock_image: ImageTag
     version: PluginVersion
@@ -87,8 +87,8 @@ class Plugin:
 @deserialize
 class PluginSearch:
     count: int
-    next: Optional[PluginSearchUrl]
-    previous: Optional[PluginSearchUrl]
+    next: Optional[StorePluginSearchUrl]
+    previous: Optional[StorePluginSearchUrl]
     results: list[Plugin]
 
 

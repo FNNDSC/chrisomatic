@@ -1,6 +1,6 @@
 version: 1.0
 
-on:
+to:
   cube_url: http://localhost:8000/api/v1/
   chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:

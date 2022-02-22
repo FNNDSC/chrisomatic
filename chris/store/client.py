@@ -14,7 +14,7 @@ import aiohttp
 from serde.json import from_json
 from typing import TypeVar, Generic
 from chris.common.client import AbstractClient, AnonymousClient, AuthenticatedClient
-from chris.store.types import PluginSearchUrl
+from chris.store.types import StorePluginSearchUrl
 
 
 _L = TypeVar('_L', bound=AnonymousCollectionLinks)
@@ -23,8 +23,8 @@ _L = TypeVar('_L', bound=AnonymousCollectionLinks)
 class _AnonymousChrisStoreClient(AbstractClient[_L], Generic[_L]):
 
     @property
-    def plugins_search_url(self) -> PluginSearchUrl:
-        return PluginSearchUrl(self.collection_links.plugins + 'search/')
+    def plugins_search_url(self) -> StorePluginSearchUrl:
+        return StorePluginSearchUrl(self.collection_links.plugins + 'search/')
 
     async def get_first_plugin(self, **query):
         # no upstream docs so why should I?
