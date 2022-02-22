@@ -17,8 +17,8 @@ class _AnonymousChrisStoreClient(AbstractClient[_L], Generic[_L]):
     pass
 
 
-class AnonymousChrisStoreClient(_AnonymousChrisStoreClient[AnonymousCollectionLinks],
-                                AnonymousClient['AnonymousChrisStoreClient', AnonymousCollectionLinks]):
+class AnonymousChrisStoreClient(AnonymousClient['AnonymousChrisStoreClient', AnonymousCollectionLinks],
+                                _AnonymousChrisStoreClient[AnonymousCollectionLinks]):
     pass
 
 

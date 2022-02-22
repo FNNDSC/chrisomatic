@@ -102,7 +102,7 @@ class AbstractClient(Generic[_L], abc.ABC):
         return PaginatedUrl(f'{self.collection_links.plugins}search/?{qs}')
 
 
-class BaseClient(AbstractClient[_L], AsyncContextManager[_B], Generic[_B, _L], abc.ABC):
+class BaseClient(Generic[_B, _L], AsyncContextManager[_B], AbstractClient[_L], abc.ABC):
     """
     Provides the `BaseClient.new` constructor. Subclasses which make
     use of `BaseClient.new` may not have any extra fields.

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from serde import deserialize
 from chris.common.types import (
     UserUrl, UserId, ChrisUsername,
@@ -7,6 +8,7 @@ from chris.common.types import (
 
 
 @deserialize
+@dataclass(frozen=True)
 class Plugin:
     url: PluginUrl
     id: PluginId
@@ -17,6 +19,7 @@ class Plugin:
 
 
 @deserialize
+@dataclass(frozen=True)
 class CreatedUser:
     url: UserUrl
     id: UserId
