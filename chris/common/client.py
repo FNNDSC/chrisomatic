@@ -102,7 +102,7 @@ class AbstractClient(Generic[_L], abc.ABC):
         return PaginatedUrl(f'{self.collection_links.plugins}search/?{qs}')
 
 
-class BaseClient(Generic[_B, _L], AsyncContextManager[_B], AbstractClient[_L], abc.ABC):
+class BaseClient(AbstractClient[_L], AsyncContextManager[_B], abc.ABC):
     """
     Provides the `BaseClient.new` constructor. Subclasses which make
     use of `BaseClient.new` may not have any extra fields.
@@ -148,7 +148,7 @@ class BaseClient(Generic[_B, _L], AsyncContextManager[_B], AbstractClient[_L], a
         await self.close()
 
 
-class AnonymousClient(BaseClient[_A, _L], Generic[_A, _L]):
+class AnonymousClient(BaseClient[_L, _A]):
     @classmethod
     async def from_url(cls, url: str | ChrisURL,
                        connector: Optional[aiohttp.BaseConnector] = None,
@@ -160,8 +160,7 @@ class AnonymousClient(BaseClient[_A, _L], Generic[_A, _L]):
         return await cls.new(url, connector, connector_owner)
 
 
-class AuthenticatedClient(BaseClient[_C, _UL], Generic[_C, _UL], abc.ABC):
-
+class AuthenticatedClient(BaseClient[_UL, _C], abc.ABC):
     @classmethod
     async def from_login(cls,
                          url: str | ChrisURL,
@@ -252,7 +251,7 @@ def generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
     Get the actual class represented by a bound TypeVar of a generic.
     """
     for generic_type in typing_inspect.get_args(c):
-        if isinstance(generic_type, (str, ForwardRef)):
+        if isinstance(generic_type, (str, ForwardRef, TypeVar)):
             continue
         if issubclass(generic_type, t):
             return generic_type

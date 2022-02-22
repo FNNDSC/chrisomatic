@@ -17,12 +17,12 @@ class _AnonymousChrisStoreClient(AbstractClient[_L], Generic[_L]):
     pass
 
 
-class AnonymousChrisStoreClient(AnonymousClient['AnonymousChrisStoreClient', AnonymousCollectionLinks],
+class AnonymousChrisStoreClient(AnonymousClient[AnonymousCollectionLinks, 'AnonymousChrisStoreClient'],
                                 _AnonymousChrisStoreClient[AnonymousCollectionLinks]):
     pass
 
 
-class ChrisStoreClient(AuthenticatedClient['ChrisStoreClient', StoreCollectionLinks],
+class ChrisStoreClient(AuthenticatedClient[StoreCollectionLinks, 'ChrisStoreClient'],
                        _AnonymousChrisStoreClient[StoreCollectionLinks]):
     async def upload_plugin(self, name: str, dock_image: str,
                             public_repo: str,

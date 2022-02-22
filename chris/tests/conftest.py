@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 import aiohttp
+from chris.common.types import ChrisURL
 
 
 @pytest.fixture(scope='session')
@@ -17,3 +18,13 @@ def event_loop():
 async def session(event_loop) -> aiohttp.ClientSession:
     async with aiohttp.ClientSession(loop=event_loop) as session:
         yield session
+
+
+@pytest.fixture(scope='session')
+def chris_store_url():
+    return ChrisURL('http://localhost:8010/api/v1/')
+
+
+@pytest.fixture(scope='session')
+def cube_url():
+    return ChrisURL('http://localhost:8000/api/v1/')

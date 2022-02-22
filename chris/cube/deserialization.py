@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from serde import deserialize
 from chris.common.types import ApiUrl, UserUrl
-from chris.common.atypes import CommonCollectionLinks
+from chris.common.atypes import AuthenticatedCollectionLinks
 from chris.common.deserialization import Plugin
 from chris.cube.types import AdminUrl, ComputeResourceName
 
 
 @deserialize
 @dataclass(frozen=True)
-class CubeCollectionLinks(CommonCollectionLinks):
+class CubeCollectionLinks(AuthenticatedCollectionLinks):
     chrisinstance: ApiUrl
     admin: AdminUrl
     files: ApiUrl
