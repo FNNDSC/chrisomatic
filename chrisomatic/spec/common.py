@@ -13,9 +13,9 @@ class User:
 class ComputeResource:
     name: ComputeResourceName
     url: str
-    username: str
-    password: str
-    description: str
+    username: str = 'pfcon'
+    password: str = 'pfcon1234'
+    description: str = ''
 
 
 @serde

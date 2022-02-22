@@ -16,5 +16,5 @@ venv
 .idea/
 .vscode/
 
-examples/
+docs/examples/
 

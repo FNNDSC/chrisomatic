@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "chrisomatic"
 version = "0.1.0"
-description = "Setup ChRIS with plugins, style, and elegance."
+description = "Setup ChRIS with plugins and powerpointlessnes."
 authors = ["Jennings Zhang <jenni_zh@protonmail.com>"]
 license = "MIT"
 

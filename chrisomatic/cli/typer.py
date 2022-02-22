@@ -46,7 +46,7 @@ def apply(
         )
 ):
     """
-    Additively provision a running ChRIS backend.
+    Apply a configuration additively to a running ChRIS backend.
     """
     input_config = sys.stdin.read() if file == Path('-') else file.read_text()
 
