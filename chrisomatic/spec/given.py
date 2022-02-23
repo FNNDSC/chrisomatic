@@ -10,7 +10,7 @@ class On:
     cube_url: ChrisURL
     chris_store_url: ChrisURL
     chris_superuser: User
-    public_store: list[ChrisURL] = field(default_factory=lambda: ['https://chrisstore.co/api/v1/'])
+    public_store: list[ChrisURL]
 
 
 @deserialize

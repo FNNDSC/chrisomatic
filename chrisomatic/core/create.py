@@ -8,7 +8,7 @@ from chris.common.errors import IncorrectLoginError
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.core.superuser import create_superuser
-from chrisomatic.core.client.superclient import SuperClient
+from chrisomatic.core.superclient import SuperClient
 from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.task import ChrisomaticTask, State
 from chrisomatic.spec.given import On

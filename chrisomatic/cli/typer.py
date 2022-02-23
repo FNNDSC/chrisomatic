@@ -2,7 +2,9 @@ import typer
 import sys
 from pathlib import Path
 from typing import Optional
+from strictyaml import YAMLValidationError
 import chrisomatic
+from chrisomatic.spec.deserialize import deserialize_config
 from chrisomatic.cli.apply import apply as apply_from_config
 from chrisomatic.spec.deserialize import InputError
 
@@ -48,14 +50,26 @@ def apply(
     """
     Apply a configuration additively to a running ChRIS backend.
     """
-    input_config = sys.stdin.read() if file == Path('-') else file.read_text()
+    if file == Path('-'):
+        input_config = sys.stdin.read()
+        filename = '<stdin>'
+    else:
+        input_config = file.read_text()
+        filename = str(file)
 
     try:
-        apply_from_config(input_config)
-    except InputError as e:
-        typer.secho(f'Error parsing {file}: {e.args[0]}',
-                    err=True, color=typer.colors.RED)
+        config = deserialize_config(input_config, filename)
+    except YAMLValidationError as e:
+        print(e)
         raise typer.Abort()
+
+    typer.echo(config)
+    # try:
+    #     apply_from_config(input_config)
+    # except InputError as e:
+    #     typer.secho(f'Error parsing {file}: {e.args[0]}',
+    #                 err=True, color=typer.colors.RED)
+    #     raise typer.Abort()
 
 
 @app.command()
