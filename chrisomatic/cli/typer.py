@@ -1,3 +1,5 @@
+import os
+import logging
 import asyncio
 import typer
 import sys
@@ -6,6 +8,7 @@ from typing import Optional
 from strictyaml import YAMLValidationError
 import chrisomatic
 from chrisomatic.spec.deserialize import deserialize_config
+from chrisomatic.cli import Gstr_title, console
 from chrisomatic.cli.apply import apply as apply_from_config
 from chrisomatic.spec.deserialize import InputError
 
@@ -67,7 +70,7 @@ def apply(
         print(e)
         raise typer.Abort()
 
-    typer.echo(config)
+    console.print(Gstr_title)
     asyncio.run(apply_from_config(config))
 
 

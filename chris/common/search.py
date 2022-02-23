@@ -13,6 +13,10 @@ import aiohttp
 from serde import deserialize, from_dict
 from serde.json import from_json
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 PaginatedUrl = NewType('PaginatedUrl', str)
 T = TypeVar('T')
@@ -29,6 +33,7 @@ class _Paginated:
 async def get_paginated(session: aiohttp.ClientSession, url: PaginatedUrl,
                         element_type: Type[T],
                         max_requests: int = 100) -> AsyncGenerator[T, None]:
+    logger.debug('GET, max_requests=%d, --> %s', max_requests, url)
     if max_requests <= 0:
         raise TooMuchPaginationException()
     res = await session.get(url)
@@ -36,22 +41,9 @@ async def get_paginated(session: aiohttp.ClientSession, url: PaginatedUrl,
     for element in data.results:
         yield from_dict(element_type, element)
     if data.next is not None:
-        next_results = get_paginated(session, url, element_type,
-                                     max_requests - data.count)
+        next_results = get_paginated(session, data.next, element_type, max_requests - 1)
         async for next_element in next_results:
             yield next_element
-
-
-async def peek(x: AsyncIterable[T], mt: Type[Exception] = ValueError) -> T:
-    async for e in x:
-        return e
-    raise mt('x is empty')
-
-
-async def hasnext(x: AsyncIterable[Any]) -> bool:
-    async for _ in x:
-        return True
-    return False
 
 
 async def to_sequence(async_iterable: AsyncIterable[T]) -> list[T]:

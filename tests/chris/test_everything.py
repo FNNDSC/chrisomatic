@@ -97,10 +97,10 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
                                some_name: str, example_plugin: Path):
     plugin_name = f'test-{some_name}'
     dock_image = f'localhost/fnndsc/pl-nums2mask:{some_name}'
-    assert not await chris_store_client.plugin_exists(name_exact=plugin_name)
-    assert not await chris_store_client.plugin_exists(dock_image=dock_image)
-    assert not await normal_cube_client.plugin_exists(name_exact=plugin_name)
-    assert not await normal_cube_client.plugin_exists(dock_image=dock_image)
+    assert await chris_store_client.get_first_plugin(name_exact=plugin_name) is None
+    assert await chris_store_client.get_first_plugin(dock_image=dock_image) is None
+    assert await normal_cube_client.get_first_plugin(name_exact=plugin_name) is None
+    assert await normal_cube_client.get_first_plugin(dock_image=dock_image) is None
     uploaded_plugin = await chris_store_client.upload_plugin(
         name=plugin_name,
         dock_image=dock_image,
@@ -109,8 +109,8 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     )
     get_uploaded = await chris_store_client.get_first_plugin(dock_image=dock_image)
     assert uploaded_plugin.id == get_uploaded.id
-    assert await chris_store_client.plugin_exists(name_exact=plugin_name)
-    assert await chris_store_client.plugin_exists(dock_image=dock_image)
+    assert await chris_store_client.get_first_plugin(name_exact=plugin_name) is not None
+    assert await chris_store_client.get_first_plugin(dock_image=dock_image) is not None
 
     compute_env_name = ComputeResourceName(f'test-{some_name}')
     created_compute_env: ComputeResource = await superuser_cube_client.create_compute_resource(
@@ -134,7 +134,7 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     )
     assert registered_plugin.name == plugin_name
     assert registered_plugin.dock_image == dock_image
-    assert await normal_cube_client.plugin_exists(name_exact=plugin_name)
+    assert await normal_cube_client.get_first_plugin(name_exact=plugin_name) is not None
 
     computes = await to_sequence(normal_cube_client.get_compute_resources_of(registered_plugin))
     assert computes == [created_compute_env]

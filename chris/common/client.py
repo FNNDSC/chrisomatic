@@ -36,14 +36,14 @@ import abc
 from dataclasses import dataclass
 from functools import cache
 import aiohttp
-from typing import Optional, TypeVar, Generic, AsyncContextManager, AsyncIterable, Type, ForwardRef, Callable
+from typing import Optional, TypeVar, Generic, AsyncContextManager, AsyncIterator, Type, ForwardRef, Callable
 import typing_inspect
 from serde import from_dict
 from serde.json import from_json
 
 from chris.common.deserialization import Plugin, CreatedUser
-from chris.common.search import get_paginated, peek, hasnext, PaginatedUrl
-from chris.common.errors import IncorrectLoginError, BadRequestError, EmptySearchError
+from chris.common.search import get_paginated, PaginatedUrl, T
+from chris.common.errors import IncorrectLoginError, BadRequestError
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
@@ -72,7 +72,7 @@ class AbstractClient(Generic[_L], abc.ABC):
         """
         await self.s.close()
 
-    async def get_first_plugin(self, **query) -> Plugin:
+    async def get_first_plugin(self, **query) -> Optional[Plugin]:
         """
         Get the first plugin from a search.
 
@@ -82,36 +82,27 @@ class AbstractClient(Generic[_L], abc.ABC):
         - https://github.com/FNNDSC/ChRIS_store/blob/8f4fc98b3d87dc9aa3f7fbb314684021680a5945/store_backend/plugins/models.py#L203-L261
         - https://github.com/FNNDSC/ChRIS_ultron_backEnd/blob/1ea8fc0ce6c6c1be6d67be21cf235ea07d8a9aa7/chris_backend/plugins/models.py#L212-L248
         """
-        search_results = self.__search_plugins(limit=1, **query)
-        try:
-            return await peek(search_results)
-        except ValueError:
-            raise EmptySearchError(f'No results on {self.url} for: {query}')
+        search_results = self.search_plugins(limit=1, max_requests=1, **query)
+        return await anext(search_results, None)
 
-    async def plugin_exists(self, **query) -> bool:
-        """
-        Search for a plugin.
+    def search_plugins(self, max_requests=100, **query) -> AsyncIterator[Plugin]:
+        return self.search(
+            url=self.collection_links.plugins,
+            query=query, element_type=Plugin,
+            max_requests=max_requests
+        )
 
-        Returns
-        -------
-        exists: bool
-            True if there was at least one search result
-        """
-        search_results = self.__search_plugins(limit=1, **query)
-        return await hasnext(search_results)
-
-    def __search_plugins(self, **query) -> AsyncIterable[Plugin]:
+    def search(self, url: str, query: dict, element_type: Type[T],
+               max_requests: int = 100) -> AsyncIterator[T]:
+        qs = self._join_qs(query)
         return get_paginated(session=self.s,
-                             url=self._plugins_search_url(**query),
-                             element_type=Plugin)
+                             url=PaginatedUrl(f'{url}search?{qs}'),
+                             element_type=element_type,
+                             max_requests=max_requests)
 
     @staticmethod
-    def _join_qs(**kwargs) -> str:
-        return '&'.join([f'{k}={v}' for k, v in kwargs.items() if v])
-
-    def _plugins_search_url(self, **query) -> PaginatedUrl:
-        qs = self._join_qs(**query)
-        return PaginatedUrl(f'{self.collection_links.plugins}search/?{qs}')
+    def _join_qs(query: dict) -> str:
+        return '&'.join(f'{k}={v}' for k, v in query.items() if v)
 
 
 class BaseClient(AbstractClient[_L], AsyncContextManager[_B], abc.ABC):

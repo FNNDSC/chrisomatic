@@ -9,9 +9,17 @@ from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.core.superuser import create_superuser
 from chrisomatic.core.superclient import SuperClient
-from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.task import ChrisomaticTask, State
 from chrisomatic.spec.given import On
+from chrisomatic.framework.outcome import Outcome
+from chrisomatic.framework.taskset import TableTaskSet
+
+
+async def create_super_client(on: On) -> tuple[Outcome, SuperClient]:
+    fact = SuperClientFactory(on=on)
+    task_set = TableTaskSet(tasks=[fact])
+    results = await task_set.apply()
+    return results[0]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -79,7 +87,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
         emit.status = 'creating session...'
         session = aiohttp.ClientSession(connector=cube_client.s.connector,
                                         connector_owner=False)
-        emit.status = 'created session.'
+        emit.status = 'created client sessions.'
         return SuperClient(
             cube=cube_client,
             docker=self.docker,
