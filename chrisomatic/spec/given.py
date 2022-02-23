@@ -1,6 +1,5 @@
 from serde import deserialize, field
-from chris.common.types import PluginName, PluginVersion, ImageTag, ChrisURL
-from chris.store.types import StorePluginUrl
+from chris.common.types import PluginName, PluginVersion, ImageTag, ChrisURL, PluginUrl
 from typing import Union, Optional
 
 from chrisomatic.spec.common import User, ComputeResource, Pipeline
@@ -27,7 +26,7 @@ class GivenChrisStore(GivenBackend):
 
 @deserialize
 class GivenCubePlugin:
-    url: Optional[StorePluginUrl] = None
+    url: Optional[PluginUrl] = None
     name: Optional[PluginName] = None
     version: Optional[PluginVersion] = None
     dock_image: Optional[ImageTag] = None
@@ -44,6 +43,6 @@ class GivenCube(GivenBackend):
 @deserialize
 class GivenConfig:
     version: str
-    to: dict
+    on: On
     cube: GivenCube
     chris_store: GivenChrisStore

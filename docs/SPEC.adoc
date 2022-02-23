@@ -13,30 +13,30 @@ Not all fields are required. Most of them can be guessed or inferred.
 
 Type: Literal[1.0]
 
-=== to
+=== on
 
 Information about the _ChRIS_ system.
 
-==== to.cube_url
+==== on.cube_url
 
 Type: string
 
 URL of _ChRIS_ backend.
 
-==== to.chris_store_url
+==== on.chris_store_url
 
 Type: string
 
 URL of _ChRIS_ store backend.
 
-==== to.chris_superuser
+==== on.chris_superuser
 
 Type: <<User>>
 
 Admin user of _ChRIS_ backend, i.e.
 user who is able to register plugins to _ChRIS_.
 
-==== to.public_store
+==== on.public_store
 
 Type: list[string]
 

@@ -31,7 +31,7 @@ This file describes your _ChRIS_ system and what to add to it.
 Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
-to:
+on:
   cube_url: http://localhost:8000/api/v1/
   chris_superuser:
     username: chris

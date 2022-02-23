@@ -137,7 +137,7 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     assert await normal_cube_client.plugin_exists(name_exact=plugin_name)
 
     computes = await to_sequence(normal_cube_client.get_compute_resources_of(registered_plugin))
-    assert computes == (created_compute_env,)
+    assert computes == [created_compute_env]
 
 
 @pytest.fixture
