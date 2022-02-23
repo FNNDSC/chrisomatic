@@ -2,7 +2,15 @@ class BaseClientError(Exception):
     pass
 
 
-class BadRequestError(BaseClientError):
+class ResponseError(BaseClientError):
+    pass
+
+
+class BadRequestError(ResponseError):
+    pass
+
+
+class InternalServerError(ResponseError):
     pass
 
 

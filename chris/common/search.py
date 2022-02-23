@@ -7,7 +7,7 @@ and `https://cube.chrisproject.org/api/v1/plugins/search/`
 are analogous but one wouldn't make sense in the context
 of the other.
 """
-from typing import NewType, Optional, TypeVar, Any, AsyncGenerator, Type, AsyncIterable
+from typing import NewType, Optional, TypeVar, Any, AsyncGenerator, Type, AsyncIterable, Any
 
 import aiohttp
 from serde import deserialize, from_dict
@@ -46,6 +46,12 @@ async def peek(x: AsyncIterable[T], mt: Type[Exception] = ValueError) -> T:
     async for e in x:
         return e
     raise mt('x is empty')
+
+
+async def hasnext(x: AsyncIterable[Any]) -> bool:
+    async for _ in x:
+        return True
+    return False
 
 
 class TooMuchPaginationException(Exception):

@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  chrisomatic_test:
+    build:
+      context: ..
+      dockerfile: testing_harness/Dockerfile
+    networks:
+      minichris:
+    userns_mode: host
+    command: pytest --color=yes --code-highlight=yes -o cache_dir=/var/cache/pytest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      - "../:/usr/local/src/chrisomatic:ro"
+      - "pytest-cache:/var/cache/pytest:rw"
+
+networks:
+  minichris:
+    external: true
+    name: minichris_local
+
+volumes:
+  pytest-cache:

@@ -16,5 +16,6 @@ venv
 .idea/
 .vscode/
 
-docs/examples/
+docs/
+testing_harness/
 

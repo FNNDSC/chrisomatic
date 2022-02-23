@@ -64,3 +64,17 @@ class CubePlugin(Plugin):
 #     "instances": "http://localhost:8000/api/v1/plugins/5/instances/",
 #     "compute_resources": "http://localhost:8000/api/v1/plugins/5/computeresources/"
 # }
+
+
+@deserialize
+@dataclass(frozen=True)
+class ComputeResource:
+    url: ApiUrl
+    id: int
+    creation_date: str
+    modification_date: str
+    name: ComputeResourceName
+    compute_url: str
+    compute_auth_url: str
+    description: str
+    max_job_exec_seconds: int

@@ -1,7 +1,7 @@
-FROM python:3.10.2-alpine
+FROM ghcr.io/fnndsc/python-poetry:1.1.13
 
-WORKDIR /usr/local/src/chrisstore-client
-COPY chris-client .
-RUN pip install -r requirements.txt && pip install .
+WORKDIR /usr/local/src/chrisomatic
+COPY . .
+RUN poetry install --no-dev
 
-COPY org /usr/share/ansible/plugins/modules
+CMD ["chrisomatic"]

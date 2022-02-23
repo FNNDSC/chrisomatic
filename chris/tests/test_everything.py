@@ -10,7 +10,9 @@ from chris.common.deserialization import CreatedUser
 from chris.cube.client import CubeClient
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
+from chris.cube.deserialization import ComputeResource, CubePlugin
 from chris.tests.examples.plugin_description import pl_nums2mask
+import warnings
 
 C = TypeVar('C', bound=AuthenticatedClient)
 
@@ -71,28 +73,67 @@ async def chris_store_client(session, chris_store_url, some_name) -> ChrisStoreC
 
 
 @pytest.fixture
-async def cube_client(session, cube_url, some_name) -> CubeClient:
+async def normal_cube_client(session, cube_url, some_name) -> CubeClient:
     async with create_user_and_client(session, CubeClient, cube_url, some_name) as client:
         yield client
 
 
-async def test_upload_and_register(chris_store_client: ChrisStoreClient,
-                                   normal_cube_client: CubeClient,
-                                   # superuser_cube_client: CubeClient,
-                                   some_name: str, example_plugin: Path):
+@pytest.fixture
+async def superuser_cube_client(session, cube_url, cube_superuser) -> CubeClient:
+    cm = await CubeClient.from_login(url=cube_url,
+                                     connector=session.connector,
+                                     connector_owner=False,
+                                     **cube_superuser)
+    async with cm as client:
+        yield client
+    assert client
+
+
+async def test_upload_to_store(chris_store_client: ChrisStoreClient,
+                               normal_cube_client: CubeClient,
+                               superuser_cube_client: CubeClient,
+                               in_docker_network: bool,
+                               some_name: str, example_plugin: Path):
+    plugin_name = f'test-{some_name}'
     dock_image = f'localhost/fnndsc/pl-nums2mask:{some_name}'
+    assert not await chris_store_client.plugin_exists(name_exact=plugin_name)
+    assert not await chris_store_client.plugin_exists(dock_image=dock_image)
+    assert not await normal_cube_client.plugin_exists(name_exact=plugin_name)
+    assert not await normal_cube_client.plugin_exists(dock_image=dock_image)
     uploaded_plugin = await chris_store_client.upload_plugin(
-        name=f'test-{some_name}',
+        name=plugin_name,
         dock_image=dock_image,
         public_repo=f'https://github.com/FNNDSC/{some_name}',
         descriptor_file=example_plugin
     )
     get_uploaded = await chris_store_client.get_first_plugin(dock_image=dock_image)
     assert uploaded_plugin.id == get_uploaded.id
+    assert await chris_store_client.plugin_exists(name_exact=plugin_name)
+    assert await chris_store_client.plugin_exists(dock_image=dock_image)
 
-    # TODO
-    # registered_plugin = await cube_client.register_plugin(get_uploaded.url, ComputeResourceName('host'))
-    # assert registered_plugin.dock_image == dock_image
+    compute_env_name = ComputeResourceName(f'test-{some_name}')
+    created_compute_env: ComputeResource = await superuser_cube_client.create_compute_resource(
+        name=compute_env_name,
+        compute_url=f'https://example.com/{some_name}/api/v1/',
+        compute_user=f'test-pfconuser-{some_name}',
+        compute_password=f'test-pfconpassword-{some_name}',
+    )
+    assert created_compute_env.name == compute_env_name
+
+    if not in_docker_network:
+        warnings.warn(UserWarning(
+            f'Cannot register plugin {uploaded_plugin.url} '
+            'when testing from outside the Docker network.'
+        ))
+        return
+
+    registered_plugin: CubePlugin = await superuser_cube_client.register_plugin(
+        plugin_store_url=uploaded_plugin.url,
+        compute_name=compute_env_name
+    )
+    assert registered_plugin.name == plugin_name
+    assert registered_plugin.dock_image == dock_image
+    assert await normal_cube_client.plugin_exists(name_exact=plugin_name)
 
 
 @pytest.fixture
