@@ -18,8 +18,8 @@ from chrisomatic.spec.given import On
 class SuperClientFactory(ChrisomaticTask[SuperClient]):
 
     on: On
-    connector: Optional[aiohttp.BaseConnector]
-    connector_owner: bool
+    connector: Optional[aiohttp.BaseConnector] = None
+    connector_owner: bool = True
     docker: aiodocker.Docker = dataclasses.field(default_factory=aiodocker.Docker)
     attempt: int = 0
 
@@ -30,7 +30,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             status=f'checking for superuser: username={user.username}'
         )
 
-    def run(self, emit: State) -> tuple[Outcome, Optional[SuperClient]]:
+    async def run(self, emit: State) -> tuple[Outcome, Optional[SuperClient]]:
         """
         Constructor for `SuperClient`.
         Create a `CubeClient` with the given superuser credentials.
@@ -47,7 +47,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             )
             emit.status = 'connected!'
             outcome = Outcome.NO_CHANGE
-            superclient = await self.__from_client(cube, self.docker, self.on, emit)
+            superclient = await self.__from_client(cube, emit)
         except IncorrectLoginError:
             if self.attempt >= 1:
                 # previously tried to create new superuser, but still

@@ -1,13 +1,13 @@
 """
 Everything to do with the rich display and parallel execution of tasks.
 """
-
+import abc
 import asyncio
 from rich.console import RenderableType, ConsoleRenderable, StyleType
 from rich.text import Text
 from rich.live import Live
 from rich.table import Table, Column
-from rich.panel import Panel
+# from rich.panel import Panel
 from rich.spinner import Spinner
 from typing import Sequence, ClassVar, TypeVar, Generic
 from dataclasses import dataclass, InitVar
@@ -51,6 +51,21 @@ class _RunningTask(Generic[_R]):
                     style=self.outcome.style if self.done() else None)
 
 
+@dataclass
+class TaskSet(Generic[_R]):
+    """
+    A `TaskSet` executes multiple `ChrisomaticTask` concurrently.
+    """
+    tasks: Sequence[ChrisomaticTask[_R]]
+
+    @abc.abstractmethod
+    async def apply(self) -> Sequence[tuple[Outcome, _R]]:
+        """
+        Execute all tasks in parallel.
+        """
+        ...
+
+
 @dataclass(frozen=True)
 class TableDisplayConfig:
     refresh_per_second: float = 15
@@ -64,12 +79,11 @@ _DEFAULT_DISPLAY_CONFIG = TableDisplayConfig()
 
 
 @dataclass
-class TaskSet(Generic[_R]):
+class TableTaskSet(TaskSet[_R]):
     """
-    A `TaskSet` executes multiple `ChrisomaticTask` concurrently.
+    `TableTaskSet` is more suitable for task sets which have few tasks,
+    and tasks that take a long time.
     """
-    title: str
-    tasks: Sequence[ChrisomaticTask[_R]]
     config: TableDisplayConfig = _DEFAULT_DISPLAY_CONFIG
 
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
@@ -93,14 +107,25 @@ class TaskSet(Generic[_R]):
         )
         for running_task in tasks:
             table.add_row(*running_task.to_row())
-        panel = Panel(
-            table,
-            title=self.title,
-            title_align='left',
-            border_style=self.config.border_style,
-        )
-        return panel
+        # panel = Panel(
+        #     table,
+        #     title=self.title,
+        #     title_align='left',
+        #     border_style=self.config.border_style,
+        # )
+        # return panel
+        return table
 
     @staticmethod
     def _all_done(tasks: Sequence[_RunningTask]) -> bool:
         return all(t.done() for t in tasks)
+
+
+@dataclass
+class ProgressTaskSet(TaskSet[_R]):
+    """
+    `ProgressTaskSet` is more suitable for a set of many quick tasks.
+    """
+
+    def apply(self) -> Sequence[tuple[Outcome, _R]]:
+        ...

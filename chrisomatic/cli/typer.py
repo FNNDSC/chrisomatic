@@ -1,3 +1,4 @@
+import asyncio
 import typer
 import sys
 from pathlib import Path
@@ -7,8 +8,6 @@ import chrisomatic
 from chrisomatic.spec.deserialize import deserialize_config
 from chrisomatic.cli.apply import apply as apply_from_config
 from chrisomatic.spec.deserialize import InputError
-
-app = typer.Typer()
 
 
 def show_version(value: bool):
@@ -21,21 +20,26 @@ def show_version(value: bool):
     raise typer.Exit()
 
 
-# noinspection PyUnusedLocal
-@app.callback()
-def entry(
+app = typer.Typer(add_completion=False)
+
+# # noinspection PyUnusedLocal
+# @app.callback()
+# def entry(
+#         version: Optional[bool] = typer.Option(
+#             None, '--version', '-V', callback=show_version,
+#             is_eager=True, help='Print version.')
+# ):
+#     """
+#     ChRIS backend management.
+#     """
+#     pass
+
+
+@app.command(context_settings={'help_option_names': ['-h', '--help']})
+def apply(
         version: Optional[bool] = typer.Option(
             None, '--version', '-V', callback=show_version,
-            is_eager=True, help='Print version.')
-):
-    """
-    ChRIS backend management.
-    """
-    pass
-
-
-@app.command()
-def apply(
+            is_eager=True, help='Print version.'),
         file: Path = typer.Argument(
             exists=True,
             file_okay=True,
@@ -64,18 +68,13 @@ def apply(
         raise typer.Abort()
 
     typer.echo(config)
-    # try:
-    #     apply_from_config(input_config)
-    # except InputError as e:
-    #     typer.secho(f'Error parsing {file}: {e.args[0]}',
-    #                 err=True, color=typer.colors.RED)
-    #     raise typer.Abort()
+    asyncio.run(apply_from_config(config))
 
 
-@app.command()
-def export():
-    """
-    Analyze a running ChRIS backend and save its state to a file.
-    """
-    typer.echo('not implemented.')
-    raise typer.Abort()
+# @app.command()
+# def export():
+#     """
+#     Analyze a running ChRIS backend and save its state to a file.
+#     """
+#     typer.echo('not implemented.')
+#     raise typer.Abort()
