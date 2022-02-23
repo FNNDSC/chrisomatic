@@ -23,6 +23,7 @@ Type: string
 
 URL of _ChRIS_ backend.
 
+[#chris_store_url]
 ==== on.chris_store_url
 
 Type: string
@@ -36,6 +37,7 @@ Type: <<User>>
 Admin user of _ChRIS_ backend, i.e.
 user who is able to register plugins to _ChRIS_.
 
+[#public_store]
 ==== on.public_store
 
 Type: list[string]
@@ -90,13 +92,13 @@ Type: string
 
 Type: string
 
+[#cube_plugins]
 ==== cube.plugins
 
-Type: list[string | <<Plugin>>]
+Type: list[string | Plugin]
 
-If value is a string, then try to guess whether it represents
-a <<plugin_url,ChRIS store url>>, <<plugin_name,plugin name>>,
-<<plugin_dock_image,image tag>>, or
+If value is a string, then it may represent any of: <<plugin_url,ChRIS store url>>, <<plugin_name,plugin name>>,
+<<plugin_dock_image,image tag>>,
 <<plugin_public_repo,code repository URL>>.
 
 [#plugin_url]
@@ -133,6 +135,7 @@ Type: str
 
 URL of a source code repository, e.g. `https://github.com/FNNDSC/pl-dircopy`
 
+[#plugins_compute_resource]
 ===== cube.plugins[*].compute_resource
 
 Type: list[str]

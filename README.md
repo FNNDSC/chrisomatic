@@ -23,7 +23,7 @@ the command `chrisomatic apply`.
 ### Configuration File
 
 A subset of a _ChRIS_ backend's state (users, plugins, pipelines, compute
-environments) can be described statically by the _ChRISomatic_ spec.
+environments) can be described statically by the _ChRISomatic_ schema.
 
 First, create a configuration file called `chrisomatic.yml`.
 This file describes your _ChRIS_ system and what to add to it.
@@ -72,19 +72,7 @@ or were created from
 
 ##### Advanced
 
-Read the complete spec: [docs/SPEC.adoc](docs/SPEC.adoc)
-
-By default, plugins are registered to every compute environment listed.
-This behavior can be changed by specifying plugins in object form:
-
-```yaml
-cube:
-  plugins:
-    - name: pl-fastsurfer_inference
-      compute_resource:
-        - host
-        - moc
-```
+Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/interpretation.adoc).
 
 ### Running `chrisomatic`
 

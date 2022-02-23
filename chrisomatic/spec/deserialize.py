@@ -8,6 +8,10 @@ class InputError(Exception):
     pass
 
 
-def deserialize_config(input_config: str, filename: str) -> dict:
+def deserialize_config(input_config: str, filename: str):
+    return _load_from_yaml(input_config, filename)
+
+
+def _load_from_yaml(input_config: str, filename: str) -> GivenConfig:
     parsed_yaml = load(input_config, schema=schema, label=filename)
-    return parsed_yaml.data
+    return from_dict(GivenConfig, parsed_yaml.data)

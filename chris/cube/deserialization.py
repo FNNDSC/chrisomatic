@@ -4,7 +4,7 @@ from chris.common.types import ApiUrl, UserUrl
 from chris.common.search import PaginatedUrl
 from chris.common.atypes import AuthenticatedCollectionLinks
 from chris.common.deserialization import Plugin
-from chris.cube.types import AdminUrl, ComputeResourceName
+from chris.cube.types import AdminUrl, ComputeResourceName, ComputeResourceId
 
 
 @deserialize
@@ -71,7 +71,7 @@ class CubePlugin(Plugin):
 @dataclass(frozen=True)
 class ComputeResource:
     url: ApiUrl
-    id: int
+    id: ComputeResourceId
     creation_date: str
     modification_date: str
     name: ComputeResourceName
