@@ -135,6 +135,9 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     assert registered_plugin.dock_image == dock_image
     assert await normal_cube_client.plugin_exists(name_exact=plugin_name)
 
+    computes = [c async for c in normal_cube_client.get_compute_resources_of(registered_plugin)]
+    assert computes == [created_compute_env]
+
 
 @pytest.fixture
 def example_plugin(tmp_path: Path) -> Path:

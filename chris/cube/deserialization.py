@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from serde import deserialize
 from chris.common.types import ApiUrl, UserUrl
+from chris.common.search import PaginatedUrl
 from chris.common.atypes import AuthenticatedCollectionLinks
 from chris.common.deserialization import Plugin
 from chris.cube.types import AdminUrl, ComputeResourceName
@@ -29,7 +30,7 @@ class ChrisAdminCollectionLinks:
 @deserialize
 @dataclass(frozen=True)
 class CubePlugin(Plugin):
-    compute_resources: ApiUrl
+    compute_resources: PaginatedUrl
 
 # {
 #     "url": "http://localhost:8000/api/v1/plugins/5/",

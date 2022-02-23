@@ -14,7 +14,7 @@ from serde import deserialize, from_dict
 from serde.json import from_json
 
 
-PaginatedUrl = NewType('PluginSearchUrl', str)
+PaginatedUrl = NewType('PaginatedUrl', str)
 T = TypeVar('T')
 
 

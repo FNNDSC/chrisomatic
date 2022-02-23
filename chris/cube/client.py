@@ -1,7 +1,8 @@
 from serde.json import from_json
-from typing import Type, TypeVar
+from typing import Type, TypeVar, AsyncIterable
 from chris.common.types import PluginUrl
 from chris.common.client import AuthenticatedClient
+from chris.common.search import get_paginated
 import chris.common.decorator as http
 from chris.cube.types import ComputeResourceName
 from chris.cube.deserialization import CubeCollectionLinks, CubePlugin, ComputeResource
@@ -24,3 +25,10 @@ class CubeClient(AuthenticatedClient[CubeCollectionLinks, 'CubeClient']):
                                       description: str = '',
                                       ) -> ComputeResource:
         ...
+
+    def get_compute_resources_of(self, plugin: CubePlugin) -> AsyncIterable[ComputeResource]:
+        return get_paginated(
+            session=self.s,
+            url=plugin.compute_resources,
+            element_type=ComputeResource
+        )
