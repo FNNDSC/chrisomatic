@@ -54,5 +54,9 @@ async def hasnext(x: AsyncIterable[Any]) -> bool:
     return False
 
 
+async def to_sequence(async_iterable: AsyncIterable[T]) -> tuple[T, ...]:
+    return tuple(e async for e in async_iterable)
+
+
 class TooMuchPaginationException(Exception):
     pass

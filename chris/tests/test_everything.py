@@ -10,6 +10,7 @@ from chris.common.deserialization import CreatedUser
 from chris.cube.client import CubeClient
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
+from chris.common.search import to_sequence
 from chris.cube.deserialization import ComputeResource, CubePlugin
 from chris.tests.examples.plugin_description import pl_nums2mask
 import warnings
@@ -135,8 +136,8 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     assert registered_plugin.dock_image == dock_image
     assert await normal_cube_client.plugin_exists(name_exact=plugin_name)
 
-    computes = [c async for c in normal_cube_client.get_compute_resources_of(registered_plugin)]
-    assert computes == [created_compute_env]
+    computes = await to_sequence(normal_cube_client.get_compute_resources_of(registered_plugin))
+    assert computes == (created_compute_env,)
 
 
 @pytest.fixture
