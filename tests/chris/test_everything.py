@@ -12,7 +12,7 @@ from chris.cube.types import ComputeResourceName
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
 from chris.common.search import to_sequence
 from chris.cube.deserialization import ComputeResource, CubePlugin
-from chris.tests.examples.plugin_description import pl_nums2mask
+from tests.chris.examples.plugin_description import pl_nums2mask
 import warnings
 
 C = TypeVar('C', bound=AuthenticatedClient)

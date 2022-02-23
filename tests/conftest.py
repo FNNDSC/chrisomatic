@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 import aiohttp
+import aiodocker
 from typing import TypedDict
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword
 
@@ -19,6 +20,14 @@ def event_loop():
 async def session(event_loop) -> aiohttp.ClientSession:
     async with aiohttp.ClientSession(loop=event_loop) as session:
         yield session
+
+
+@pytest.fixture(scope='session')
+async def docker(event_loop):
+    async with aiohttp.UnixConnector('/var/run/docker.sock', loop=event_loop) as connector:
+        d = aiodocker.Docker(url='unix://localhost', connector=connector)
+        yield d
+        await d.close()
 
 
 minichris_cube_url = ChrisURL('http://chris:8000/api/v1/')
