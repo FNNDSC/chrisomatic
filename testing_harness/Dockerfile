@@ -6,4 +6,4 @@ COPY poetry.lock .
 COPY pyproject.toml .
 RUN poetry install --no-root
 
-CMD ["pytest"]
+CMD ["python", "-m", "chrisomatic.cli.noop"]

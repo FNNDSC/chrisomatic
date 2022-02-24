@@ -1,23 +1,18 @@
 version: "3.8"
 
 services:
-  chrisomatic_test:
+  dev:
     build:
       context: ..
       dockerfile: testing_harness/Dockerfile
     networks:
       minichris:
     userns_mode: host
-    command: /testing_harness/entrypoint.sh
-    environment:
-      program: ${program:-pytest}
-    tty: true
-    stdin_open: true
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
       - "../:/usr/local/src/chrisomatic:ro"
       - "pytest-cache:/var/cache/pytest:rw"
-      - "./:/testing_harness:ro"
+      - "./scripts:/t:ro"
 
 networks:
   minichris:

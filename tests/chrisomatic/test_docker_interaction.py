@@ -1,6 +1,6 @@
 import pytest
 import aiodocker
-from chrisomatic.core.superuser import find_cube
+from chrisomatic.core.docker import find_cube
 from chrisomatic.core.expand import is_local_image
 
 

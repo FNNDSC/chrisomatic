@@ -1,5 +1,3 @@
-import os
-import logging
 import asyncio
 import typer
 import sys
@@ -10,6 +8,7 @@ import chrisomatic
 from chrisomatic.spec.deserialize import deserialize_config
 from chrisomatic.cli import Gstr_title, console
 from chrisomatic.cli.apply import apply as apply_from_config
+from chrisomatic.cli.noop import wait_on_cube
 from chrisomatic.spec.deserialize import InputError
 
 
@@ -25,24 +24,22 @@ def show_version(value: bool):
 
 app = typer.Typer(add_completion=False)
 
-# # noinspection PyUnusedLocal
-# @app.callback()
-# def entry(
-#         version: Optional[bool] = typer.Option(
-#             None, '--version', '-V', callback=show_version,
-#             is_eager=True, help='Print version.')
-# ):
-#     """
-#     ChRIS backend management.
-#     """
-#     pass
+
+# noinspection PyUnusedLocal
+@app.callback()
+def entry(
+        version: Optional[bool] = typer.Option(
+            None, '--version', '-V', callback=show_version,
+            is_eager=True, help='Print version.')
+):
+    """
+    ChRIS backend management.
+    """
+    pass
 
 
 @app.command(context_settings={'help_option_names': ['-h', '--help']})
 def apply(
-        version: Optional[bool] = typer.Option(
-            None, '--version', '-V', callback=show_version,
-            is_eager=True, help='Print version.'),
         file: Path = typer.Argument(
             exists=True,
             file_okay=True,
@@ -72,6 +69,14 @@ def apply(
 
     console.print(Gstr_title)
     asyncio.run(apply_from_config(config))
+
+
+@app.command()
+def noop():
+    """
+    Block by waiting on the CUBE container.
+    """
+    asyncio.run(wait_on_cube())
 
 
 # @app.command()
