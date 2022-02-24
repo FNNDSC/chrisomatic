@@ -20,44 +20,11 @@ data = {
         'public_store': [],
     },
     'chris_store': {
-        'users': [
-            {
-                'username': f'try-{stamp}-a',
-                'password': f'trying1234a'
-            },
-            {
-                'username': f'try-{stamp}-b',
-                'password': f'trying1234b'
-            }
-        ]
+        'users': []
     },
     'cube': {
-        'users': [
-            {
-                'username': f'try-{stamp}-c',
-                'password': f'trying1234c'
-            },
-            {
-                'username': f'try-{stamp}-d',
-                'password': f'trying1234d'
-            },
-        ],
-        'compute_resource': [
-            {
-                'name': f'try-{stamp}-cr-a',
-                'url': 'http://example.com/',
-                'username': 'trycra',
-                'password': 'doesntmatter',
-                'description': f'trial A created on {now}'
-            },
-            {
-                'name': f'try-{stamp}-cr-b',
-                'url': 'http://example.com/',
-                'username': 'trycrb',
-                'password': 'doesntmatter',
-                'description': f'trial B created on {now}'
-            },
-        ],
+        'users': [],
+        'compute_resource': [],
         'plugins': [
             'docker.io/fnndsc/pl-tsdircopy:1.2.1',
             'localhost/fnndsc/pl-chrisomatic',
@@ -69,6 +36,23 @@ data = {
         ]
     }
 }
+
+for letter in 'abcdefgh':
+    data['cube']['compute_resource'].append({
+        'name': f'try-{stamp}-cr-{letter}',
+        'url': f'https://example.com/computeresource/{letter.upper()}/api/v1/',
+        'username': f'trycr{letter}',
+        'password': 'doesntmatter',
+        'description': f'trial {letter} created on {now}'
+    })
+    data['chris_store']['users'].append({
+        'username': f'try-{stamp}-{letter}',
+        'password': f'trying1234{letter}'
+    })
+    data['cube']['users'].append({
+        'username': f'try-{stamp}-{letter * 3}',
+        'password': f'trying1234{letter * 3}'
+    })
 
 yaml = as_document(data, schema=schema)
 print(yaml.as_yaml())
