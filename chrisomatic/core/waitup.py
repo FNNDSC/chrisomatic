@@ -43,14 +43,14 @@ class WaitUp(ChrisomaticTask[float]):
                     res = await session.get(self.url)
                     elapsed_time = time.monotonic() - start_time
                     if res.status == self.good_status:
-                        emit.status = f'server is ready after {elapsed_time}s'
+                        emit.status = f'server is ready after {elapsed_time:.1f}s'
                         return Outcome.NO_CHANGE, elapsed_time
                     emit.status = f'bad status={res.status} (expected {self.good_status})'
                     return Outcome.FAILED, elapsed_time
                 except aiohttp.ClientConnectorError:
                     await asyncio.sleep(self.interval)
         elapsed_time = time.monotonic() - start_time
-        emit.status = f'timed out after {elapsed_time}s'
+        emit.status = f'timed out after {elapsed_time:.1f}s'
         return Outcome.FAILED, elapsed_time
 
 
