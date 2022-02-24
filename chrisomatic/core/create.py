@@ -7,7 +7,7 @@ from chris.common.types import ChrisURL
 from chris.common.errors import IncorrectLoginError
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
-from chrisomatic.core.superuser import create_superuser
+from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
 from chrisomatic.core.superclient import SuperClient
 from chrisomatic.framework.task import ChrisomaticTask, State
 from chrisomatic.spec.given import On
@@ -60,7 +60,10 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             if superclient is None:
                 await asyncio.gather(cube.close(), self.docker.close())
                 return Outcome.FAILED, None
-
+        except aiohttp.ClientError as e:
+            emit.status = str(e)
+            await self.docker.close()
+            return Outcome.FAILED, None
         except IncorrectLoginError:
             if self.attempt >= 1:
                 # previously tried to create new superuser, but still
@@ -70,10 +73,14 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
 
             # couldn't log in as superuser, so create new superuser
             emit.status = f'Creating superuser "{user.username}" ...'
-            await create_superuser(self.docker, user)
+            try:
+                await create_superuser(self.docker, user)
+            except SuperuserCreationError as e:
+                emit.status = str(e)
+                return Outcome.FAILED, None
             emit.status = f'Superuser "{user.username}" created.'
             second_attempt = dataclasses.replace(self, attempt=self.attempt + 1)
-            outcome, superclient = second_attempt.run(emit)
+            outcome, superclient = await second_attempt.run(emit)
             if outcome != Outcome.FAILED:
                 outcome = Outcome.CHANGE
                 emit.status = f'created new superuser: "{user.username}"'

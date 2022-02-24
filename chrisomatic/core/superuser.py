@@ -35,12 +35,13 @@ async def create_superuser(docker: aiodocker.Docker, user: User) -> None:
     print(user.username, end='')
     """)
     cmd = ('python', 'manage.py', 'shell', '-c', script)
-    exec = await cube.exec(cmd)
-    exec.start(detach=True)
-    cmd = ('python', '-c', 'print("hello from container")')
+    # exec = await cube.exec(cmd)
+    # await exec.start(detach=True)
+    # cmd = ('python', '-c', 'print("hello from container")')
     exec_instance = await cube.exec(cmd)
     async with exec_instance.start(detach=False) as stream:
-        output_bytes: bytes = await stream.read_out()
+        output_message = await stream.read_out()
+        output_bytes = output_message.data
         output: str = output_bytes.decode('utf-8')
         if output != user.username:
             raise SuperuserCreationError(

@@ -8,11 +8,16 @@ services:
     networks:
       minichris:
     userns_mode: host
-    command: pytest --color=yes --code-highlight=yes -o cache_dir=/var/cache/pytest
+    command: /testing_harness/entrypoint.sh
+    environment:
+      program: ${program:-pytest}
+    tty: true
+    stdin_open: true
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
       - "../:/usr/local/src/chrisomatic:ro"
       - "pytest-cache:/var/cache/pytest:rw"
+      - "./:/testing_harness:ro"
 
 networks:
   minichris:
