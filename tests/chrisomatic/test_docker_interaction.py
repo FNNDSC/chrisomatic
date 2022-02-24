@@ -37,6 +37,7 @@ async def test_check_output_nonzero(docker: aiodocker.Docker):
 
 async def test_check_output(docker: aiodocker.Docker):
     assert await check_output(docker, 'alpine', ('printf', 'hello dude')) == 'hello dude'
+    assert await check_output(docker, 'alpine', ('printf', r'hello\ndude')) == 'hello\ndude'
 
 
 async def test_get_cmd(docker: aiodocker.Docker):

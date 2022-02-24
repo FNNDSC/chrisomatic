@@ -6,12 +6,12 @@ from tempfile import NamedTemporaryFile
 from typing import Sequence, Optional, Collection, Callable, Awaitable
 
 import aiodocker
-import aiohttp
-from rich.text import Text
 
+from rich.text import Text
 from chris.common.deserialization import Plugin
 from chris.common.search import to_sequence
 from chris.common.types import PluginUrl, PluginName, ImageTag, ChrisUsername
+from chris.common.errors import BadRequestError
 from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
@@ -114,8 +114,11 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             emit.status = f'failures: {exceptions}'
             return Outcome.FAILED, None
         if len(registrations) == 0:
+            # probably shouldn't reach here
             emit.status = f'Did not register to any compute environment'
             return Outcome.NO_CHANGE, None
+
+        emit.status = registrations[0].url
         return Outcome.CHANGE, PluginRegistration(
             plugin=registrations[0],
             from_url=plugin_in_store.url,
@@ -179,14 +182,15 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         inferred = InferredPluginInfo.from_given(self.plugin)
         with NamedTemporaryFile('w', suffix='.json') as temp:
             temp.write(json_representation)
+            temp.flush()
             try:
                 uploaded_plugin = await self.linked_store.upload_plugin(
                     name=inferred.name, dock_image=inferred.dock_image,
                     public_repo=inferred.public_repo,
                     descriptor_file=Path(temp.name)
                 )
-            except aiohttp.ClientResponseError as e:
-                emit.status = Text(str(e), style='bold red')
+            except BadRequestError as e:
+                emit.status = str(e)
                 return None
         return uploaded_plugin
 

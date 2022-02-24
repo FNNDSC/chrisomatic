@@ -63,7 +63,7 @@ async def check_output(docker: aiodocker.Docker,
         if info['State']['ExitCode'] != 0:
             raise NonZeroExitCodeError(info)
         output = await container.log(stdout=True)
-        return output[0]
+        return ''.join(output)
 
 
 async def get_cmd(docker: aiodocker.Docker, image: str) -> list[str]:

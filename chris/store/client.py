@@ -9,6 +9,7 @@ import aiohttp
 from serde.json import from_json
 from typing import TypeVar
 from chris.common.client import AbstractClient, AnonymousClient, AuthenticatedClient
+from chris.common.errors import BadRequestError
 
 
 _L = TypeVar('_L', bound=AnonymousCollectionLinks)
@@ -37,6 +38,9 @@ class ChrisStoreClient(AuthenticatedClient[StoreCollectionLinks, Plugin, 'ChrisS
                        filename=descriptor_file.name, content_type='application/json')
         res = await self.s.post(
             self.collection_links.plugins,
-            data=form
+            data=form,
+            raise_for_status=False
         )
+        if res.status >= 400:
+            raise BadRequestError(res.status, await res.text())
         return from_json(Plugin, await res.text())
