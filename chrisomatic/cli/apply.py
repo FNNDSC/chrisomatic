@@ -3,7 +3,6 @@ from chrisomatic.cli import console
 from chrisomatic.spec.given import GivenConfig
 from chrisomatic.core.create import create_super_client
 from chrisomatic.framework.outcome import Outcome
-from chrisomatic.framework.taskset import TableTaskSet
 
 
 async def apply(config: GivenConfig):

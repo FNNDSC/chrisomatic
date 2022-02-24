@@ -7,9 +7,9 @@ from rich.console import RenderableType, ConsoleRenderable, StyleType
 from rich.text import Text
 from rich.live import Live
 from rich.table import Table, Column
-# from rich.panel import Panel
+from rich.progress import Progress, TaskID
 from rich.spinner import Spinner
-from typing import Sequence, ClassVar, TypeVar, Generic
+from typing import Sequence, ClassVar, TypeVar, Generic, Awaitable
 from dataclasses import dataclass, InitVar
 from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
@@ -17,7 +17,7 @@ _R = TypeVar('_R')
 
 
 @dataclass
-class _RunningTask(Generic[_R]):
+class _RunningTableTask(Generic[_R]):
 
     chrisomatic_task: InitVar[ChrisomaticTask[_R]]
     task: ClassVar[asyncio.Task]
@@ -52,9 +52,9 @@ class _RunningTask(Generic[_R]):
 
 
 @dataclass
-class TaskSet(Generic[_R]):
+class TaskRunner(Generic[_R]):
     """
-    A `TaskSet` executes multiple `ChrisomaticTask` concurrently.
+    A `TaskRunner` executes multiple `ChrisomaticTask` concurrently.
     """
     tasks: Sequence[ChrisomaticTask[_R]]
 
@@ -79,9 +79,9 @@ _DEFAULT_DISPLAY_CONFIG = TableDisplayConfig()
 
 
 @dataclass
-class TableTaskSet(TaskSet[_R]):
+class TableTaskRunner(TaskRunner[_R]):
     """
-    `TableTaskSet` is more suitable for task sets which have few tasks,
+    `TableTaskRunner` is more suitable for task sets which have few tasks,
     and tasks that take a long time.
     """
     config: TableDisplayConfig = _DEFAULT_DISPLAY_CONFIG
@@ -90,7 +90,7 @@ class TableTaskSet(TaskSet[_R]):
         """
         Execute all tasks in parallel while displaying a table that shows their live statuses.
         """
-        running_tasks = tuple(_RunningTask(t) for t in self.tasks)
+        running_tasks = tuple(_RunningTableTask(t) for t in self.tasks)
         with Live(self._render(running_tasks),
                   refresh_per_second=self.config.refresh_per_second) as live:
             while not self._all_done(running_tasks):
@@ -98,7 +98,7 @@ class TableTaskSet(TaskSet[_R]):
                 live.update(self._render(running_tasks))
         return tuple(t.result() for t in running_tasks)
 
-    def _render(self, tasks: Sequence[_RunningTask]) -> ConsoleRenderable:
+    def _render(self, tasks: Sequence[_RunningTableTask]) -> ConsoleRenderable:
         table = Table.grid(
             Column(width=3, justify='center'),
             Column(ratio=1, min_width=20, max_width=120),
@@ -117,15 +117,50 @@ class TableTaskSet(TaskSet[_R]):
         return table
 
     @staticmethod
-    def _all_done(tasks: Sequence[_RunningTask]) -> bool:
+    def _all_done(tasks: Sequence[_RunningTableTask]) -> bool:
         return all(t.done() for t in tasks)
 
 
 @dataclass
-class ProgressTaskSet(TaskSet[_R]):
+class ProgressTaskRunner(TaskRunner[_R]):
     """
-    `ProgressTaskSet` is more suitable for a set of many quick tasks.
+    `ProgressTaskRunner` is a task runner which displays a progress bar that updates
+    after the completion of a `ChrisomaticTask`.
+    It is more suitable for a set of many quick tasks.
     """
 
-    def apply(self) -> Sequence[tuple[Outcome, _R]]:
-        ...
+    title: str
+    noisy: bool = True
+
+    async def apply(self) -> Sequence[tuple[Outcome, _R]]:
+        with Progress() as progress:
+            progress_task = progress.add_task(f'[yellow]{self.title}', total=len(self.tasks))
+            return await asyncio.gather(*(
+                self.wrap_update(progress, progress_task, ct)
+                for ct in self.tasks
+            ))
+
+    def wrap_update(self,
+                    progress: Progress,
+                    progress_task: TaskID,
+                    chrisomatic_task: ChrisomaticTask
+                    ) -> Awaitable[tuple[Outcome, _R]]:
+        """
+        Wrap a `ChrisomaticTask` so that it updates a progress bar after it finishes.
+        """
+        async def run_and_update() -> tuple[Outcome, _R]:
+            state = chrisomatic_task.initial_state()
+            outcome, result = await chrisomatic_task.run(state)
+            progress.update(progress_task, advance=1)
+            if self.noisy:
+                msg = self.__format_noise(outcome, state)
+                progress.console.print(msg)
+            return outcome, result
+        return run_and_update()
+
+    @staticmethod
+    def __format_noise(outcome: Outcome, state: State) -> Text:
+        t = Text()
+        t.append(f'[{state.title}]', style=outcome.style)
+        t.append(f' {state.status}')
+        return t

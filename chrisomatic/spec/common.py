@@ -1,6 +1,6 @@
 from serde import serde
 from chris.common.types import ChrisUsername, ChrisPassword
-from chris.cube.types import ComputeResourceName
+from chris.cube.types import ComputeResourceName, PfconUrl
 from dataclasses import dataclass, field
 
 
@@ -20,7 +20,7 @@ class User:
 @dataclass(frozen=True)
 class ComputeResource:
     name: ComputeResourceName
-    url: str
+    url: PfconUrl
     username: str = 'pfcon'
     password: str = 'pfcon1234'
     description: str = ''

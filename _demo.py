@@ -2,7 +2,8 @@ import asyncio
 from typing import Sequence
 from dataclasses import dataclass
 from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
-from chrisomatic.framework.taskset import TaskSet
+from chrisomatic.framework.taskrunner import TableTaskRunner, ProgressTaskRunner
+from chrisomatic.cli import console
 
 
 @dataclass
@@ -55,9 +56,10 @@ tasks = (
 
 
 async def demo():
-    ts = TaskSet(title='ChRIS Ultron Backend', tasks=tasks)
-    results = await ts.apply()
-    print(results)
+    # runner = TableTaskRunner(tasks=tasks)
+    runner = ProgressTaskRunner(tasks=tasks, title=__file__)
+    results = await runner.apply()
+    console.print(results)
 
 
 def main():

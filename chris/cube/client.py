@@ -3,7 +3,7 @@ from chris.common.types import PluginUrl
 from chris.common.client import AuthenticatedClient
 from chris.common.search import get_paginated, to_sequence
 import chris.common.decorator as http
-from chris.cube.types import ComputeResourceName
+from chris.cube.types import ComputeResourceName, PfconUrl
 from chris.cube.deserialization import CubeCollectionLinks, CubePlugin, ComputeResource
 
 _T = TypeVar('_T')
@@ -18,7 +18,7 @@ class CubeClient(AuthenticatedClient[CubeCollectionLinks, 'CubeClient']):
     @http.post('/chris-admin/api/v1/computeresources/')
     async def create_compute_resource(self,
                                       name: ComputeResourceName,
-                                      compute_url: str,
+                                      compute_url: PfconUrl,
                                       compute_user: str,
                                       compute_password: str,
                                       description: str = '',

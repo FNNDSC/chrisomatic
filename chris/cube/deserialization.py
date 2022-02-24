@@ -4,7 +4,7 @@ from chris.common.types import ApiUrl, UserUrl
 from chris.common.search import PaginatedUrl
 from chris.common.atypes import AuthenticatedCollectionLinks
 from chris.common.deserialization import Plugin
-from chris.cube.types import AdminUrl, ComputeResourceName, ComputeResourceId
+from chris.cube.types import AdminUrl, ComputeResourceName, ComputeResourceId, PfconUrl
 
 
 @deserialize
@@ -75,7 +75,7 @@ class ComputeResource:
     creation_date: str
     modification_date: str
     name: ComputeResourceName
-    compute_url: str
+    compute_url: PfconUrl
     compute_auth_url: str
     description: str
     max_job_exec_seconds: int
