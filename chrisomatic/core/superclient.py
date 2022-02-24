@@ -1,12 +1,16 @@
 import asyncio
 import aiohttp
 import aiodocker
-from typing import Sequence, AsyncContextManager
-from dataclasses import dataclass
+from typing import Sequence, AsyncContextManager, TypeVar, Type
+from dataclasses import dataclass, field
 from chris.common.types import ChrisURL
+from chris.common.deserialization import CreatedUser
+from chris.common.client import AbstractClient, AuthenticatedClient
 from chris.cube.client import CubeClient
-from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
+from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.spec.common import User
+
+A = TypeVar('A', bound=AuthenticatedClient)
 
 
 @dataclass(frozen=True)
@@ -21,33 +25,40 @@ class SuperClient(AsyncContextManager['SuperClient']):
     store_url: ChrisURL
     session: aiohttp.ClientSession
     public_stores: Sequence[AnonymousChrisStoreClient]
+    _other_clients: list[AbstractClient] = field(default_factory=list)
 
-    async def create_store_user(self, user: User) -> ChrisStoreClient:
-        """
-        Create a `ChrisStoreClient` using the same `aiohttp.BaseConnector`
-        as the one used by this client's `CubeClient`.
-        """
-        user = await ChrisStoreClient.create_user(
-            url=self.store_url,
+    async def create_user(self, url: ChrisURL, user: User, client_class: Type[AuthenticatedClient]) -> CreatedUser:
+        user = await client_class.create_user(
+            url=url,
             username=user.username,
             password=user.password,
             email=user.email,
             session=self.session
         )
-        return await ChrisStoreClient.from_login(
-            url=self.store_url,
+        return user
+
+    async def create_client(self, url: ChrisURL, user: User, client_class: Type[A]) -> A:
+        client = await client_class.from_login(
+            url=url,
             username=user.username,
             password=user.password,
             connector=self.cube.s.connector,
             connector_owner=False
         )
+        self._other_clients.append(client)
+        return client
+
+    @property
+    def _all_clients(self) -> Sequence[AbstractClient | aiohttp.ClientSession]:
+        return [
+            self.cube,
+            self.docker,
+            *self.public_stores,
+            *self._other_clients
+        ]
 
     async def close(self):
-        await asyncio.gather(
-            self.cube.close(),
-            self.docker.close(),
-            *(s.close() for s in self.public_stores)
-        )
+        await asyncio.gather(*(c.close() for c in self._all_clients))
 
     async def __aenter__(self) -> 'SuperClient':
         return self

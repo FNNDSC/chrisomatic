@@ -8,7 +8,7 @@ from typing import Type, TypeVar
 from chris.common.client import AuthenticatedClient, AuthenticatedCollectionLinks, generic_of
 from chris.common.deserialization import CreatedUser
 from chris.cube.client import CubeClient
-from chris.cube.types import ComputeResourceName
+from chris.cube.types import ComputeResourceName, PfconUrl
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
 from chris.common.search import to_sequence
 from chris.cube.deserialization import ComputeResource, CubePlugin
@@ -115,7 +115,7 @@ async def test_upload_to_store(chris_store_client: ChrisStoreClient,
     compute_env_name = ComputeResourceName(f'test-{some_name}')
     created_compute_env: ComputeResource = await superuser_cube_client.create_compute_resource(
         name=compute_env_name,
-        compute_url=f'https://example.com/{some_name}/api/v1/',
+        compute_url=PfconUrl(f'https://example.com/{some_name}/api/v1/'),
         compute_user=f'test-pfconuser-{some_name}',
         compute_password=f'test-pfconpassword-{some_name}',
     )

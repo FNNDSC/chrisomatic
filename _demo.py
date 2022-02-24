@@ -22,7 +22,7 @@ class DemoTask(ChrisomaticTask[str]):
         return self.result, self.stuff[-1]
 
     def initial_state(self) -> State:
-        return State(self.name, 'resolving info...')
+        return State(self.name, 'resolving user...')
 
 
 tasks = (

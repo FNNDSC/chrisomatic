@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+import sys
 import time
 from strictyaml import as_document
 from chrisomatic.spec.schema import schema
 from collections import OrderedDict
 
-stamp = str(int(time.time()))
+if len(sys.argv) >= 2:
+    stamp = sys.argv[1]
+else:
+    stamp = str(int(time.time()))
+
 now = time.asctime()
 
 

@@ -1,17 +1,20 @@
 import typer
 from chrisomatic.cli import console
+from chris.store.client import ChrisStoreClient
+from chris.cube.client import CubeClient
 from chrisomatic.spec.given import GivenConfig
 from chrisomatic.core.waitup import wait_up
-from chrisomatic.core.create import create_super_client
+from chrisomatic.core.create_god import create_super_client
 from chrisomatic.core.expand import smart_expand_config
 from chrisomatic.core.computeenvs import create_compute_resources
+from chrisomatic.core.create_users import create_users
 from chrisomatic.framework.outcome import Outcome
 
 
 async def apply(given_config: GivenConfig):
 
     # ------------------------------------------------------------
-    # wait for CUBE and friends to come online
+    # Wait for CUBE and friends to come online
     # ------------------------------------------------------------
 
     console.rule('[bold blue]Waiting for Backend Servers')
@@ -21,7 +24,7 @@ async def apply(given_config: GivenConfig):
         raise typer.Abort()
 
     # ------------------------------------------------------------
-    # create superuser account if necessary, and then create HTTP sessions
+    # Create superuser account if necessary, and then create HTTP sessions
     # ------------------------------------------------------------
 
     console.rule('[bold blue]Creating Superuser Account and HTTP Sessions')
@@ -32,13 +35,13 @@ async def apply(given_config: GivenConfig):
     async with superclient_cm as superclient:
 
         # ------------------------------------------------------------
-        # fully expand config
+        # Fully expand config
         # ------------------------------------------------------------
 
         config = await smart_expand_config(given_config, superclient)
 
         # ------------------------------------------------------------
-        # add compute resources
+        # Add compute resources
         # ------------------------------------------------------------
 
         console.rule('[bold blue]Compute Resources')
@@ -46,4 +49,17 @@ async def apply(given_config: GivenConfig):
         console.print(f'Existing compute resources: {[c.name for c in existing_compute_resources]}')
         create_compute_resources_results = await create_compute_resources(
             superclient, existing_compute_resources, config.cube.compute_resource
+        )
+
+        # ------------------------------------------------------------
+        # Create users
+        # ------------------------------------------------------------
+        console.rule('[bold blue]Creating Users')
+        store_user_creation = await create_users(
+            superclient, superclient.store_url, config.chris_store.users, ChrisStoreClient,
+            'creating users in the ChRIS store...'
+        )
+        cube_user_creation = await create_users(
+            superclient, superclient.cube.url, config.cube.users, CubeClient,
+            'creating users in CUBE...'
         )
