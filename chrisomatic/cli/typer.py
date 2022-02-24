@@ -10,6 +10,7 @@ from chrisomatic.cli import Gstr_title, console
 from chrisomatic.cli.apply import apply as apply_from_config
 from chrisomatic.cli.noop import wait_on_cube
 from chrisomatic.spec.deserialize import InputError
+from chrisomatic.framework.outcome import Outcome
 
 
 def show_version(value: bool):
@@ -68,7 +69,9 @@ def apply(
         raise typer.Abort()
 
     console.print(Gstr_title)
-    asyncio.run(apply_from_config(config))
+    final_result = asyncio.run(apply_from_config(config))
+    if final_result.summary[Outcome.FAILED] > 0:
+        raise typer.Exit(1)
 
 
 @app.command()

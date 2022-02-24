@@ -1,5 +1,5 @@
 import typer
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Iterable
 from chris.common.types import ChrisUsername
 from chrisomatic.spec.common import User
 from chrisomatic.cli import console
@@ -14,9 +14,11 @@ from chrisomatic.core.computeenvs import create_compute_resources
 from chrisomatic.core.create_users import create_users
 from chrisomatic.core.plugins import register_plugins
 from chrisomatic.framework.outcome import Outcome
+from rich.text import Text
+from chrisomatic.cli.final_result import FinalResult
 
 
-async def apply(given_config: GivenConfig):
+async def apply(given_config: GivenConfig) -> FinalResult:
 
     # ------------------------------------------------------------
     # Wait for CUBE and friends to come online
@@ -79,7 +81,21 @@ async def apply(given_config: GivenConfig):
         # Register plugins to CUBE
         # ------------------------------------------------------------
         console.rule('[bold blue]Registering plugins to CUBE')
-        registrations = await register_plugins(superclient, config.cube.plugins, store_clients)
+        plugin_registrations = await register_plugins(superclient, config.cube.plugins, store_clients)
+
+    # ------------------------------------------------------------
+    # Finish up
+    # ------------------------------------------------------------
+
+    all_outcomes = count_outcomes((
+        superuser_creation,
+        *(o for o, _ in create_compute_resources_results),
+        *(o for o, _ in store_user_creation),
+        *(o for o, _ in cube_user_creation),
+        *(o for o, _ in plugin_registrations),
+    ))
+    console.rule(to_summary(all_outcomes))
+    return FinalResult(summary=all_outcomes)
 
 
 def created_users_mapping(
@@ -96,3 +112,22 @@ def created_users_mapping(
 
 def get_first_username(mapping: dict[ChrisUsername, A]) -> Optional[ChrisUsername]:
     return next(iter(mapping.keys()), None)
+
+
+def count_outcomes(outcomes: Iterable[Outcome]) -> dict[Outcome, int]:
+    return {
+        outcome_type: sum(outcome == outcome_type for outcome in outcomes)
+        for outcome_type in Outcome
+    }
+
+
+def to_summary(outcomes: dict[Outcome, int]) -> Text:
+    summary = Text()
+    summary.append('Summary: ', style='bold')
+    summary.append(str(outcomes[Outcome.NO_CHANGE]), style=Outcome.NO_CHANGE.style)
+    summary.append(' ok, ')
+    summary.append(str(outcomes[Outcome.CHANGE]), style=Outcome.CHANGE.style)
+    summary.append(' changed, ')
+    summary.append(str(outcomes[Outcome.FAILED]), style=Outcome.FAILED.style)
+    summary.append(' failures')
+    return summary

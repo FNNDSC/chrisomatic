@@ -91,6 +91,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if existing_plugin is not None:
             emit.title = existing_plugin.name
         if len(compute_envs) == 0:
+            emit.status = existing_plugin.url
             return Outcome.NO_CHANGE, PluginRegistration(
                 plugin=existing_plugin,
                 from_url=None,
@@ -146,7 +147,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         current_computes = set(c.name for c in await to_sequence(self.cube.get_compute_resources_of(existing_plugin)))
         wanted_computes = set(self.plugin.compute_resource)
         remaining_computes = wanted_computes - current_computes
-        emit.status = f'already registered to {current_computes}, missing from {remaining_computes}'
+        # emit.status = f'already registered to {current_computes}, missing from {remaining_computes}'
         return existing_plugin, remaining_computes
 
     async def _find_in_stores_else_upload(self, emit: State) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
@@ -228,19 +229,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     def _all_clients(self):
         return [self.linked_store, *self.other_stores]
 
-
-# @dataclass(frozen=True)
-# class PluginFromUrlTask(ChrisomaticTask[PluginRegistration]):
-#     plugin_name: PluginName
-#     plugin_url: PluginUrl
-#     cube: CubeClient
-#
-#     def initial_state(self) -> State:
-#         return State(title=self.plugin_name, status='registering plugin...')
-#
-#     async def run(self, emit: State) -> tuple[Outcome, Optional[PluginRegistration]]:
-#         ...
-#
 
 async def register_plugins(superclient: SuperClient, plugins: Sequence[GivenCubePlugin],
                            store_clients: dict[ChrisUsername, ChrisStoreClient],
