@@ -1,4 +1,4 @@
-from typing import Optional, Collection
+from typing import Optional, Collection, Sequence
 from dataclasses import dataclass
 from chris.cube.deserialization import ComputeResource as CubeComputeResource
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
@@ -63,5 +63,12 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
         )
 
 
-async def create_compute_resources():
-    ...
+async def create_compute_resources(superclient: SuperClient,
+                                   existing: Collection[CubeComputeResource],
+                                   givens: Sequence[GivenComputeResource]
+                                   ) -> Sequence[tuple[Outcome, CubeComputeResource]]:
+    runner = ProgressTaskRunner(
+        title='Adding compute resources',
+        tasks=[ComputeResourceTask(superclient, given, existing) for given in givens]
+    )
+    return await runner.apply()
