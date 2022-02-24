@@ -10,8 +10,9 @@
 It is particularly useful for seeding a setup for testing or development,
 though it may also (work and) be useful for deployments.
 
-## Features
+## Advantages
 
+- declarative provisioning
 - [rich](https://pypi.org/project/rich/) CLI output
 - asynchronous tasks (speed!)
 
@@ -33,9 +34,15 @@ Here is an example which reflects a minimal working _CUBE_:
 ```yaml
 on:
   cube_url: http://localhost:8000/api/v1/
+  chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:
     username: chris
     password: chris1234
+
+chris_store:
+   users:
+      - username: chrisstoreuser
+        password: chris1234
 
 cube:
   computeresources:
@@ -92,6 +99,21 @@ TODO TODO TODO
 4. Upload plugins to _ChRIS_.
 5. Upload pipelines to _ChRIS_.
 
-## Project Status
+## Project Scope
 
-Okay, everything above was a lie. Most of these features are not supported yet.
+WIP.
+
+### Currently Supported Features
+
+- [x] Create CUBE superuser
+- [x] Create CUBE users
+- [x] Create _ChRIS_ store users
+- [x] Add compute resources to CUBE
+- [x] Register plugins from a store to CUBE
+- [ ] Register plugin given a docker image to CUBE
+- [ ] Add pipelines to CUBE
+- [x] very fast
+
+### Maybe Features
+
+Support provisioning of _ChRIS_ store independently?

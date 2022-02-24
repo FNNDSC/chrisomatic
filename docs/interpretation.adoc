@@ -118,18 +118,3 @@ these commands, and if one doesn't work, it tries the next:
 
 1. `chris_plugin_info`
 2. `{{CMD}} --json`, where `{{CMD}}` is the `CMD` set by `Dockerfile`
-
-
-[#multiple_compute_environments]
-=== Multiple Compute Environments
-
-Given a _ChRIS_ store URL, it is cheap to register it to _CUBE_.
-On the other hand,
-<<plugin_representation_strategy,producing a plugin representation JSON>>
-is expensive.
-`chrisomatic` does a "first pass" and registers every
-xref:schema.adoc#cube_plugins[Plugin] to their first
-xref:schema.adoc#plugins_compute_resource[compute resource].
-Next, `chrisomatic` collects all the _ChRIS_ store URLs used in the
-first pass, and then efficiently reuses those URLs to register
-those same plugins to their other _compute resources_.

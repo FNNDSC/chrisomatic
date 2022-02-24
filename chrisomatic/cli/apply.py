@@ -12,6 +12,7 @@ from chrisomatic.core.create_god import create_super_client
 from chrisomatic.core.expand import smart_expand_config
 from chrisomatic.core.computeenvs import create_compute_resources
 from chrisomatic.core.create_users import create_users
+from chrisomatic.core.plugins import register_plugins
 from chrisomatic.framework.outcome import Outcome
 
 
@@ -73,6 +74,12 @@ async def apply(given_config: GivenConfig):
             console.print('No ChRIS store users available.', style='bold red')
             typer.Abort()
         config = await smart_expand_config(given_config, superclient, default_store_owner)
+
+        # ------------------------------------------------------------
+        # Register plugins to CUBE
+        # ------------------------------------------------------------
+        console.rule('[bold blue]Registering plugins to CUBE')
+        registrations = await register_plugins(superclient, config.cube.plugins, store_clients)
 
 
 def created_users_mapping(

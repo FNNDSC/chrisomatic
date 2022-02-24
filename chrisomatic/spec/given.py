@@ -100,13 +100,11 @@ class GivenCubePlugin:
 
     def to_search_params(self) -> dict[str, str]:
         d: dict = to_dict(self)
-        for key, value in d.items():
-            if value is None:
-                del d[key]
         d['name_exact'] = d['name']
         del d['name']
         del d['url']
         del d['compute_resource']
+        d = {k: v for k, v in d.items() if v is not None}
         return d
 
 

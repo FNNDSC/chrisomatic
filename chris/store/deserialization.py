@@ -25,13 +25,7 @@ class AnonymousHome:
     collection_links: AnonymousCollectionLinks
 
 
-@deserialize
-@dataclass(frozen=True)
-class PluginUpload:
-    url: PluginUrl
-    id: PluginId
-
-
+# plugin upload response
 # {
 #     "url": "http://localhost:8010/api/v1/plugins/1/",
 #     "id": 1,

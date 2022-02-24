@@ -18,6 +18,7 @@ async def smart_expand_config(given_config: GivenConfig, superclient: SuperClien
 
     - if a plugin string is a docker image known by the docker daemon, then mark it as such
     - if a plugin's owner is not specified, provide a default value
+    - TODO add all required plugins from pipelines to plugin list
     """
     resolved_plugins: tuple[str | GivenCubePlugin, ...] = await asyncio.gather(*(
         mark_if_is_image(superclient.docker, plugin) for plugin in given_config.cube.plugins

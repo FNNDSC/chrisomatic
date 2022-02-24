@@ -9,7 +9,7 @@ from chris.cube.deserialization import CubeCollectionLinks, CubePlugin, ComputeR
 _T = TypeVar('_T')
 
 
-class CubeClient(AuthenticatedClient[CubeCollectionLinks, 'CubeClient']):
+class CubeClient(AuthenticatedClient[CubeCollectionLinks, CubePlugin, 'CubeClient']):
     @http.post('/chris-admin/api/v1/')
     async def register_plugin(self, plugin_store_url: PluginUrl, compute_name: ComputeResourceName
                               ) -> CubePlugin:
