@@ -81,7 +81,8 @@ _DEFAULT_DISPLAY_CONFIG = TableDisplayConfig()
 @dataclass
 class TableTaskRunner(TaskRunner[_R]):
     """
-    `TableTaskRunner` is more suitable for task sets which have few tasks,
+    `TableTaskRunner` shows the live statuses from the states of all its running tasks.
+    It is more suitable for task sets which have few tasks,
     and tasks that take a long time.
     """
     config: TableDisplayConfig = _DEFAULT_DISPLAY_CONFIG
