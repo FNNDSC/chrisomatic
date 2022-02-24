@@ -1,5 +1,5 @@
 import typer
-from typing import Sequence
+from typing import Sequence, Optional
 from chris.common.types import ChrisUsername
 from chrisomatic.spec.common import User
 from chrisomatic.cli import console
@@ -68,7 +68,11 @@ async def apply(given_config: GivenConfig):
         # Fully expand config
         # ------------------------------------------------------------
 
-        config = await smart_expand_config(given_config, superclient)
+        default_store_owner = get_first_username(store_clients)
+        if default_store_owner is None:
+            console.print('No ChRIS store users available.', style='bold red')
+            typer.Abort()
+        config = await smart_expand_config(given_config, superclient, default_store_owner)
 
 
 def created_users_mapping(
@@ -81,3 +85,7 @@ def created_users_mapping(
         if outcome != Outcome.FAILED:
             mapping[user_info.username] = client
     return mapping
+
+
+def get_first_username(mapping: dict[ChrisUsername, A]) -> Optional[ChrisUsername]:
+    return next(iter(mapping.keys()), None)
