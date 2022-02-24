@@ -1,8 +1,12 @@
 import typer
+from typing import Sequence
+from chris.common.types import ChrisUsername
+from chrisomatic.spec.common import User
 from chrisomatic.cli import console
 from chris.store.client import ChrisStoreClient
 from chris.cube.client import CubeClient
 from chrisomatic.spec.given import GivenConfig
+from chrisomatic.core.superclient import A
 from chrisomatic.core.waitup import wait_up
 from chrisomatic.core.create_god import create_super_client
 from chrisomatic.core.expand import smart_expand_config
@@ -35,12 +39,6 @@ async def apply(given_config: GivenConfig):
     async with superclient_cm as superclient:
 
         # ------------------------------------------------------------
-        # Fully expand config
-        # ------------------------------------------------------------
-
-        config = await smart_expand_config(given_config, superclient)
-
-        # ------------------------------------------------------------
         # Add compute resources
         # ------------------------------------------------------------
 
@@ -48,7 +46,7 @@ async def apply(given_config: GivenConfig):
         existing_compute_resources = await superclient.cube.get_all_compute_resources()
         console.print(f'Existing compute resources: {[c.name for c in existing_compute_resources]}')
         create_compute_resources_results = await create_compute_resources(
-            superclient, existing_compute_resources, config.cube.compute_resource
+            superclient, existing_compute_resources, given_config.cube.compute_resource
         )
 
         # ------------------------------------------------------------
@@ -56,10 +54,30 @@ async def apply(given_config: GivenConfig):
         # ------------------------------------------------------------
         console.rule('[bold blue]Creating Users')
         store_user_creation = await create_users(
-            superclient, superclient.store_url, config.chris_store.users, ChrisStoreClient,
+            superclient, superclient.store_url, given_config.chris_store.users, ChrisStoreClient,
             'creating users in the ChRIS store...'
         )
         cube_user_creation = await create_users(
-            superclient, superclient.cube.url, config.cube.users, CubeClient,
+            superclient, superclient.cube.url, given_config.cube.users, CubeClient,
             'creating users in CUBE...'
         )
+        store_clients = created_users_mapping(given_config.chris_store.users, store_user_creation)
+        cube_clients = created_users_mapping(given_config.cube.users, cube_user_creation)
+
+        # ------------------------------------------------------------
+        # Fully expand config
+        # ------------------------------------------------------------
+
+        config = await smart_expand_config(given_config, superclient)
+
+
+def created_users_mapping(
+        user_infos: Sequence[User],
+        user_creation: Sequence[tuple[Outcome, A]]
+) -> dict[ChrisUsername, A]:
+    mapping = dict()
+    for user_info, r in zip(user_infos, user_creation):
+        outcome, client = r
+        if outcome != Outcome.FAILED:
+            mapping[user_info.username] = client
+    return mapping

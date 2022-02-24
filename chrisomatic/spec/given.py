@@ -204,12 +204,14 @@ class GivenConfig:
     cube: GivenCube
     chris_store: GivenChrisStore
 
+    def __post_init__(self):
+        if len(self.chris_store.users) == 0 and len(self.cube.plugins) > 0:
+            raise ValidationError('You must list at least one ChRIS store user.')
+
     def expand(self) -> ExpandedConfig:
         """
         Fill default values.
         """
-        if len(self.chris_store.users) == 0 and len(self.cube.plugins) > 0:
-            raise ValidationError('You must list at least one ChRIS store user.')
         return ExpandedConfig(self.version, self.on, self.cube.expand(), self.chris_store)
 
 
