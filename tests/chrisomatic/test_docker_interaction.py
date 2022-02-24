@@ -26,4 +26,3 @@ async def test_is_local_image(docker: aiodocker.Docker, example_images: tuple[st
     assert await is_local_image(docker, example2)
     assert not await is_local_image(docker, 'docker.io/chrisomatic/dne')
     assert not await is_local_image(docker, 'https://chrisstore.co/api/v1/')
-

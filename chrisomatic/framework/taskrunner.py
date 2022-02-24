@@ -3,7 +3,7 @@ Everything to do with the rich display and parallel execution of tasks.
 """
 import abc
 import asyncio
-from rich.console import RenderableType, ConsoleRenderable, StyleType
+from rich.console import RenderableType, ConsoleRenderable
 from rich.text import Text
 from rich.live import Live
 from rich.table import Table, Column
@@ -20,9 +20,9 @@ _R = TypeVar('_R')
 class _RunningTableTask(Generic[_R]):
 
     chrisomatic_task: InitVar[ChrisomaticTask[_R]]
+    spinner: RenderableType
     task: ClassVar[asyncio.Task]
     state: ClassVar[State]
-    spinner: ClassVar[RenderableType] = Spinner('dots')
 
     def __post_init__(self, chrisomatic_task: ChrisomaticTask):
         self.state = chrisomatic_task.initial_state()
@@ -72,7 +72,8 @@ class TableDisplayConfig:
     polling_interval: float = 0.25
     # task_title_width: int = 20
     # task_status_width: int = 50
-    border_style: StyleType = 'bold yellow'
+    spinner: Spinner = Spinner('dots')
+    spinner_width: int = 3
 
 
 _DEFAULT_DISPLAY_CONFIG = TableDisplayConfig()
@@ -91,7 +92,7 @@ class TableTaskRunner(TaskRunner[_R]):
         """
         Execute all tasks in parallel while displaying a table that shows their live statuses.
         """
-        running_tasks = tuple(_RunningTableTask(t) for t in self.tasks)
+        running_tasks = tuple(_RunningTableTask(t, spinner=self.config.spinner) for t in self.tasks)
         with Live(self._render(running_tasks),
                   refresh_per_second=self.config.refresh_per_second) as live:
             while not self._all_done(running_tasks):
@@ -101,7 +102,7 @@ class TableTaskRunner(TaskRunner[_R]):
 
     def _render(self, tasks: Sequence[_RunningTableTask]) -> ConsoleRenderable:
         table = Table.grid(
-            Column(width=3, justify='center'),
+            Column(width=self.config.spinner_width, justify='center'),
             Column(ratio=1, min_width=20, max_width=120),
             Column(ratio=2, min_width=40),
             expand=True

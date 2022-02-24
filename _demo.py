@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
 from chrisomatic.framework.taskrunner import TableTaskRunner, ProgressTaskRunner
 from chrisomatic.cli import console
+from chrisomatic.core.waitup import wait_up
 
 
 @dataclass
@@ -57,9 +58,13 @@ tasks = (
 
 async def demo():
     # runner = TableTaskRunner(tasks=tasks)
-    runner = ProgressTaskRunner(tasks=tasks, title=__file__)
-    results = await runner.apply()
-    console.print(results)
+    # runner = ProgressTaskRunner(tasks=tasks, title=__file__)
+    # results = await runner.apply()
+    # console.print(results)
+    waiter = wait_up(['http://dne', 'http://wack'])
+    await waiter.apply()
+
+
 
 
 def main():

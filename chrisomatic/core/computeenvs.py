@@ -23,7 +23,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             status='checking for compute resource...'
         )
 
-    def run(self, emit: State) -> tuple[Outcome, Optional[CubeComputeResource]]:
+    async def run(self, emit: State) -> tuple[Outcome, Optional[CubeComputeResource]]:
         preexisting = self.find_in_existing()
         if preexisting is not None:
             emit.status = preexisting.url
