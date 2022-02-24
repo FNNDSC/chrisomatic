@@ -112,7 +112,7 @@ class TableTaskRunner(TaskRunner[_R]):
         #     table,
         #     title=self.title,
         #     title_align='left',
-        #     border_style=self.config.border_style,
+        #     border_style=self.given_config.border_style,
         # )
         # return panel
         return table

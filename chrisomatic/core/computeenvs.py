@@ -2,6 +2,7 @@ from typing import Optional, Collection
 from dataclasses import dataclass
 from chris.cube.deserialization import ComputeResource as CubeComputeResource
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
+from chrisomatic.framework.taskrunner import ProgressTaskRunner
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource
 from chrisomatic.core.superclient import SuperClient
 
@@ -29,7 +30,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             if self.same_as(preexisting):
                 return Outcome.NO_CHANGE, preexisting
             emit.status = f'Existing compute resource "{preexisting.name}" ' \
-                          'is different from config.'
+                          'is different from given_config.'
             return Outcome.FAILED, preexisting
         created: CubeComputeResource = await self.superclient.cube.create_compute_resource(
             name=self.given.name,
@@ -60,3 +61,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             and self.given.url == preexisting.compute_url
             and self.given.description == preexisting.description
         )
+
+
+async def create_compute_resources():
+    ...
