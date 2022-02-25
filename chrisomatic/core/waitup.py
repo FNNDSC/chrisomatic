@@ -37,8 +37,8 @@ class WaitUp(ChrisomaticTask[float]):
     async def run(self, emit: State) -> tuple[Outcome, float]:
         start_time = time.monotonic()
         async with aiohttp.ClientSession() as session:
-            while (time.monotonic() - start_time) <= self.timeout:
-                emit.status = _waiting_text
+            elapsed_time = 0.0
+            while elapsed_time <= self.timeout:
                 try:
                     res = await session.get(self.url)
                     elapsed_time = time.monotonic() - start_time
@@ -49,13 +49,15 @@ class WaitUp(ChrisomaticTask[float]):
                     return Outcome.FAILED, elapsed_time
                 except aiohttp.ClientConnectorError:
                     await asyncio.sleep(self.interval)
-        elapsed_time = time.monotonic() - start_time
+                    elapsed_time = time.monotonic() - start_time
+                    emit.status = Text(f'waiting until server is online... ({elapsed_time:.1f})', style='dim')
+
         emit.status = f'timed out after {elapsed_time:.1f}s'
         return Outcome.FAILED, elapsed_time
 
 
 async def wait_up(urls: Sequence[str], good_status: int = 200, interval: float = 2.0, timeout: float = 300.0,
-            ) -> tuple[bool, Sequence[float]]:
+                  ) -> tuple[bool, Sequence[float]]:
     runner = TableTaskRunner(
         config=TableDisplayConfig(spinner=Spinner('aesthetic'), spinner_width=12, polling_interval=interval / 4),
         tasks=[WaitUp(url, good_status, interval, timeout) for url in urls]
