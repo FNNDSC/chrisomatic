@@ -81,10 +81,55 @@ Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/in
 
 ### Running `chrisomatic`
 
-`chrisomatic` should be used as a container.
+`chrisomatic` should be run as a container in the same docker network as
+the _ChRIS_ backend (CUBE). The CUBE container should have the label
+`org.chrisproject.role=ChRIS ultron backEnd`.
+`chrisomatic` needs the docker daemon socket `/var/lib/docker.sock`
+and a configuration file `chrisomatic.yml`.
+
+```yaml
+version: '3.7'
+
+services:
+  chrisomatic:
+    container_name: chrisomatic
+    image: fnndsc/chrisomatic:0.1.0
+    networks:
+      - local
+    volumes:
+      - "./chrisomatic.yml:/etc/chrisomatic/chrisomatic.yml:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    restart: always
+    userns_mode: host
+  chris:
+    container_name: chris
+    image: ghcr.io/fnndsc/chris:3.0.0.pre2
+    ports:
+      - "8000:8000"
+    networks:
+      - local
+    env_file: secrets.env
+    environment:
+      DJANGO_DB_MIGRATE: "on"
+      DJANGO_COLLECTSTATIC: "on"
+    labels:
+      org.chrisproject.role: "ChRIS ultron backEnd"
+
+# ...
+
+networks:
+  local:
+```
+
+The default command for the container `fnndsc/chrisomatic` is to do nothing.
+It is recommended to run the command `chrisomatic apply` manually, with
+a full-featured TTY console.
+
+Start _ChRIS_ and `chrisomatic` by running:
 
 ```shell
-TODO TODO TODO
+docker compose up -d
+docker compose exec chrisomatic chrisomatic apply
 ```
 
 #### What Happens?
