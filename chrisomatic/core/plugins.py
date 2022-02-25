@@ -105,20 +105,37 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         emit.title = plugin_in_store.name
 
         # register to all
-        registrations: tuple[CubePlugin, ...] = await asyncio.gather(*(
-            self.cube.register_plugin(plugin_store_url=plugin_in_store.url,
-                                      compute_name=compute_resource_name)
-            for compute_resource_name in compute_envs
-        ), return_exceptions=True)
-        exceptions = [e for e in registrations if isinstance(e, BaseException)]
-        if len(exceptions) != 0:
-            emit.status = f'failures: {exceptions}'
+        # NB: do not register same plugin to different compute resources in parallel
+        # https://github.com/FNNDSC/ChRIS_ultron_backEnd/issues/366
+        # registrations: tuple[CubePlugin, ...] = await asyncio.gather(*(
+        #     self.cube.register_plugin(plugin_store_url=plugin_in_store.url,
+        #                               compute_name=compute_resource_name)
+        #     for compute_resource_name in compute_envs
+        # ), return_exceptions=True)
+        # exceptions = [e for e in registrations if isinstance(e, BaseException)]
+        # if len(exceptions) != 0:
+        #     emit.status = f'failures: {exceptions}'
+        #     return Outcome.FAILED, None
+        #
+        # emit.status = registrations[0].url
+        # return Outcome.CHANGE, PluginRegistration(
+        #     plugin=registrations[0],
+        #     from_url=plugin_in_store.url,
+        #     origin=origin
+        # )
+        registrations: list[CubePlugin] = []
+        errors: list[BadRequestError] = []
+        for compute_resource_name in compute_envs:
+            emit.status = f'--> "{compute_resource_name}"'
+            try:
+                registered = await self.cube.register_plugin(plugin_store_url=plugin_in_store.url,
+                                                             compute_name=compute_resource_name)
+                registrations.append(registered)
+            except BadRequestError as e:
+                errors.append(e)
+        if len(errors) > 0:
+            emit.status = str(errors)
             return Outcome.FAILED, None
-        if len(registrations) == 0:
-            # probably shouldn't reach here
-            emit.status = f'Did not register to any compute environment'
-            return Outcome.NO_CHANGE, None
-
         emit.status = registrations[0].url
         return Outcome.CHANGE, PluginRegistration(
             plugin=registrations[0],
