@@ -13,7 +13,9 @@ class User:
 
     def __post_init__(self):
         if self.email is None:
-            object.__setattr__(self, 'email', f'chrisomatic.{self.username}@example.com')
+            object.__setattr__(
+                self, "email", f"chrisomatic.{self.username}@example.com"
+            )
 
 
 @serde
@@ -21,9 +23,9 @@ class User:
 class ComputeResource:
     name: ComputeResourceName
     url: PfconUrl
-    username: str = 'pfcon'
-    password: str = 'pfcon1234'
-    description: str = ''
+    username: str = "pfcon"
+    password: str = "pfcon1234"
+    description: str = ""
 
 
 @serde

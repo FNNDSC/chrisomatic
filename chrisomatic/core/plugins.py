@@ -30,32 +30,34 @@ class InferredPluginInfo:
     public_repo: str
 
     @classmethod
-    def from_given(cls, p: GivenCubePlugin) -> 'InferredPluginInfo':
+    def from_given(cls, p: GivenCubePlugin) -> "InferredPluginInfo":
         if not p.dock_image:
-            raise ValueError(p, 'dock_image cannot be empty')
+            raise ValueError(p, "dock_image cannot be empty")
         base_repo = p.dock_image
-        colon = base_repo.rfind(':')
+        colon = base_repo.rfind(":")
         if colon != -1:
             base_repo = base_repo[:colon]
         name = base_repo
-        slash = base_repo.rfind('/')
+        slash = base_repo.rfind("/")
         if slash:
-            name = base_repo[slash + 1:]
-            another_slash = base_repo[:slash - 1].rfind('/')
+            name = base_repo[slash + 1 :]
+            another_slash = base_repo[: slash - 1].rfind("/")
             if another_slash != -1:
-                base_repo = base_repo[another_slash + 1:]
+                base_repo = base_repo[another_slash + 1 :]
         return cls(
             name=p.name if p.name else PluginName(name),
             dock_image=p.dock_image,
-            public_repo=p.public_repo if p.public_repo else f'https://github.com/{base_repo}'
+            public_repo=p.public_repo
+            if p.public_repo
+            else f"https://github.com/{base_repo}",
         )
 
 
 class PluginOrigin(enum.Enum):
-    local_store = 'store.local'
-    public_store = 'store.public'
-    docker_chris_plugin_info = 'docker.chris_plugin_info'
-    docker_old_chrisapp = 'docker.chrisapp'
+    local_store = "store.local"
+    public_store = "store.public"
+    docker_chris_plugin_info = "docker.chris_plugin_info"
+    docker_old_chrisapp = "docker.chrisapp"
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     then attempt to produce the JSON representation and upload it to the
     ChRIS store first.
     """
+
     plugin: GivenCubePlugin
     linked_store: Optional[ChrisStoreClient]
     other_stores: Sequence[AbstractChrisStoreClient]
@@ -82,7 +85,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     cube: CubeClient
 
     def initial_state(self) -> State:
-        return State(title=self.plugin.title, status='checking compute resources...')
+        return State(title=self.plugin.title, status="checking compute resources...")
 
     async def run(self, emit: State) -> tuple[Outcome, Optional[PluginRegistration]]:
 
@@ -93,9 +96,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if len(compute_envs) == 0:
             emit.status = existing_plugin.url
             return Outcome.NO_CHANGE, PluginRegistration(
-                plugin=existing_plugin,
-                from_url=None,
-                origin=None
+                plugin=existing_plugin, from_url=None, origin=None
             )
 
         # find the plugin in a ChRIS store, or attempt to upload it
@@ -128,8 +129,10 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         for compute_resource_name in compute_envs:
             emit.status = f'--> "{compute_resource_name}"'
             try:
-                registered = await self.cube.register_plugin(plugin_store_url=plugin_in_store.url,
-                                                             compute_name=compute_resource_name)
+                registered = await self.cube.register_plugin(
+                    plugin_store_url=plugin_in_store.url,
+                    compute_name=compute_resource_name,
+                )
                 registrations.append(registered)
             except BadRequestError as e:
                 errors.append(e)
@@ -138,12 +141,12 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             return Outcome.FAILED, None
         emit.status = registrations[0].url
         return Outcome.CHANGE, PluginRegistration(
-            plugin=registrations[0],
-            from_url=plugin_in_store.url,
-            origin=origin
+            plugin=registrations[0], from_url=plugin_in_store.url, origin=origin
         )
 
-    async def _already_present(self, emit: State) -> tuple[Optional[CubePlugin], Collection[ComputeResourceName]]:
+    async def _already_present(
+        self, emit: State
+    ) -> tuple[Optional[CubePlugin], Collection[ComputeResourceName]]:
         """
         If the plugin is already registered to CUBE, return its representation in CUBE and the
         compute resources which are requested for the plugin to be registered to but _not_ yet
@@ -161,30 +164,39 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if existing_plugin is None:
             # plugin not registered, so need to register to all compute envs
             return None, self.plugin.compute_resource
-        current_computes = set(c.name for c in await to_sequence(self.cube.get_compute_resources_of(existing_plugin)))
+        current_computes = set(
+            c.name
+            for c in await to_sequence(
+                self.cube.get_compute_resources_of(existing_plugin)
+            )
+        )
         wanted_computes = set(self.plugin.compute_resource)
         remaining_computes = wanted_computes - current_computes
         # emit.status = f'already registered to {current_computes}, missing from {remaining_computes}'
         return existing_plugin, remaining_computes
 
-    async def _find_in_stores_else_upload(self, emit: State) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
+    async def _find_in_stores_else_upload(
+        self, emit: State
+    ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         found_in_store, origin = await self._find_in_store(emit)
         if found_in_store:
-            emit.status = f'found --> {found_in_store.url}'
+            emit.status = f"found --> {found_in_store.url}"
             return found_in_store, origin
-        emit.status = Text('not found', style='bold red')
+        emit.status = Text("not found", style="bold red")
         uploaded_plugin = await self._upload_to_store(emit)
         return uploaded_plugin, PluginOrigin.local_store
 
-    async def _find_in_store(self, emit: State) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
+    async def _find_in_store(
+        self, emit: State
+    ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         query = self.plugin.to_store_search()
-        emit.status = f'searching in {self.linked_store.url}...'
+        emit.status = f"searching in {self.linked_store.url}..."
         result = await self.linked_store.get_first_plugin(**query)
         if result is not None:
             return result, PluginOrigin.local_store
 
         for client in self.other_stores:
-            emit.status = f'searching in {client.url}...'
+            emit.status = f"searching in {client.url}..."
             result = await client.get_first_plugin(**query)
             if result is not None:
                 return result, PluginOrigin.public_store
@@ -192,20 +204,23 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
 
     async def _upload_to_store(self, emit: State) -> Optional[Plugin]:
         if self.linked_store is None:
-            emit.status = Text(f'No client for owner "{self.plugin.owner}"', style='bold red')
+            emit.status = Text(
+                f'No client for owner "{self.plugin.owner}"', style="bold red"
+            )
             return None
         json_representation = await self._get_json_representation(emit)
         if json_representation is None:
             return None
         inferred = InferredPluginInfo.from_given(self.plugin)
-        with NamedTemporaryFile('w', suffix='.json') as temp:
+        with NamedTemporaryFile("w", suffix=".json") as temp:
             temp.write(json_representation)
             temp.flush()
             try:
                 uploaded_plugin = await self.linked_store.upload_plugin(
-                    name=inferred.name, dock_image=inferred.dock_image,
+                    name=inferred.name,
+                    dock_image=inferred.dock_image,
                     public_repo=inferred.public_repo,
-                    descriptor_file=Path(temp.name)
+                    descriptor_file=Path(temp.name),
                 )
             except BadRequestError as e:
                 emit.status = str(e)
@@ -215,9 +230,10 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     async def _get_json_representation(self, emit: State) -> Optional[str]:
         if self.plugin.dock_image is None:
             return None
-        emit.status = 'attempting to produce JSON representation...'
+        emit.status = "attempting to produce JSON representation..."
         guessing_methods: list[Callable[[State], Awaitable[Optional[str]]]] = [
-            self._json_from_chris_plugin_info, self._json_from_old_chrisapp
+            self._json_from_chris_plugin_info,
+            self._json_from_old_chrisapp,
         ]
         for guess_method in guessing_methods:
             json_representation = await guess_method(emit)
@@ -226,16 +242,16 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return None
 
     async def _json_from_chris_plugin_info(self, emit: State) -> Optional[str]:
-        return await self._try_run(emit, ('chris_plugin_info',))
+        return await self._try_run(emit, ("chris_plugin_info",))
 
     async def _json_from_old_chrisapp(self, emit: State) -> Optional[str]:
         cmd = await get_cmd(self.docker, self.plugin.dock_image)
         if len(cmd) == 0:
             return None
-        return await self._try_run(emit, (cmd[0], '--json'))
+        return await self._try_run(emit, (cmd[0], "--json"))
 
     async def _try_run(self, emit: State, command: Sequence[str]) -> Optional[str]:
-        emit.status = f'Running {command}'
+        emit.status = f"Running {command}"
         try:
             return await check_output(self.docker, self.plugin.dock_image, command)
         except aiodocker.DockerContainerError:
@@ -246,17 +262,21 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return [self.linked_store, *self.other_stores]
 
 
-async def register_plugins(superclient: SuperClient, plugins: Sequence[GivenCubePlugin],
-                           store_clients: dict[ChrisUsername, ChrisStoreClient],
-                           ) -> Sequence[tuple[Outcome, PluginRegistration]]:
+async def register_plugins(
+    superclient: SuperClient,
+    plugins: Sequence[GivenCubePlugin],
+    store_clients: dict[ChrisUsername, ChrisStoreClient],
+) -> Sequence[tuple[Outcome, PluginRegistration]]:
     runner = TableTaskRunner(
         tasks=[
             RegisterPluginTask(
                 plugin=p,
-                linked_store=(store_clients[p.owner] if p.owner in store_clients else None),
+                linked_store=(
+                    store_clients[p.owner] if p.owner in store_clients else None
+                ),
                 other_stores=superclient.public_stores,
                 docker=superclient.docker,
-                cube=superclient.cube
+                cube=superclient.cube,
             )
             for p in plugins
         ]

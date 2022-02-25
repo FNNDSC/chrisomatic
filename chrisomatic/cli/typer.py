@@ -19,7 +19,7 @@ def show_version(value: bool):
     """
     if not value:
         return
-    typer.echo(f'chrisomatic {chrisomatic.__version__}')
+    typer.echo(f"chrisomatic {chrisomatic.__version__}")
     raise typer.Exit()
 
 
@@ -29,9 +29,14 @@ app = typer.Typer(add_completion=False)
 # noinspection PyUnusedLocal
 @app.callback()
 def entry(
-        version: Optional[bool] = typer.Option(
-            None, '--version', '-V', callback=show_version,
-            is_eager=True, help='Print version.')
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        callback=show_version,
+        is_eager=True,
+        help="Print version.",
+    )
 ):
     """
     ChRIS backend management.
@@ -39,25 +44,25 @@ def entry(
     pass
 
 
-@app.command(context_settings={'help_option_names': ['-h', '--help']})
+@app.command(context_settings={"help_option_names": ["-h", "--help"]})
 def apply(
-        file: Path = typer.Argument(
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            writable=False,
-            readable=True,
-            allow_dash=True,
-            default='chrisomatic.yml',
-            help='configuration file.'
-        )
+    file: Path = typer.Argument(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        writable=False,
+        readable=True,
+        allow_dash=True,
+        default="chrisomatic.yml",
+        help="configuration file.",
+    )
 ):
     """
     Apply a configuration additively to a running ChRIS backend.
     """
-    if file == Path('-'):
+    if file == Path("-"):
         input_config = sys.stdin.read()
-        filename = '<stdin>'
+        filename = "<stdin>"
     else:
         input_config = file.read_text()
         filename = str(file)

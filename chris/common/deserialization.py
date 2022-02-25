@@ -1,9 +1,14 @@
 from dataclasses import dataclass
 from serde import deserialize
 from chris.common.types import (
-    UserUrl, UserId, ChrisUsername,
-    PluginName, ImageTag, PluginVersion,
-    PluginUrl, PluginId,
+    UserUrl,
+    UserId,
+    ChrisUsername,
+    PluginName,
+    ImageTag,
+    PluginVersion,
+    PluginUrl,
+    PluginId,
 )
 
 

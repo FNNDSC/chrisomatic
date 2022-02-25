@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from serde import deserialize
-from chris.common.types import (
-    ApiUrl, PluginUrl, PluginId
-)
+from chris.common.types import ApiUrl, PluginUrl, PluginId
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
 
@@ -57,4 +55,3 @@ class AnonymousHome:
 #     "parameters": "http://localhost:8010/api/v1/plugins/1/parameters/",
 #     "meta": "http://localhost:8010/api/v1/1/"
 # }
-

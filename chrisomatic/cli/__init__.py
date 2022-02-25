@@ -15,10 +15,10 @@ Gstr_title = r"""
 \____/_/ /_/_/ |_/___//____/\____/_/ /_/ /_/\__,_/\__/_/\___/  
 
 """
-Gstr_title += (' ' * 30) + 'version ' + chrisomatic.__version__ + '\n'
+Gstr_title += (" " * 30) + "version " + chrisomatic.__version__ + "\n"
 
 console = Console()
 
 
-if 'CHRISOMATIC_DEBUG' in os.environ:
+if "CHRISOMATIC_DEBUG" in os.environ:
     logging.basicConfig(level=logging.DEBUG)

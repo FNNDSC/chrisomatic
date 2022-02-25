@@ -36,7 +36,16 @@ import abc
 from dataclasses import dataclass
 from functools import cache
 import aiohttp
-from typing import Optional, TypeVar, Generic, AsyncContextManager, AsyncIterator, Type, ForwardRef, Callable
+from typing import (
+    Optional,
+    TypeVar,
+    Generic,
+    AsyncContextManager,
+    AsyncIterator,
+    Type,
+    ForwardRef,
+    Callable,
+)
 import typing_inspect
 from serde import from_dict
 from serde.json import from_json
@@ -47,12 +56,12 @@ from chris.common.errors import IncorrectLoginError, BadRequestError
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
-_B = TypeVar('_B', bound='BaseClient')
-_A = TypeVar('_A', bound='AnonymousClient')
-_C = TypeVar('_C', bound='AuthenticatedClient')
-_L = TypeVar('_L', bound=CommonCollectionLinks)
-_UL = TypeVar('_UL', bound=AuthenticatedCollectionLinks)
-_P = TypeVar('_P', bound=Plugin)
+_B = TypeVar("_B", bound="BaseClient")
+_A = TypeVar("_A", bound="AnonymousClient")
+_C = TypeVar("_C", bound="AuthenticatedClient")
+_L = TypeVar("_L", bound=CommonCollectionLinks)
+_UL = TypeVar("_UL", bound=AuthenticatedCollectionLinks)
+_P = TypeVar("_P", bound=Plugin)
 
 
 @dataclass(frozen=True)
@@ -63,6 +72,7 @@ class AbstractClient(Generic[_L, _P], abc.ABC):
     [aiohttp.ClientSession](https://docs.aiohttp.org/en/stable/client_advanced.html#client-session)
     and also has the `collection_links` object from the base URL.
     """
+
     collection_links: _L
     s: aiohttp.ClientSession
     url: ChrisURL
@@ -89,21 +99,25 @@ class AbstractClient(Generic[_L, _P], abc.ABC):
     def search_plugins(self, max_requests=100, **query) -> AsyncIterator[_P]:
         return self.search(
             url=self.collection_links.plugins,
-            query=query, element_type=generic_of(self.__class__, Plugin),
-            max_requests=max_requests
+            query=query,
+            element_type=generic_of(self.__class__, Plugin),
+            max_requests=max_requests,
         )
 
-    def search(self, url: str, query: dict, element_type: Type[T],
-               max_requests: int = 100) -> AsyncIterator[T]:
+    def search(
+        self, url: str, query: dict, element_type: Type[T], max_requests: int = 100
+    ) -> AsyncIterator[T]:
         qs = self._join_qs(query)
-        return get_paginated(session=self.s,
-                             url=PaginatedUrl(f'{url}search?{qs}'),
-                             element_type=element_type,
-                             max_requests=max_requests)
+        return get_paginated(
+            session=self.s,
+            url=PaginatedUrl(f"{url}search?{qs}"),
+            element_type=element_type,
+            max_requests=max_requests,
+        )
 
     @staticmethod
     def _join_qs(query: dict) -> str:
-        return '&'.join(f'{k}={v}' for k, v in query.items() if v)
+        return "&".join(f"{k}={v}" for k, v in query.items() if v)
 
 
 class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
@@ -113,11 +127,13 @@ class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
     """
 
     @classmethod
-    async def new(cls, url: ChrisURL,
-                  connector: Optional[aiohttp.BaseConnector] = None,
-                  connector_owner: bool = True,
-                  session_modifier: Optional[Callable[[aiohttp.ClientSession], None]] = None
-                  ) -> _B:
+    async def new(
+        cls,
+        url: ChrisURL,
+        connector: Optional[aiohttp.BaseConnector] = None,
+        connector_owner: bool = True,
+        session_modifier: Optional[Callable[[aiohttp.ClientSession], None]] = None,
+    ) -> _B:
         """
         A constructor which creates the session for the `AbstractClient`
         and makes an initial request to populate `collection_links`.
@@ -127,21 +143,25 @@ class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
         headers to the session.
         """
         accept_json = {
-            'Accept': 'application/json',
+            "Accept": "application/json",
             # 'Content-Type': 'application/vnd.collection+json',
         }
         # TODO maybe we want to wrap the session:
         # - status == 4XX --> print response text
         # - content-type: application/vnd.collection+json
-        session = aiohttp.ClientSession(headers=accept_json, raise_for_status=True,
-                                        connector=connector, connector_owner=connector_owner)
+        session = aiohttp.ClientSession(
+            headers=accept_json,
+            raise_for_status=True,
+            connector=connector,
+            connector_owner=connector_owner,
+        )
         if session_modifier is not None:
             session_modifier(session)
 
         res = await session.get(url)
         body = await res.json()
         links_type = generic_of(cls, CommonCollectionLinks)
-        links = from_dict(links_type, body['collection_links'])
+        links = from_dict(links_type, body["collection_links"])
 
         return cls(url=url, s=session, collection_links=links)
 
@@ -154,10 +174,12 @@ class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
 
 class AnonymousClient(BaseClient[_L, _P, _A]):
     @classmethod
-    async def from_url(cls, url: str | ChrisURL,
-                       connector: Optional[aiohttp.BaseConnector] = None,
-                       connector_owner: bool = True
-                       ) -> _A:
+    async def from_url(
+        cls,
+        url: str | ChrisURL,
+        connector: Optional[aiohttp.BaseConnector] = None,
+        connector_owner: bool = True,
+    ) -> _A:
         """
         Create an anonymous client for the given backend URL.
         """
@@ -166,87 +188,102 @@ class AnonymousClient(BaseClient[_L, _P, _A]):
 
 class AuthenticatedClient(BaseClient[_UL, _P, _C], abc.ABC):
     @classmethod
-    async def from_login(cls,
-                         url: str | ChrisURL,
-                         username: str | ChrisUsername,
-                         password: str | ChrisPassword,
-                         connector: Optional[aiohttp.TCPConnector] = None,
-                         connector_owner: bool = True) -> _C:
+    async def from_login(
+        cls,
+        url: str | ChrisURL,
+        username: str | ChrisUsername,
+        password: str | ChrisPassword,
+        connector: Optional[aiohttp.TCPConnector] = None,
+        connector_owner: bool = True,
+    ) -> _C:
         """
         Get authentication token using username and password, then construct the client.
         """
-        async with aiohttp.ClientSession(connector=connector, connector_owner=False) as session:
-            c = await cls.__from_login_with(url, username, password, session, connector_owner)
+        async with aiohttp.ClientSession(
+            connector=connector, connector_owner=False
+        ) as session:
+            c = await cls.__from_login_with(
+                url, username, password, session, connector_owner
+            )
         return c
 
     @classmethod
-    async def __from_login_with(cls,
-                                url: ChrisURL,
-                                username: ChrisUsername,
-                                password: ChrisPassword,
-                                session: aiohttp.ClientSession,
-                                connector_owner: bool) -> _C:
+    async def __from_login_with(
+        cls,
+        url: ChrisURL,
+        username: ChrisUsername,
+        password: ChrisPassword,
+        session: aiohttp.ClientSession,
+        connector_owner: bool,
+    ) -> _C:
         """
         Get authentication token using the given session, and then construct the client.
         """
-        payload = {
-            'username': username,
-            'password': password
-        }
-        login = await session.post(url + 'auth-token/', json=payload)
+        payload = {"username": username, "password": password}
+        login = await session.post(url + "auth-token/", json=payload)
         if login.status == 400:
             raise IncorrectLoginError(await login.text())
 
         data = await login.json()
-        return await cls.from_token(url=url, token=data['token'],
-                                    connector=session.connector,
-                                    connector_owner=connector_owner)
+        return await cls.from_token(
+            url=url,
+            token=data["token"],
+            connector=session.connector,
+            connector_owner=connector_owner,
+        )
 
     @classmethod
-    async def from_token(cls, url: ChrisURL,
-                         token: ChrisToken,
-                         connector: Optional[aiohttp.TCPConnector] = None,
-                         connector_owner: Optional[bool] = True) -> _C:
+    async def from_token(
+        cls,
+        url: ChrisURL,
+        token: ChrisToken,
+        connector: Optional[aiohttp.TCPConnector] = None,
+        connector_owner: Optional[bool] = True,
+    ) -> _C:
         """
         Construct an authenticated client using the given token.
         """
-        return await cls.new(url, connector, connector_owner,
-                             session_modifier=cls.__curry_token(token))
+        return await cls.new(
+            url, connector, connector_owner, session_modifier=cls.__curry_token(token)
+        )
 
     @staticmethod
     def __curry_token(token: ChrisToken) -> Callable[[aiohttp.ClientSession], None]:
         def add_token_to(session: aiohttp.ClientSession) -> None:
-            session.headers.update({'Authorization': 'Token ' + token})
+            session.headers.update({"Authorization": "Token " + token})
+
         return add_token_to
 
     @classmethod
-    async def create_user(cls,
-                          url: ChrisURL | str,
-                          username: ChrisUsername | str,
-                          password: ChrisPassword | str,
-                          email: str,
-                          session: aiohttp.ClientSession) -> CreatedUser:
+    async def create_user(
+        cls,
+        url: ChrisURL | str,
+        username: ChrisUsername | str,
+        password: ChrisPassword | str,
+        email: str,
+        session: aiohttp.ClientSession,
+    ) -> CreatedUser:
         payload = {
-            'template': {
-                'data': [
-                    {'name': 'email', 'value': email},
-                    {'name': 'username', 'value': username},
-                    {'name': 'password', 'value': password},
+            "template": {
+                "data": [
+                    {"name": "email", "value": email},
+                    {"name": "username", "value": username},
+                    {"name": "password", "value": password},
                 ]
             }
         }
         headers = {
-            'Content-Type': 'application/vnd.collection+json',
-            'Accept': 'application/json'
+            "Content-Type": "application/vnd.collection+json",
+            "Accept": "application/json",
         }
-        res = await session.post(url + 'users/', json=payload, headers=headers)
+        res = await session.post(url + "users/", json=payload, headers=headers)
         if res.status == 400:
             raise BadRequestError(await res.text())
         res.raise_for_status()
         return from_json(CreatedUser, await res.text())
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 @cache
@@ -260,11 +297,11 @@ def generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
         if issubclass(generic_type, t):
             return generic_type
 
-    if hasattr(c, '__orig_bases__'):
+    if hasattr(c, "__orig_bases__"):
         for subclass in c.__orig_bases__:
             subclass_generic = generic_of(subclass, t, subclass=True)
             if subclass_generic is not None:
                 return subclass_generic
     if not subclass:
-        raise ValueError('Superclass does not inherit BaseClient')
+        raise ValueError("Superclass does not inherit BaseClient")
     return None

@@ -8,8 +8,9 @@ from chrisomatic.spec.given import GivenCubePlugin, GivenConfig, ExpandedConfig
 from chrisomatic.core.superclient import SuperClient
 
 
-async def smart_expand_config(given_config: GivenConfig, superclient: SuperClient,
-                              default_owner: ChrisUsername) -> ExpandedConfig:
+async def smart_expand_config(
+    given_config: GivenConfig, superclient: SuperClient, default_owner: ChrisUsername
+) -> ExpandedConfig:
     """
     Expand the given config, i.e. fill in default values, but use information
     we are able to obtain using the `SuperClient` to make better choices.
@@ -20,16 +21,22 @@ async def smart_expand_config(given_config: GivenConfig, superclient: SuperClien
     - if a plugin's owner is not specified, provide a default value
     - TODO add all required plugins from pipelines to plugin list
     """
-    resolved_plugins: tuple[str | GivenCubePlugin, ...] = await asyncio.gather(*(
-        mark_if_is_image(superclient.docker, plugin) for plugin in given_config.cube.plugins
-    ))
+    resolved_plugins: tuple[str | GivenCubePlugin, ...] = await asyncio.gather(
+        *(
+            mark_if_is_image(superclient.docker, plugin)
+            for plugin in given_config.cube.plugins
+        )
+    )
     realized_config: GivenConfig = dataclasses.replace(
-        given_config, cube=dataclasses.replace(given_config.cube, plugins=list(resolved_plugins))
+        given_config,
+        cube=dataclasses.replace(given_config.cube, plugins=list(resolved_plugins)),
     )
     return realized_config.expand(default_owner)
 
 
-async def mark_if_is_image(docker: aiodocker.Docker, plugin: str | GivenCubePlugin) -> str | GivenCubePlugin:
+async def mark_if_is_image(
+    docker: aiodocker.Docker, plugin: str | GivenCubePlugin
+) -> str | GivenCubePlugin:
     if isinstance(plugin, GivenCubePlugin):
         return plugin
     if await is_local_image(docker, plugin):
@@ -38,7 +45,7 @@ async def mark_if_is_image(docker: aiodocker.Docker, plugin: str | GivenCubePlug
 
 
 async def is_local_image(docker: aiodocker.Docker, name: str) -> bool:
-    if '://' in name:
+    if "://" in name:
         return False
     try:
         await docker.images.inspect(name)

@@ -18,8 +18,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-PaginatedUrl = NewType('PaginatedUrl', str)
-T = TypeVar('T')
+PaginatedUrl = NewType("PaginatedUrl", str)
+T = TypeVar("T")
 
 
 @deserialize
@@ -30,10 +30,13 @@ class _Paginated:
     results: list[Any]
 
 
-async def get_paginated(session: aiohttp.ClientSession, url: PaginatedUrl,
-                        element_type: Type[T],
-                        max_requests: int = 100) -> AsyncGenerator[T, None]:
-    logger.debug('GET, max_requests=%d, --> %s', max_requests, url)
+async def get_paginated(
+    session: aiohttp.ClientSession,
+    url: PaginatedUrl,
+    element_type: Type[T],
+    max_requests: int = 100,
+) -> AsyncGenerator[T, None]:
+    logger.debug("GET, max_requests=%d, --> %s", max_requests, url)
     if max_requests <= 0:
         raise TooMuchPaginationException()
     res = await session.get(url)

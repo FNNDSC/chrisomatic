@@ -32,6 +32,7 @@ class ChrisAdminCollectionLinks:
 class CubePlugin(Plugin):
     compute_resources: PaginatedUrl
 
+
 # {
 #     "url": "http://localhost:8000/api/v1/plugins/5/",
 #     "id": 5,

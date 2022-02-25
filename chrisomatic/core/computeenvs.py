@@ -18,10 +18,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
     existing: Collection[CubeComputeResource]
 
     def initial_state(self) -> State:
-        return State(
-            title=self.given.name,
-            status='checking for compute resource...'
-        )
+        return State(title=self.given.name, status="checking for compute resource...")
 
     async def run(self, emit: State) -> tuple[Outcome, Optional[CubeComputeResource]]:
         preexisting = self.find_in_existing()
@@ -29,15 +26,19 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             emit.status = preexisting.url
             if self.same_as(preexisting):
                 return Outcome.NO_CHANGE, preexisting
-            emit.status = f'Existing compute resource "{preexisting.name}" ' \
-                          'is different from given_config.'
+            emit.status = (
+                f'Existing compute resource "{preexisting.name}" '
+                "is different from given_config."
+            )
             return Outcome.FAILED, preexisting
-        created: CubeComputeResource = await self.superclient.cube.create_compute_resource(
-            name=self.given.name,
-            compute_url=self.given.url,
-            compute_user=self.given.username,
-            compute_password=self.given.password,
-            description=self.given.description
+        created: CubeComputeResource = (
+            await self.superclient.cube.create_compute_resource(
+                name=self.given.name,
+                compute_url=self.given.url,
+                compute_user=self.given.username,
+                compute_password=self.given.password,
+                description=self.given.description,
+            )
         )
         emit.status = created.url
         return Outcome.CHANGE, created
@@ -63,12 +64,13 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
         )
 
 
-async def create_compute_resources(superclient: SuperClient,
-                                   existing: Collection[CubeComputeResource],
-                                   givens: Sequence[GivenComputeResource]
-                                   ) -> Sequence[tuple[Outcome, CubeComputeResource]]:
+async def create_compute_resources(
+    superclient: SuperClient,
+    existing: Collection[CubeComputeResource],
+    givens: Sequence[GivenComputeResource],
+) -> Sequence[tuple[Outcome, CubeComputeResource]]:
     runner = ProgressTaskRunner(
-        title='Adding compute resources',
-        tasks=[ComputeResourceTask(superclient, given, existing) for given in givens]
+        title="Adding compute resources",
+        tasks=[ComputeResourceTask(superclient, given, existing) for given in givens],
     )
     return await runner.apply()

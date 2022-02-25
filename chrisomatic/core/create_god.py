@@ -34,8 +34,8 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
     def initial_state(self) -> State:
         user = self.on.chris_superuser
         return State(
-            title=f'superuser ({user.username})',
-            status=f'checking for superuser: username={user.username}'
+            title=f"superuser ({user.username})",
+            status=f"checking for superuser: username={user.username}",
         )
 
     async def run(self, emit: State) -> tuple[Outcome, Optional[SuperClient]]:
@@ -51,9 +51,9 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
                 username=user.username,
                 password=user.password,
                 connector=self.connector,
-                connector_owner=self.connector_owner
+                connector_owner=self.connector_owner,
             )
-            emit.status = 'connected!'
+            emit.status = "connected!"
             outcome = Outcome.NO_CHANGE
 
             superclient = await self.__from_client(cube, emit)
@@ -68,7 +68,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             if self.attempt >= 1:
                 # previously tried to create new superuser, but still
                 # unable to log in as them
-                emit.status = 'Did not create superuser.'
+                emit.status = "Did not create superuser."
                 return Outcome.FAILED, None
 
             # couldn't log in as superuser, so create new superuser
@@ -87,54 +87,61 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
         return outcome, superclient
 
     async def __from_client(
-            self,
-            cube_client: CubeClient,
-            emit: State
+        self, cube_client: CubeClient, emit: State
     ) -> Optional[SuperClient]:
         """
         Use the created `cube_client`'s `aiohttp.BaseConnector` to create everything else.
         Returns `None` if connection with any of the public _ChRIS_ stores failed.
         """
-        emit.status = 'connecting to ChRIS store...'
+        emit.status = "connecting to ChRIS store..."
 
         try:
-            stores = await self.__public_store_clients(self.on.public_store, cube_client.s.connector)
+            stores = await self.__public_store_clients(
+                self.on.public_store, cube_client.s.connector
+            )
         except aiohttp.ClientConnectorError as e:
             emit.status = f"Connection to ChRIS store: {e}"
             return None
 
-        emit.status = 'creating session...'
-        session = aiohttp.ClientSession(connector=cube_client.s.connector,
-                                        connector_owner=False)
-        emit.status = 'created client sessions.'
+        emit.status = "creating session..."
+        session = aiohttp.ClientSession(
+            connector=cube_client.s.connector, connector_owner=False
+        )
+        emit.status = "created client sessions."
         return SuperClient(
             cube=cube_client,
             docker=self.docker,
             store_url=self.on.chris_store_url,
             session=session,
-            public_stores=stores
+            public_stores=stores,
         )
 
     @staticmethod
-    async def __public_store_clients(stores: Sequence[ChrisURL],
-                                     connector: aiohttp.BaseConnector
-                                     ) -> Sequence[AnonymousChrisStoreClient]:
+    async def __public_store_clients(
+        stores: Sequence[ChrisURL], connector: aiohttp.BaseConnector
+    ) -> Sequence[AnonymousChrisStoreClient]:
         """
         Create `AnonymousChrisStoreClient` from the given public _ChRIS_ store URLs.
         """
-        store_clients = await asyncio.gather(*(AnonymousChrisStoreClient.from_url(
-            url=url,
-            connector=connector,
-            connector_owner=False
-        ) for url in stores), return_exceptions=True)
+        store_clients = await asyncio.gather(
+            *(
+                AnonymousChrisStoreClient.from_url(
+                    url=url, connector=connector, connector_owner=False
+                )
+                for url in stores
+            ),
+            return_exceptions=True,
+        )
 
         exceptions = [c for c in store_clients if isinstance(c, Exception)]
         if exceptions:
-            await asyncio.gather(*(
-                client.close()
-                for client in store_clients
-                if hasattr(client, 'close') and callable(client.close)
-            ))
+            await asyncio.gather(
+                *(
+                    client.close()
+                    for client in store_clients
+                    if hasattr(client, "close") and callable(client.close)
+                )
+            )
             raise exceptions[0]
 
         return store_clients

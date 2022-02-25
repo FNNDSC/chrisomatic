@@ -15,7 +15,7 @@ from dataclasses import dataclass, InitVar
 from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
 highlighter = ReprHighlighter()
-_R = TypeVar('_R')
+_R = TypeVar("_R")
 
 
 @dataclass
@@ -49,8 +49,7 @@ class _RunningTableTask(Generic[_R]):
         return self.spinner
 
     def __get_title(self) -> RenderableType:
-        return Text(self.state.title,
-                    style=self.outcome.style if self.done() else None)
+        return Text(self.state.title, style=self.outcome.style if self.done() else None)
 
     def __highlighted_status(self) -> RenderableType:
         if isinstance(self.state.status, Text):
@@ -65,6 +64,7 @@ class TaskRunner(Generic[_R]):
     """
     A `TaskRunner` executes multiple `ChrisomaticTask` concurrently.
     """
+
     tasks: Sequence[ChrisomaticTask[_R]]
 
     @abc.abstractmethod
@@ -81,7 +81,7 @@ class TableDisplayConfig:
     polling_interval: float = 0.25
     # task_title_width: int = 20
     # task_status_width: int = 50
-    spinner: Spinner = Spinner('dots')
+    spinner: Spinner = Spinner("dots")
     spinner_width: int = 3
 
 
@@ -95,15 +95,20 @@ class TableTaskRunner(TaskRunner[_R]):
     It is more suitable for task sets which have few tasks,
     and tasks that take a long time.
     """
+
     config: TableDisplayConfig = _DEFAULT_DISPLAY_CONFIG
 
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
         """
         Execute all tasks in parallel while displaying a table that shows their live statuses.
         """
-        running_tasks = tuple(_RunningTableTask(t, spinner=self.config.spinner) for t in self.tasks)
-        with Live(self._render(running_tasks),
-                  refresh_per_second=self.config.refresh_per_second) as live:
+        running_tasks = tuple(
+            _RunningTableTask(t, spinner=self.config.spinner) for t in self.tasks
+        )
+        with Live(
+            self._render(running_tasks),
+            refresh_per_second=self.config.refresh_per_second,
+        ) as live:
             while not self._all_done(running_tasks):
                 await asyncio.sleep(self.config.polling_interval)
                 live.update(self._render(running_tasks))
@@ -111,10 +116,10 @@ class TableTaskRunner(TaskRunner[_R]):
 
     def _render(self, tasks: Sequence[_RunningTableTask]) -> ConsoleRenderable:
         table = Table.grid(
-            Column(width=self.config.spinner_width, justify='center'),
+            Column(width=self.config.spinner_width, justify="center"),
             Column(ratio=3, min_width=20, max_width=120),
             Column(ratio=8, min_width=40),
-            expand=True
+            expand=True,
         )
         for running_task in tasks:
             table.add_row(*running_task.to_row())
@@ -145,20 +150,23 @@ class ProgressTaskRunner(TaskRunner[_R]):
 
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
         with Progress() as progress:
-            progress_task = progress.add_task(f'[yellow]{self.title}', total=len(self.tasks))
-            return await asyncio.gather(*(
-                self.wrap_update(progress, progress_task, ct)
-                for ct in self.tasks
-            ))
+            progress_task = progress.add_task(
+                f"[yellow]{self.title}", total=len(self.tasks)
+            )
+            return await asyncio.gather(
+                *(self.wrap_update(progress, progress_task, ct) for ct in self.tasks)
+            )
 
-    def wrap_update(self,
-                    progress: Progress,
-                    progress_task: TaskID,
-                    chrisomatic_task: ChrisomaticTask
-                    ) -> Awaitable[tuple[Outcome, _R]]:
+    def wrap_update(
+        self,
+        progress: Progress,
+        progress_task: TaskID,
+        chrisomatic_task: ChrisomaticTask,
+    ) -> Awaitable[tuple[Outcome, _R]]:
         """
         Wrap a `ChrisomaticTask` so that it updates a progress bar after it finishes.
         """
+
         async def run_and_update() -> tuple[Outcome, _R]:
             state = chrisomatic_task.initial_state()
             outcome, result = await chrisomatic_task.run(state)
@@ -167,11 +175,12 @@ class ProgressTaskRunner(TaskRunner[_R]):
                 msg = self.__format_noise(outcome, state)
                 progress.console.print(msg)
             return outcome, result
+
         return run_and_update()
 
     @staticmethod
     def __format_noise(outcome: Outcome, state: State) -> Text:
         t = Text()
-        t.append(f'[{state.title}]', style=outcome.style)
-        t.append(f' {state.status}')
+        t.append(f"[{state.title}]", style=outcome.style)
+        t.append(f" {state.status}")
         return t

@@ -9,5 +9,5 @@ async def wait_on_cube() -> None:
         await container.wait()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(wait_on_cube())

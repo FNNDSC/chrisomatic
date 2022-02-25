@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from chrisomatic.framework.outcome import Outcome
 from rich.console import RenderableType
 
-_R = TypeVar('_R')
+_R = TypeVar("_R")
 
 
 @dataclass
@@ -13,6 +13,7 @@ class State:
     Mutable object used to relay information between `ChrisomaticTask.run`
     and a live display.
     """
+
     title: str
     status: RenderableType
 

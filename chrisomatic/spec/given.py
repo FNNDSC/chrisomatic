@@ -3,7 +3,14 @@ from functools import cached_property
 from serde import deserialize, serde, Untagged, field, to_dict
 from dataclasses import dataclass
 import dataclasses
-from chris.common.types import PluginName, PluginVersion, ImageTag, ChrisURL, PluginUrl, ChrisUsername
+from chris.common.types import (
+    PluginName,
+    PluginVersion,
+    ImageTag,
+    ChrisURL,
+    PluginUrl,
+    ChrisUsername,
+)
 from chris.cube.types import ComputeResourceName, ComputeResourceId
 from typing import Union, Optional, Sequence, TypeGuard
 
@@ -33,7 +40,7 @@ class GivenBackend:
 
     def expand_pipeline(self, pipeline: str | Pipeline) -> Pipeline:
         if len(self.users) == 0:
-            raise ValidationError(f'No users specified for {self.__class__}')
+            raise ValidationError(f"No users specified for {self.__class__}")
         if isinstance(pipeline, Pipeline):
             return pipeline
         return Pipeline(src=pipeline, owner=self.users[0].username)
@@ -66,9 +73,9 @@ class GivenCubePlugin:
             return self.url
         if self.public_repo:
             return self.public_repo
-        return 'Unknown'
+        return "Unknown"
 
-    def set_owner_if_none(self, owner: ChrisUsername) -> 'GivenCubePlugin':
+    def set_owner_if_none(self, owner: ChrisUsername) -> "GivenCubePlugin":
         if self.owner:
             return self
         return dataclasses.replace(self, owner=owner)
@@ -79,8 +86,9 @@ class GivenCubePlugin:
         """
         return self.to_search_params()
 
-    def to_cube_search(self, compute_resources: dict[ComputeResourceName, ComputeResourceId]
-                       ) -> Sequence[dict[str, str]]:
+    def to_cube_search(
+        self, compute_resources: dict[ComputeResourceName, ComputeResourceId]
+    ) -> Sequence[dict[str, str]]:
         """
         Produce query parameters for a _CUBE_ `GET /api/v1/plugins/search/`
         """
@@ -95,15 +103,15 @@ class GivenCubePlugin:
     @staticmethod
     def __copy_and_set_compute(d: dict, cid: ComputeResourceId) -> dict[str, str]:
         d = d.copy()
-        d['compute_resource_id'] = str(cid)
+        d["compute_resource_id"] = str(cid)
         return d
 
     def to_search_params(self) -> dict[str, str]:
         d: dict = to_dict(self)
-        d['name_exact'] = d['name']
-        del d['name']
-        del d['url']
-        del d['compute_resource']
+        d["name_exact"] = d["name"]
+        del d["name"]
+        del d["url"]
+        del d["compute_resource"]
         d = {k: v for k, v in d.items() if v is not None}
         return d
 
@@ -114,7 +122,7 @@ class ExpandedCube(ExpandedBackend):
     plugins: Sequence[GivenCubePlugin]
 
 
-_store_plugin_re = re.compile(r'^https?://.+/api/v1/plugins/\d+/$')
+_store_plugin_re = re.compile(r"^https?://.+/api/v1/plugins/\d+/$")
 
 
 @deserialize(tagging=Untagged)
@@ -126,17 +134,25 @@ class GivenCube(GivenBackend):
 
     def expand(self, default_plugin_owner: ChrisUsername) -> ExpandedCube:
         if len(self.compute_resource) == 0 and len(self.plugins) > 0:
-            raise ValidationError('Must specify at least one compute_resource for ChRIS')
+            raise ValidationError(
+                "Must specify at least one compute_resource for ChRIS"
+            )
         return ExpandedCube(
             users=self.users,
             pipelines=tuple(self.expand_pipeline(p) for p in self.pipelines),
             compute_resource=self.compute_resource,
-            plugins=tuple(self.expand_plugin(p, default_plugin_owner) for p in self.plugins)
+            plugins=tuple(
+                self.expand_plugin(p, default_plugin_owner) for p in self.plugins
+            ),
         )
 
-    def expand_plugin(self, plugin: str | GivenCubePlugin, owner: ChrisUsername) -> GivenCubePlugin:
+    def expand_plugin(
+        self, plugin: str | GivenCubePlugin, owner: ChrisUsername
+    ) -> GivenCubePlugin:
         resolved_plugin = self.resolve_plugin_type(plugin)
-        return self.fill_plugin_compute_resource(resolved_plugin).set_owner_if_none(owner)
+        return self.fill_plugin_compute_resource(resolved_plugin).set_owner_if_none(
+            owner
+        )
 
     def resolve_plugin_type(self, plugin: str | GivenCubePlugin) -> GivenCubePlugin:
         """
@@ -154,7 +170,9 @@ class GivenCube(GivenBackend):
 
     def fill_plugin_compute_resource(self, plugin: GivenCubePlugin) -> GivenCubePlugin:
         if len(plugin.compute_resource) == 0:
-            return dataclasses.replace(plugin, compute_resource=self.compute_resource_names)
+            return dataclasses.replace(
+                plugin, compute_resource=self.compute_resource_names
+            )
         self.check_plugin_compute_resources_exist(plugin)
         return plugin
 
@@ -162,8 +180,8 @@ class GivenCube(GivenBackend):
         for compute_resource in plugin.compute_resource:
             if compute_resource not in self.compute_resource_names:
                 raise ValidationError(
-                    f'Error with plugin {plugin}: compute resource '
-                    f'not found in {self.compute_resource_names}'
+                    f"Error with plugin {plugin}: compute resource "
+                    f"not found in {self.compute_resource_names}"
                 )
 
     @cached_property
@@ -178,17 +196,21 @@ class GivenCube(GivenBackend):
     @staticmethod
     def looks_like_image_tag(s: str) -> TypeGuard[ImageTag]:
         return (
-            s.startswith('docker.io/')
-            or s.startswith('ghcr.io/')
-            or s.startswith('fnndsc/pl-')
-            or (s.count(':') == 1 and s[0].isalpha() and s.count('/') <= 2 and '//' not in s)
+            s.startswith("docker.io/")
+            or s.startswith("ghcr.io/")
+            or s.startswith("fnndsc/pl-")
+            or (
+                s.count(":") == 1
+                and s[0].isalpha()
+                and s.count("/") <= 2
+                and "//" not in s
+            )
         )
 
     @staticmethod
     def looks_like_public_repo(s: str) -> bool:
-        return (
-            s.startswith('https://github.com/')
-            or s.startswith('https://gitlab.com/')
+        return s.startswith("https://github.com/") or s.startswith(
+            "https://gitlab.com/"
         )
 
 
@@ -210,13 +232,18 @@ class GivenConfig:
 
     def __post_init__(self):
         if len(self.chris_store.users) == 0 and len(self.cube.plugins) > 0:
-            raise ValidationError('You must list at least one ChRIS store user.')
+            raise ValidationError("You must list at least one ChRIS store user.")
 
     def expand(self, default_plugin_owner: ChrisUsername) -> ExpandedConfig:
         """
         Fill default values.
         """
-        return ExpandedConfig(self.version, self.on, self.cube.expand(default_plugin_owner), self.chris_store)
+        return ExpandedConfig(
+            self.version,
+            self.on,
+            self.cube.expand(default_plugin_owner),
+            self.chris_store,
+        )
 
 
 class ValidationError(Exception):
