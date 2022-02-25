@@ -169,7 +169,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         for client in self.other_stores:
             emit.status = f'searching in {client.url}...'
             result = await client.get_first_plugin(**query)
-            await asyncio.sleep(4)
             if result is not None:
                 return result, PluginOrigin.public_store
         return None, None
