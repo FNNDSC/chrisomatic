@@ -1,7 +1,9 @@
-FROM ghcr.io/fnndsc/python-poetry:1.1.13
+FROM docker.io/fnndsc/python-poetry:1.1.13
 
 WORKDIR /usr/local/src/chrisomatic
 COPY . .
 RUN poetry install --no-dev
 
-CMD ["chrisomatic"]
+COPY docs/examples/default.yml /etc/chrisomatic/chrisomatic.yml
+WORKDIR /etc/chrisomatic
+CMD ["chrisomatic", "noop"]

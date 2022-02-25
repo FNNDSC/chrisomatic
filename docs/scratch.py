@@ -57,14 +57,10 @@ tasks = (
 
 
 async def demo():
-    # runner = TableTaskRunner(tasks=tasks)
+    runner = TableTaskRunner(tasks=tasks)
     # runner = ProgressTaskRunner(tasks=tasks, title=__file__)
-    # results = await runner.apply()
+    results = await runner.apply()
     # console.print(results)
-    waiter = wait_up(['http://dne', 'http://wack'])
-    await waiter.apply()
-
-
 
 
 def main():

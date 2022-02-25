@@ -104,7 +104,7 @@ on:
 ----
 
 [#plugin_representation_strategy]
-=== Plugin Representation Strategy
+=== Plugin JSON Description Strategy
 
 Most _ChRIS_ plugins are created from either
 https://github.com/FNNDSC/cookiecutter-chrisapp[cookiecutter-chrisapp],

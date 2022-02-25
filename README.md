@@ -1,10 +1,8 @@
 # _ChRISomatic_
 
-[//]: # ([![Version]&#40;https://img.shields.io/docker/v/fnndsc/chrisomatic?sort=semver&#41;]&#40;https://hub.docker.com/r/fnndsc/chrisomatic&#41;)
-
+[![Version](https://img.shields.io/docker/v/fnndsc/chrisomatic?sort=semver)](https://hub.docker.com/r/fnndsc/chrisomatic)
 [![MIT License](https://img.shields.io/github/license/fnndsc/chrisomatic)](https://github.com/FNNDSC/chrisomatic/blob/master/LICENSE)
-
-[//]: # ([![Build]&#40;https://github.com/FNNDSC/chrisomatic/actions/workflows/ci.yml/badge.svg&#41;]&#40;https://github.com/FNNDSC/chrisomatic/actions&#41;)
+[![Build](https://github.com/FNNDSC/chrisomatic/actions/workflows/build.yml/badge.svg)](https://github.com/FNNDSC/chrisomatic/actions)
 
 `chrisomatic` is a tool for automatic administration of _ChRIS_ backends.
 It is particularly useful for seeding a setup for testing or development,
@@ -99,7 +97,7 @@ TODO TODO TODO
 4. Upload plugins to _ChRIS_.
 5. Upload pipelines to _ChRIS_.
 
-## Project Scope
+## Project Stage and Scope
 
 WIP.
 
@@ -110,7 +108,7 @@ WIP.
 - [x] Create _ChRIS_ store users
 - [x] Add compute resources to CUBE
 - [x] Register plugins from a store to CUBE
-- [ ] Register plugin given a docker image to CUBE
+- [x] Register plugin given a docker image to CUBE
 - [ ] Add pipelines to CUBE
 - [x] very fast
 
