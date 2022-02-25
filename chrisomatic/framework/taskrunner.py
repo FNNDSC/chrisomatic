@@ -112,8 +112,8 @@ class TableTaskRunner(TaskRunner[_R]):
     def _render(self, tasks: Sequence[_RunningTableTask]) -> ConsoleRenderable:
         table = Table.grid(
             Column(width=self.config.spinner_width, justify='center'),
-            Column(ratio=1, min_width=20, max_width=120),
-            Column(ratio=2, min_width=40),
+            Column(ratio=3, min_width=20, max_width=120),
+            Column(ratio=8, min_width=40),
             expand=True
         )
         for running_task in tasks:

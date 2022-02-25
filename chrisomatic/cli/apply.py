@@ -125,7 +125,7 @@ def to_summary(outcomes: dict[Outcome, int]) -> Text:
     summary = Text()
     summary.append('Summary: ', style='bold')
     summary.append(str(outcomes[Outcome.NO_CHANGE]), style=Outcome.NO_CHANGE.style)
-    summary.append(' ok, ')
+    summary.append(' present, ')
     summary.append(str(outcomes[Outcome.CHANGE]), style=Outcome.CHANGE.style)
     summary.append(' changed, ')
     summary.append(str(outcomes[Outcome.FAILED]), style=Outcome.FAILED.style)
