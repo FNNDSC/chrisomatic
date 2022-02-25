@@ -1,4 +1,6 @@
 import enum
+from rich.console import RenderableType
+from rich.text import Text
 from rich.emoji import Emoji
 from rich.style import Style
 
@@ -9,7 +11,7 @@ class Outcome(enum.Enum):
     CHANGE = 'changed'
 
     @property
-    def emoji(self) -> Emoji:
+    def emoji(self) -> RenderableType:
         return _ICONS[self]
 
     @property
@@ -17,10 +19,14 @@ class Outcome(enum.Enum):
         return _STYLES[self]
 
 
-_ICONS: dict[Outcome, Emoji] = {
+__green_check = Text.from_markup(':heavy_check_mark:')
+__green_check.stylize('bold green')
+
+
+_ICONS: dict[Outcome, RenderableType] = {
     Outcome.FAILED: Emoji('x'),
     Outcome.NO_CHANGE: Emoji('heavy_minus_sign'),
-    Outcome.CHANGE: Emoji('heavy_check_mark')
+    Outcome.CHANGE: __green_check
 }
 
 _STYLES: dict[Outcome, Style] = {
