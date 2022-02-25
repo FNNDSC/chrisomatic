@@ -155,7 +155,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if found_in_store:
             emit.status = f'found --> {found_in_store.url}'
             return found_in_store, origin
-        emit.status = f'plugin not found in any ChRIS store.'
+        emit.status = Text('not found', style='bold red')
         uploaded_plugin = await self._upload_to_store(emit)
         return uploaded_plugin, PluginOrigin.local_store
 
@@ -169,6 +169,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         for client in self.other_stores:
             emit.status = f'searching in {client.url}...'
             result = await client.get_first_plugin(**query)
+            await asyncio.sleep(4)
             if result is not None:
                 return result, PluginOrigin.public_store
         return None, None
@@ -196,10 +197,9 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return uploaded_plugin
 
     async def _get_json_representation(self, emit: State) -> Optional[str]:
-        emit.status = 'attempting to produce JSON representation...'
         if self.plugin.dock_image is None:
-            emit.status = 'dock_image unspecified - cannot upload'
             return None
+        emit.status = 'attempting to produce JSON representation...'
         guessing_methods: list[Callable[[State], Awaitable[Optional[str]]]] = [
             self._json_from_chris_plugin_info, self._json_from_old_chrisapp
         ]
