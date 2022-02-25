@@ -8,7 +8,7 @@
 It is particularly useful for seeding a setup for testing or development,
 though it could also (work and) be useful for deployments.
 
-![Screen recording](https://ipfs.babymri.org/ipfs/QmdwKBqQHGb1J4f4Mg8QEeXAYNRKhmcR8vxcQCDPA6ZvU1/chrisomatic.gif)
+![Screen recording](https://ipfs.babymri.org/ipfs/QmXYHhAfgJDvHrAJsAkt77s9UrP4Snz4P7FWTnSayweMcs/chrisomatic.gif)
 
 ## Usage
 
