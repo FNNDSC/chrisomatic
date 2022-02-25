@@ -42,7 +42,7 @@ schema = Map({
             Optional('version'): Regex(r'^[0-9.]+$'),
             Optional('dock_image'): Str(),
             Optional('public_repo'): Regex(r'.+:\/\/.+'),
-            Optional('compute_resource'): Seq(Str()),
+            Optional('compute_resource', default=[]): EmptyList() | Seq(Str()),
             Optional('owner'): Str()
         }))
     })
