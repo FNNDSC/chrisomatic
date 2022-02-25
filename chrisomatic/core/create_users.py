@@ -1,11 +1,9 @@
 from typing import Optional, Sequence, Type
 from dataclasses import dataclass
 
-import aiohttp
-from rich.text import Text
 from chris.common.types import ChrisURL
 from chris.common.client import AuthenticatedClient
-from chris.common.errors import IncorrectLoginError
+from chris.common.errors import IncorrectLoginError, ResponseError
 from chrisomatic.spec.common import User
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.core.superclient import SuperClient, A
@@ -33,8 +31,8 @@ class CreateUsersTask(ChrisomaticTask[A]):
             emit.status = "creating user..."
             try:
                 await self.superclient.create_user(self.url, self.user, self.user_type)
-            except aiohttp.ClientResponseError:
-                emit.status = Text("failed to create user", style="bold red")
+            except ResponseError as e:
+                emit.status = str(e)
                 return Outcome.FAILED, None
             client: AuthenticatedClient = await self.superclient.create_client(
                 self.url, self.user, self.user_type

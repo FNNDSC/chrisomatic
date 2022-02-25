@@ -6,7 +6,7 @@ import aiohttp
 from serde.json import from_json
 from chris.common.types import ChrisURL
 from chris.common.client import AbstractClient
-from chris.common.errors import BadRequestError, InternalServerError, ResponseError
+from chris.common.errors import raise_for_status, ResponseError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -53,10 +53,3 @@ def _get_return_hint(fn: Callable[[...], _R]) -> Type[_R]:
     if "return" not in hints:
         raise ValueError(f"Function {fn} must define a return type hint.")
     return hints["return"]
-
-
-async def raise_for_status(res: aiohttp.ClientResponse):
-    if res.status < 400:
-        return
-    exception = BadRequestError if res.status < 500 else InternalServerError
-    raise exception(res.status, res.url, await res.text())

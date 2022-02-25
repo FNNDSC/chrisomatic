@@ -52,7 +52,7 @@ from serde.json import from_json
 
 from chris.common.deserialization import Plugin, CreatedUser
 from chris.common.search import get_paginated, PaginatedUrl, T
-from chris.common.errors import IncorrectLoginError, BadRequestError
+from chris.common.errors import IncorrectLoginError, raise_for_status
 from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
 
@@ -277,9 +277,7 @@ class AuthenticatedClient(BaseClient[_UL, _P, _C], abc.ABC):
             "Accept": "application/json",
         }
         res = await session.post(url + "users/", json=payload, headers=headers)
-        if res.status == 400:
-            raise BadRequestError(await res.text())
-        res.raise_for_status()
+        await raise_for_status(res)
         return from_json(CreatedUser, await res.text())
 
 

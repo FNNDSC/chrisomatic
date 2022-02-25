@@ -11,7 +11,7 @@ from rich.text import Text
 from chris.common.deserialization import Plugin
 from chris.common.search import to_sequence
 from chris.common.types import PluginUrl, PluginName, ImageTag, ChrisUsername
-from chris.common.errors import BadRequestError
+from chris.common.errors import ResponseError
 from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
@@ -125,7 +125,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         #     origin=origin
         # )
         registrations: list[CubePlugin] = []
-        errors: list[BadRequestError] = []
+        errors: list[ResponseError] = []
         for compute_resource_name in compute_envs:
             emit.status = f'--> "{compute_resource_name}"'
             try:
@@ -134,7 +134,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
                     compute_name=compute_resource_name,
                 )
                 registrations.append(registered)
-            except BadRequestError as e:
+            except ResponseError as e:
                 errors.append(e)
         if len(errors) > 0:
             emit.status = str(errors)
@@ -222,7 +222,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
                     public_repo=inferred.public_repo,
                     descriptor_file=Path(temp.name),
                 )
-            except BadRequestError as e:
+            except ResponseError as e:
                 emit.status = str(e)
                 return None
         return uploaded_plugin
