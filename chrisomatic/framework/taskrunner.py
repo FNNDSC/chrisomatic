@@ -52,11 +52,11 @@ class _RunningTableTask(Generic[_R]):
         return Text(self.state.title, style=self.outcome.style if self.done() else None)
 
     def __highlighted_status(self) -> RenderableType:
-        if isinstance(self.state.status, Text):
-            return self.state.status
-        text = Text(str(self.state.status))
-        highlighter.highlight(text)
-        return text
+        if isinstance(self.state.status, str):
+            text = Text(str(self.state.status))
+            highlighter.highlight(text)
+            return text
+        return self.state.status
 
 
 @dataclass
