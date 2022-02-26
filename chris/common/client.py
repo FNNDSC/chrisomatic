@@ -223,7 +223,7 @@ class AuthenticatedClient(BaseClient[_UL, _P, _C], abc.ABC):
         login = await session.post(url + "auth-token/", json=payload)
         if login.status == 400:
             raise IncorrectLoginError(await login.text())
-
+        await raise_for_status(login)
         data = await login.json()
         return await cls.from_token(
             url=url,

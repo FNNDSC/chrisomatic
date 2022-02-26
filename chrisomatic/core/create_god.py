@@ -4,7 +4,7 @@ import aiodocker
 from typing import Optional, Sequence
 import dataclasses
 from chris.common.types import ChrisURL
-from chris.common.errors import IncorrectLoginError
+from chris.common.errors import IncorrectLoginError, ResponseError
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
@@ -60,7 +60,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             if superclient is None:
                 await asyncio.gather(cube.close(), self.docker.close())
                 return Outcome.FAILED, None
-        except aiohttp.ClientError as e:
+        except ResponseError as e:
             emit.status = str(e)
             await self.docker.close()
             return Outcome.FAILED, None
