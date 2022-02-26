@@ -33,7 +33,11 @@ data = {
                 "dock_image": "ghcr.io/fnndsc/pl-nums2mask:1.0.0",
                 "compute_resource": [f"try-{stamp}-cr-b"],
             },
-            {"name": "pl-dircopy", "version": "2.1.1"},
+            {
+                "name": "pl-dircopy",
+                "version": "2.1.1",
+                "dock_image": "fnndsc/pl-dircopy",
+            },
         ],
     },
 }

@@ -9,12 +9,10 @@ from rich.live import Live
 from rich.table import Table, Column
 from rich.progress import Progress, TaskID
 from rich.spinner import Spinner
-from rich.highlighter import ReprHighlighter
 from typing import Sequence, ClassVar, TypeVar, Generic, Awaitable
 from dataclasses import dataclass, InitVar
 from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
-highlighter = ReprHighlighter()
 _R = TypeVar("_R")
 
 
@@ -31,7 +29,7 @@ class _RunningTableTask(Generic[_R]):
         self.task = asyncio.create_task(chrisomatic_task.run(self.state))
 
     def to_row(self) -> tuple[RenderableType, RenderableType, RenderableType]:
-        return self.__get_icon(), self.__get_title(), self.__highlighted_status()
+        return self.__get_icon(), self.__get_title(), self.state.status
 
     def done(self) -> bool:
         return self.task.done()
@@ -50,13 +48,6 @@ class _RunningTableTask(Generic[_R]):
 
     def __get_title(self) -> RenderableType:
         return Text(self.state.title, style=self.outcome.style if self.done() else None)
-
-    def __highlighted_status(self) -> RenderableType:
-        if isinstance(self.state.status, str):
-            text = Text(str(self.state.status))
-            highlighter.highlight(text)
-            return text
-        return self.state.status
 
 
 @dataclass
@@ -179,8 +170,8 @@ class ProgressTaskRunner(TaskRunner[_R]):
         return run_and_update()
 
     @staticmethod
-    def __format_noise(outcome: Outcome, state: State) -> Text:
-        t = Text()
-        t.append(f"[{state.title}]", style=outcome.style)
-        t.append(f" {state.status}")
-        return t
+    def __format_noise(outcome: Outcome, state: State) -> RenderableType:
+        title = Text(f"[{state.title}] ", style=outcome.style)
+        table = Table.grid(Column(ratio=3), Column(ratio=8), expand=True)
+        table.add_row(title, state.status)
+        return table

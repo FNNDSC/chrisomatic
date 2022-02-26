@@ -36,7 +36,11 @@ class DockerPullTask(ChrisomaticTask[str]):
     async def run(self, emit: State) -> tuple[Outcome, str]:
         async with aiodocker.Docker() as docker:
             await rich_pull(docker, "fnndsc/pl-re-sub", emit)
+            emit.append = True
+            emit.status = "will delete now..."
             await docker.images.delete("fnndsc/pl-re-sub:latest")
+            emit.status = "deleted"
+
         return Outcome.CHANGE, "ok"
 
 

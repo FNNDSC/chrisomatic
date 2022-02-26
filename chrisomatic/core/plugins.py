@@ -240,13 +240,15 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         )
         if pull_result == PullResult.error:
             return None
-        emit.status = "attempting to produce JSON representation..."
+        if pull_result == PullResult.pulled:
+            emit.append = True
         guessing_methods: list[Callable[[State], Awaitable[Optional[str]]]] = [
             self._json_from_chris_plugin_info,
             self._json_from_old_chrisapp,
         ]
         for guess_method in guessing_methods:
             json_representation = await guess_method(emit)
+            emit.append = False
             if json_representation is not None:
                 return json_representation
         return None
@@ -261,7 +263,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return await self._try_run(emit, (cmd[0], "--json"))
 
     async def _try_run(self, emit: State, command: Sequence[str]) -> Optional[str]:
-        emit.status = f"Running {command}"
+        emit.status = f"Running `{' '.join(command)}`"
         try:
             return await check_output(self.docker, self.plugin.dock_image, command)
         except aiodocker.DockerContainerError:
