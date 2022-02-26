@@ -1,4 +1,5 @@
 import asyncio
+import aiodocker
 from typing import Sequence
 from dataclasses import dataclass
 from rich.progress import Progress
@@ -6,6 +7,7 @@ from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
 from chrisomatic.framework.taskrunner import TableTaskRunner, ProgressTaskRunner
 from chrisomatic.cli import console
 from chrisomatic.core.waitup import wait_up
+from chrisomatic.core.docker import rich_pull
 
 
 @dataclass
@@ -27,22 +29,15 @@ class DemoTask(ChrisomaticTask[str]):
 
 
 @dataclass
-class ProgressTask(ChrisomaticTask[str]):
+class DockerPullTask(ChrisomaticTask[str]):
     def initial_state(self) -> State:
         return State("some progress", "some progress")
 
     async def run(self, emit: State) -> tuple[Outcome, str]:
-        await asyncio.sleep(1)
-        emit.status = Progress()
-        progress = emit.status
-        t = progress.add_task("pulling nothing...", total=100)
-        await asyncio.sleep(1)
-        progress.update(t, advance=30)
-        await asyncio.sleep(1)
-        progress.update(t, advance=50)
-        await asyncio.sleep(1)
-        progress.update(t, advance=20)
-        return Outcome.CHANGE, "okokok"
+        async with aiodocker.Docker() as docker:
+            await rich_pull(docker, "fnndsc/pl-re-sub", emit)
+            await docker.images.delete("fnndsc/pl-re-sub:latest")
+        return Outcome.CHANGE, "ok"
 
 
 tasks = (
@@ -87,7 +82,7 @@ tasks = (
             "ghcr.io/fnndsc/pl-dne:1.0.0 : not found.",
         ),
     ),
-    ProgressTask(),
+    DockerPullTask(),
     DemoTask(
         name="pl-verylongnamewhathappensifitistoolong?",
         result=Outcome.NO_CHANGE,

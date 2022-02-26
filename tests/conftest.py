@@ -28,6 +28,7 @@ async def docker(event_loop):
         "/var/run/docker.sock", loop=event_loop
     ) as connector:
         d = aiodocker.Docker(url="unix://localhost", connector=connector)
+        await d.images.pull("alpine", tag="latest", stream=False)
         yield d
         await d.close()
 

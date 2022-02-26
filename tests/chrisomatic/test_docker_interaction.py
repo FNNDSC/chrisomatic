@@ -7,6 +7,8 @@ from chrisomatic.core.docker import (
     check_output,
     run_rm,
     get_cmd,
+    has_image,
+    parse_image_tag,
     NonZeroExitCodeError,
 )
 from chrisomatic.core.expand import is_local_image
@@ -98,3 +100,21 @@ async def test_run_rm_command_not_found(docker: aiodocker.Docker):
     for info in created_containers_info:
         if command in info["Config"]["Cmd"]:
             pytest.fail(f'Container not removed: {info["Id"]}')
+
+
+async def test_has_image(docker: aiodocker.Docker):
+    a_tag = f"localhost/whatever/something:{time.time()}"
+    assert not await has_image(docker, a_tag)
+    try:
+        await docker.images.tag("alpine:latest", a_tag)
+        assert await has_image(docker, a_tag)
+    finally:
+        await docker.images.delete(a_tag)
+
+
+def test_parse_image_tag(docker: aiodocker.Docker):
+    assert parse_image_tag("python:3") == ("python", "3")
+    assert parse_image_tag("python:3.10") == ("python", "3.10")
+    assert parse_image_tag("python:latest") == ("python", "latest")
+    assert parse_image_tag("python") == ("python", "latest")
+    assert parse_image_tag("python:latest:3") is None

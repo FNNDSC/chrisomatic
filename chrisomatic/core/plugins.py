@@ -16,7 +16,12 @@ from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AbstractChrisStoreClient, ChrisStoreClient
-from chrisomatic.core.docker import check_output, get_cmd
+from chrisomatic.core.docker import (
+    check_output,
+    get_cmd,
+    rich_pull_if_missing,
+    PullResult,
+)
 from chrisomatic.core.superclient import SuperClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
@@ -229,6 +234,11 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
 
     async def _get_json_representation(self, emit: State) -> Optional[str]:
         if self.plugin.dock_image is None:
+            return None
+        pull_result = await rich_pull_if_missing(
+            self.docker, self.plugin.dock_image, emit
+        )
+        if pull_result == PullResult.error:
             return None
         emit.status = "attempting to produce JSON representation..."
         guessing_methods: list[Callable[[State], Awaitable[Optional[str]]]] = [
