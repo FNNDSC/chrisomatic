@@ -61,11 +61,11 @@ _A = TypeVar("_A", bound="AnonymousClient")
 _C = TypeVar("_C", bound="AuthenticatedClient")
 _L = TypeVar("_L", bound=CommonCollectionLinks)
 _UL = TypeVar("_UL", bound=AuthenticatedCollectionLinks)
-_P = TypeVar("_P", bound=Plugin)
+P = TypeVar("P", bound=Plugin)
 
 
 @dataclass(frozen=True)
-class AbstractClient(Generic[_L, _P], abc.ABC):
+class AbstractClient(Generic[_L, P], abc.ABC):
     """
     Common data between clients for the _ChRIS_ backend and _ChRIS_ store backend.
     It is simply a wrapper around a
@@ -83,7 +83,7 @@ class AbstractClient(Generic[_L, _P], abc.ABC):
         """
         await self.s.close()
 
-    async def get_first_plugin(self, **query) -> Optional[_P]:
+    async def get_first_plugin(self, **query) -> Optional[P]:
         """
         Get the first plugin from a search.
 
@@ -96,7 +96,7 @@ class AbstractClient(Generic[_L, _P], abc.ABC):
         search_results = self.search_plugins(limit=1, max_requests=1, **query)
         return await anext(search_results, None)
 
-    def search_plugins(self, max_requests=100, **query) -> AsyncIterator[_P]:
+    def search_plugins(self, max_requests=100, **query) -> AsyncIterator[P]:
         return self.search(
             url=self.collection_links.plugins,
             query=query,
@@ -120,7 +120,7 @@ class AbstractClient(Generic[_L, _P], abc.ABC):
         return "&".join(f"{k}={v}" for k, v in query.items() if v)
 
 
-class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
+class BaseClient(AbstractClient[_L, P], AsyncContextManager[_B], abc.ABC):
     """
     Provides the `BaseClient.new` constructor. Subclasses which make
     use of `BaseClient.new` may not have any extra fields.
@@ -172,7 +172,7 @@ class BaseClient(AbstractClient[_L, _P], AsyncContextManager[_B], abc.ABC):
         await self.close()
 
 
-class AnonymousClient(BaseClient[_L, _P, _A]):
+class AnonymousClient(BaseClient[_L, P, _A]):
     @classmethod
     async def from_url(
         cls,
@@ -186,7 +186,7 @@ class AnonymousClient(BaseClient[_L, _P, _A]):
         return await cls.new(url, connector, connector_owner)
 
 
-class AuthenticatedClient(BaseClient[_UL, _P, _C], abc.ABC):
+class AuthenticatedClient(BaseClient[_UL, P, _C], abc.ABC):
     @classmethod
     async def from_login(
         cls,

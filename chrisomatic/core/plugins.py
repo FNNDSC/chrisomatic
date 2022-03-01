@@ -3,15 +3,17 @@ import enum
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Sequence, Optional, Collection, Callable, Awaitable
+from typing import Sequence, Optional, Collection, Callable, Awaitable, Type
 
 import aiodocker
+import aiohttp
 
 from rich.text import Text
 from chris.common.deserialization import Plugin
 from chris.common.search import to_sequence
 from chris.common.types import PluginUrl, PluginName, ImageTag, ChrisUsername
 from chris.common.errors import ResponseError
+from chris.common.client import AbstractClient, P
 from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
@@ -26,6 +28,7 @@ from chrisomatic.core.superclient import SuperClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
 from chrisomatic.spec.given import GivenCubePlugin
+from chrisomatic.core.helpers import RetryWrapper, R
 
 
 @dataclass(frozen=True)
@@ -134,9 +137,8 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         for compute_resource_name in compute_envs:
             emit.status = f'--> "{compute_resource_name}"'
             try:
-                registered = await self.cube.register_plugin(
-                    plugin_store_url=plugin_in_store.url,
-                    compute_name=compute_resource_name,
+                registered = await self.__register_plugin(
+                    plugin_in_store.url, compute_resource_name, emit
                 )
                 registrations.append(registered)
             except ResponseError as e:
@@ -148,6 +150,23 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return Outcome.CHANGE, PluginRegistration(
             plugin=registrations[0], from_url=plugin_in_store.url, origin=origin
         )
+
+    async def __register_plugin(
+        self,
+        plugin_store_url: PluginUrl,
+        compute_name: ComputeResourceName,
+        emit: State,
+    ) -> CubePlugin:
+        """
+        Register a plugin to CUBE, retrying if a `ServerDisconnectedError` occurs.
+        """
+
+        async def register_plugin() -> CubePlugin:
+            return await self.cube.register_plugin(
+                plugin_store_url=plugin_store_url, compute_name=compute_name
+            )
+
+        return await _RetryOnDisconnect[CubePlugin](register_plugin).call(emit)
 
     async def _already_present(
         self, emit: State
@@ -165,7 +184,9 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         list of requested compute resources from `self.plugin` are returned.
         """
         query = self.plugin.to_search_params()
-        existing_plugin = await self.cube.get_first_plugin(**query)
+        existing_plugin: CubePlugin = await self.__get_first_plugin(
+            self.cube, query, emit
+        )
         if existing_plugin is None:
             # plugin not registered, so need to register to all compute envs
             return None, self.plugin.compute_resource
@@ -183,29 +204,46 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     async def _find_in_stores_else_upload(
         self, emit: State
     ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
-        found_in_store, origin = await self._find_in_store(emit)
-        if found_in_store:
-            emit.status = f"found --> {found_in_store.url}"
-            return found_in_store, origin
-        emit.status = Text("not found", style="bold red")
-        uploaded_plugin = await self._upload_to_store(emit)
-        return uploaded_plugin, PluginOrigin.local_store
+        try:
+            found_in_store, origin = await self._find_in_store(emit)
+            if found_in_store:
+                emit.status = f"found --> {found_in_store.url}"
+                return found_in_store, origin
+            emit.status = Text("not found", style="bold red")
+            uploaded_plugin = await self._upload_to_store(emit)
+            return uploaded_plugin, PluginOrigin.local_store
+        except aiohttp.ClientError as e:
+            emit.status = Text(str(e), style="red")
+            return None, None
 
     async def _find_in_store(
         self, emit: State
     ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         query = self.plugin.to_store_search()
         emit.status = f"searching in {self.linked_store.url}..."
-        result = await self.linked_store.get_first_plugin(**query)
+        result = await self.__get_first_plugin(self.linked_store, query, emit)
         if result is not None:
             return result, PluginOrigin.local_store
 
         for client in self.other_stores:
             emit.status = f"searching in {client.url}..."
-            result = await client.get_first_plugin(**query)
+            result = await self.__get_first_plugin(client, query, emit)
             if result is not None:
                 return result, PluginOrigin.public_store
         return None, None
+
+    @staticmethod
+    async def __get_first_plugin(
+        client: AbstractClient[Type, P], query: dict[str, str], emit: State
+    ) -> P:
+        """
+        Wraps `client.get_first_plugin` with `_RetryOnDisconnect`.
+        """
+
+        async def get_first_plugin():
+            return await client.get_first_plugin(**query)
+
+        return await _RetryOnDisconnect[P](get_first_plugin).call(emit)
 
     async def _upload_to_store(self, emit: State) -> Optional[Plugin]:
         if self.linked_store is None:
@@ -272,8 +310,23 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             return None
 
     @property
-    def _all_clients(self):
+    def _all_stores(self) -> list[AbstractChrisStoreClient]:
         return [self.linked_store, *self.other_stores]
+
+
+class _RetryOnDisconnect(RetryWrapper[R]):
+    """
+    IDK why these things happen:
+
+        aiohttp.client_exceptions.ClientOSError: [Errno 1] [SSL: APPLICATION_DATA_AFTER_CLOSE_NOTIFY]
+        application data after close notify (_ssl.c:2660)
+
+        aiohttp.client_exceptions.ServerDisconnectedError: Server disconnected
+
+    """
+
+    def check_exception(self, e: BaseException) -> bool:
+        return isinstance(e, (aiohttp.ServerDisconnectedError, aiohttp.ClientOSError))
 
 
 async def register_plugins(
