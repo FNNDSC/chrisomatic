@@ -23,20 +23,30 @@ class RetryWrapper(Generic[R], abc.ABC):
     """
     wait_min: float = 1.0
     wait_max: float = 2.0
+    max_attempt: int = 2
 
-    async def call(self, emit: State, max_attempt: int = 2, attempt: int = 0) -> R:
+    def __post_init__(self):
+        if self.wait_min > self.wait_max:
+            raise ValueError(f"wait_min > wait_max ({self.wait_min} > {self.wait_max})")
+
+    async def call(self, emit: State, attempt: int = 0) -> R:
         try:
             return await self.fn()
         except BaseException as e:
-            if attempt >= max_attempt:
+            t = Text()
+            t.append(str(e), style="red")
+            t.append(f" (attempt {attempt + 1}/{self.max_attempt})", style="dim")
+            explanation = self.explanation
+            if self.explanation:
+                t.append(f"\n{explanation}", style="dim")
+            emit.status = t
+
+            if attempt >= self.max_attempt:
                 raise e
             if not self.check_exception(e):
                 raise e
-            t = Text()
-            t.append(str(e), style="red")
-            t.append(f" (attempt {attempt + 1}/{max_attempt})", style="dim")
-            emit.status = t
-            wait = random.random() * self.wait_max + self.wait_min
+
+            wait = random.random() * (self.wait_max - self.wait_min) + self.wait_min
             await asyncio.sleep(wait)
             return await self.call(emit, attempt + 1)
 
@@ -46,3 +56,7 @@ class RetryWrapper(Generic[R], abc.ABC):
         Check the type and message of an exception and return whether it was expected.
         """
         ...
+
+    @property
+    def explanation(self) -> str:
+        return ""

@@ -34,7 +34,7 @@ def post(endpoint: str):
             try:
                 await raise_for_status(res)
             except ResponseError as e:
-                raise e.__class__(f"data={kwargs}", *e.args)
+                raise e.__class__(*e.args, f"data={kwargs}")
             return from_json(return_type, await res.text())
 
         return wrapped

@@ -148,15 +148,6 @@ or were created from
 
 Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/interpretation.adoc).
 
-## Errors
-
-Try rerunning it, of course.
-
-`chrisomatic` is highly parallel, which stresses CUBE.
-https://github.com/FNNDSC/ChRIS_ultron_backEnd/issues/366
-
-Report bugs: https://github.com/FNNDSC/chrisomatic/issues
-
 ## Project Stage and Scope
 
 WIP.
