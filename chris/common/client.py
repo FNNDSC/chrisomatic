@@ -202,9 +202,14 @@ class AuthenticatedClient(BaseClient[_UL, P, _C], abc.ABC):
         async with aiohttp.ClientSession(
             connector=connector, connector_owner=False
         ) as session:
-            c = await cls.__from_login_with(
-                url, username, password, session, connector_owner
-            )
+            try:
+                c = await cls.__from_login_with(
+                    url, username, password, session, connector_owner
+                )
+            except BaseException as e:
+                if connector is None:
+                    await session.connector.close()
+                raise e
         return c
 
     @classmethod
