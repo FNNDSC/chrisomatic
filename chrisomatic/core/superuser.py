@@ -8,12 +8,12 @@ async def create_superuser(docker: aiodocker.Docker, user: User) -> None:
     cube = await find_cube(docker)
     script = cleandoc(
         f"""
-    from django.contrib.auth.models import User
-    user = User.objects.create_superuser(username="{user.username}",
-                                         password="{user.password}",
-                                         email="{user.email}")
-    print(user.username, end='')
-    """
+        from django.contrib.auth.models import User
+        user = User.objects.create_superuser(username="{user.username}",
+                                             password="{user.password}",
+                                             email="{user.email}")
+        print(user.username, end='')
+        """
     )
     cmd = ("python", "manage.py", "shell", "-c", script)
     # exec = await cube.exec(cmd)
