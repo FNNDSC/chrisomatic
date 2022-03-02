@@ -33,6 +33,13 @@ environments) can be described declaratively by the _ChRISomatic_ schema.
 First, create a configuration file called `chrisomatic.yml`.
 This file describes your _ChRIS_ system and what to add to it.
 
+#### Examples
+
+In general, the examples below should almost work as-is.
+You'll probably need to change `on.cube_url` and `on.chris_store_url`.
+
+##### Basic Configuration
+
 Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
@@ -61,7 +68,93 @@ cube:
     - pl-topologicalcopy
 ```
 
-For a more complete example, see [docs/examples/chrisomatic.yml](docs/examples/chrisomatic.yml).
+##### Complete Example
+
+Most values are flexible and support union data types.
+
+```yaml
+# chrisomatic.yml
+version: 1.0
+
+## System information
+on:
+
+  ## Backend API URLs
+  cube_url: http://localhost:8000/api/v1/
+  chris_store_url: http://localhost:8010/api/v1/
+
+  ## ChRIS admin user, will be created if they do not exist.
+  chris_superuser:
+    username: chris
+    password: chris1234
+
+  ## Public instances of the ChRIS store where to find plugins.
+  public_store:
+     - https://chrisstore.co/api/v1/
+     - https://example.com/api/v1/
+  ## If unspecified, the default is ["https://chrisstore.co/api/v1/"]
+  ## Alternatively, plugin search in public instances can be disabled:
+  # public_store: []
+
+
+chris_store:
+  ## List of ChRIS store users to create. Email is optional.
+  users:
+    - username: chris
+      password: chris1234
+    - username: jennings
+      password: abetterpassword
+      email: jennings@example.com
+    - username: thirduser
+      password: thirdis3
+
+cube:
+  ## List of ChRIS users to create. Email is optional.
+  users:
+    - username: lana
+      password: dubrovnik
+    - username: banu
+      password: oxford
+  ## List of pfcon deployments to add to CUBE.
+  compute_resource:
+    - name: host
+      url: http://localhost:5005/api/v1/
+      username: pfcon
+      password: pfcon1234
+      description: Local compute environment
+    - name: moc
+      url: https://example.com/api/v1/
+      username: fake
+      password: fake1234
+      description: Dummy compute environment for testing purposes
+
+  ## List of plugins to add to CUBE.
+  plugins:
+      ## by docker image
+    - docker.io/fnndsc/pl-tsdircopy
+    - docker.io/fnndsc/pl-topologicalcopy
+
+      ## by store URL
+    - https://chrisstore.co/api/v1/plugins/96/
+
+      ## by name
+    - pl-dcm2niix
+
+      ## by Github repository URL
+    - https://github.com/FNNDSC/pl-office-convert
+
+      ## or, be more specific
+    - name: pl-dircopy
+      compute_resource:
+        - host
+
+    - public_repo: https://github.com/FNNDSC/dbg-nvidia-smi/
+      compute_resource:
+        - host
+        - moc
+```
+
+See below: how to specify [Plugins and Pipelines](#plugins-and-pipelines).
 
 ### Running `chrisomatic`
 

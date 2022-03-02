@@ -118,3 +118,23 @@ these commands, and if one doesn't work, it tries the next:
 
 1. `chris_plugin_info`
 2. `{{CMD}} --json`, where `{{CMD}}` is the `CMD` set by `Dockerfile`
+
+=== Plugin Store Owner
+
+When a plugin needs to be uploaded to the local store first, and
+xref:schema.adoc#plugin_owner[`cube.plugins[*\].owner`] is not specified,
+the first user listed in xref:schema.adoc#store-users[`chris_store.users`]
+will own the uploaded plugin.
+
+=== Error Handling
+
+Errors which can be expected are handled by repeating the HTTP request
+after a delay. These errors include:
+
+- server disconnect
+- CUBE 400 errors: see https://github.com/FNNDSC/ChRIS_ultron_backEnd/issues/366
+
+Some errors are irrecoverable, such as superuser creation.
+
+In case of errors it's safe to rerun `chrisomatic`. If the error was
+incidental, the rerun will be successful.

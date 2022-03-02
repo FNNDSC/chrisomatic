@@ -51,7 +51,8 @@ get plugins from.
 
 _ChRIS_ store description.
 
-==== chris_store.users:
+[#store-users]
+==== chris_store.users
 
 Type: list[<<User>>]
 
@@ -144,6 +145,7 @@ Names of which compute environments to register this plugin to.
 
 If unspecified, use <<cube_compute_resource,cube.compute_resource[0]>>.
 
+[#plugin_owner]
 ====== cube.plugins[*].owner
 
 Type: str
