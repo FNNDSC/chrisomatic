@@ -13,8 +13,17 @@ though it could also (work and) be useful for deployments.
 
 ## Usage
 
-There are two steps: create a configuration file, then apply it with
-the command `chrisomatic apply`.
+If you are looking for a zero-config _ChRIS_ distribution using `chrisomatic`,
+check out [_miniChRIS_](https://github.com/FNNDSC/miniChRIS).
+_miniChRIS_ bundles a `doocker-compose.yml` for running _ChRIS_ backend (CUBE)
+services, as well as `chrisomatic` for tooling and a correct `chrisomatic.yml`
+configuration file. Refer back here for documentation on how to customize
+`chrisomatic.yml` to your liking.
+
+The following instructions are on how to use `chrisomatic` manually
+with a CUBE that is already running.
+There are two steps: create a configuration file `chrisomatic.yml`, and apply
+it by running `chrisomatic apply`.
 
 ### Configuration File
 
@@ -57,6 +66,9 @@ the _ChRIS_ backend (CUBE). The CUBE container should have the label
 `chrisomatic` needs the docker daemon socket `/var/lib/docker.sock`
 and a configuration file `chrisomatic.yml`.
 
+Usuall, _CUBE_ is created using `docker-compose`.
+You should add `chrisoatic` as a service to your `docker-compose.yml`.
+
 ```yaml
 version: '3.7'
 
@@ -94,6 +106,10 @@ networks:
 ```
 
 The default command for the container `fnndsc/chrisomatic` is to do nothing.
+The purpose of defining a `chrisomatic` service is to create a container
+which is able to reach the `chris` service. The `chrisomatic` command can be
+executed inside the `chrisomatic` service via
+`docker compose exec chrisomatic chrisomatc`.
 It is recommended to run the command `chrisomatic apply` manually, with
 a full-featured TTY console.
 
