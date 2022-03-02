@@ -6,7 +6,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 `chrisomatic` is a tool for automatic administration of _ChRIS_ backends.
-It is particularly useful for seeding a setup for testing or development,
+It is particularly useful for the recreation of setups for testing or development,
 though it could also (work and) be useful for deployments.
 
 ![Screen recording](https://ipfs.babymri.org/ipfs/QmV98NzC6St94GjHdSs7qQmxpvkMLgjCWMm4VHafP6DH3C/chrisomatic.gif)
@@ -66,7 +66,7 @@ the _ChRIS_ backend (CUBE). The CUBE container should have the label
 `chrisomatic` needs the docker daemon socket `/var/lib/docker.sock`
 and a configuration file `chrisomatic.yml`.
 
-Usuall, _CUBE_ is created using `docker-compose`.
+Usually, _CUBE_ is created using `docker-compose`.
 You should add `chrisoatic` as a service to your `docker-compose.yml`.
 
 ```yaml
@@ -126,15 +126,15 @@ Each time you modify `chrisomatic.yml`, rerun `chrisomatic`.
 docker compose exec chrisomatic chrisomatic apply
 ```
 
-#### What Happens?
+#### What Happens during `chrisomatic apply`?
 
 1. Wait for CUBE to be ready to accept connections
 2. Check if superuser exists. If not:
-   1. Attempt to identify container on host running _CUBE_
-   2. Attempt to create superuser using Django shell
+   1. Attempt to identify container on host running _CUBE_ (requires Docker)
+   2. Attempt to create superuser using Django shell (requires Docker)
 3. Add compute resources.
 4. Create normal user accounts in both _ChRIS_ store and _CUBE_.
-5. Upload plugins to _ChRIS_.
+5. Upload plugins to _ChRIS_. (requires Docker for plugins not found in a store)
 6. Upload pipelines to _ChRIS_ (not implemented).
 
 #### Plugins and Pipelines
