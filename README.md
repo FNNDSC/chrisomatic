@@ -36,6 +36,9 @@ This file describes your _ChRIS_ system and what to add to it.
 Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
+# chrisomatic.yml
+version: 1.0
+
 on:
   cube_url: http://localhost:8000/api/v1/
   chris_store_url: http://localhost:8010/api/v1/
@@ -58,6 +61,8 @@ cube:
     - pl-topologicalcopy
 ```
 
+For a more complete example, see [docs/examples/chrisomatic.yml](docs/examples/chrisomatic.yml).
+
 ### Running `chrisomatic`
 
 `chrisomatic` should be run as a container in the same docker network as
@@ -70,6 +75,7 @@ Usually, _CUBE_ is created using `docker-compose`.
 You should add `chrisoatic` as a service to your `docker-compose.yml`.
 
 ```yaml
+# docker-compose.yml
 version: '3.7'
 
 services:
