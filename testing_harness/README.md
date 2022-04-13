@@ -23,11 +23,12 @@ popd
 ### Unit Tests
 
 ```shell
-docker compose run dev
+docker compose run --rm dev
 ```
 
 ### Run Simulation
 
 ```shell
-docker compose run dev /t/simulation.sh
+docker compose run --rm dev /t/simulation.sh
 ```
+

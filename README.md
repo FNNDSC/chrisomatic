@@ -212,13 +212,13 @@ and `docker-compose run` command require a recent version of docker-compose.
 
 ```shell
 docker compose up -d
-docker compose run chrisomatic
+docker compose run --rm chrisomatic
 ```
 
 Each time you modify `chrisomatic.yml`, rerun `chrisomatic`.
 
 ```shell
-docker compose run chrisomatic
+docker compose run --rm chrisomatic
 ```
 
 <details>
