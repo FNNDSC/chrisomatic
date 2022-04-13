@@ -5,6 +5,7 @@ services:
     build:
       context: ..
       dockerfile: testing_harness/Dockerfile
+    command: pytest --color=yes --code-highlight=yes -o cache_dir=/var/cache/pytest
     networks:
       minichris:
     userns_mode: host
@@ -17,7 +18,7 @@ services:
 networks:
   minichris:
     external: true
-    name: minichris_local
+    name: minichris-docker_local
 
 volumes:
   pytest-cache:

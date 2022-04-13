@@ -17,7 +17,10 @@ from chrisomatic.core.expand import is_local_image
 async def test_find_cube(docker: aiodocker.Docker):
     cube_container = await find_cube(docker)
     container_info = await cube_container.show()
-    assert "fnndsc/chris" in container_info["Config"]["Image"]
+    # I've renamed the container for some builds...
+    # We should remove one or the other in the near future.
+    assert "fnndsc/chris" in container_info["Config"]["Image"] \
+        or "fnndsc/cube" in container_info["Config"]["Image"]
     assert "8000/tcp" in container_info["NetworkSettings"]["Ports"]
     assert container_info["Config"]["WorkingDir"] == "/home/localuser/chris_backend"
 

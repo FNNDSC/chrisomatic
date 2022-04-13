@@ -16,9 +16,6 @@ async def create_superuser(docker: aiodocker.Docker, user: User) -> None:
         """
     )
     cmd = ("python", "manage.py", "shell", "-c", script)
-    # exec = await cube.exec(cmd)
-    # await exec.start(detach=True)
-    # cmd = ('python', '-c', 'print("hello from container")')
     exec_instance = await cube.exec(cmd)
     async with exec_instance.start(detach=False) as stream:
         output_message = await stream.read_out()

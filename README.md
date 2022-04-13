@@ -159,7 +159,7 @@ See below: how to specify [Plugins and Pipelines](#plugins-and-pipelines).
 ### Running `chrisomatic`
 
 `chrisomatic` should be run as a container in the same docker network as
-the _ChRIS_ backend (CUBE). The CUBE container should have the label
+the _ChRIS_ backend (CUBE). The CUBE container **should** have the label
 `org.chrisproject.role=ChRIS ultron backEnd`.
 `chrisomatic` needs the docker daemon socket `/var/lib/docker.sock`
 and a configuration file `chrisomatic.yml`.
@@ -169,21 +169,23 @@ You should add `chrisoatic` as a service to your `docker-compose.yml`.
 
 ```yaml
 # docker-compose.yml
-version: '3.7'
+version: '3.9'  # note the version requirement!
 
 services:
   chrisomatic:
     container_name: chrisomatic
-    image: fnndsc/chrisomatic:0.1.0
+    image: fnndsc/chrisomatic:0.2.0
     networks:
       - local
     volumes:
       - "./chrisomatic.yml:/etc/chrisomatic/chrisomatic.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
-    restart: always
     userns_mode: host
     depends_on:
       - chris
+      - chris_store
+    profiles:  # prevents chrisomatic from running by default
+      - tools
   chris:
     container_name: chris
     image: ghcr.io/fnndsc/chris:3.0.0.pre2
@@ -198,34 +200,41 @@ services:
     labels:
       org.chrisproject.role: "ChRIS ultron backEnd"
 
-# ...
+# --snip--
 
 networks:
   local:
 ```
 
-The default command for the container `fnndsc/chrisomatic` is to do nothing.
-The purpose of defining a `chrisomatic` service is to create a container
-which is able to reach the `chris` service. The `chrisomatic` command can be
-executed inside the `chrisomatic` service via
-`docker compose exec chrisomatic chrisomatc`.
-It is recommended to run the command `chrisomatic apply` manually, with
-a full-featured TTY console.
-
-Start _ChRIS_ and `chrisomatic` by running:
+`chrisomatic` should be started interactively after starting CUBE.
+Note that the ["profiles" feature](https://docs.docker.com/compose/profiles/)
+and `docker-compose run` command require a recent version of docker-compose.
 
 ```shell
 docker compose up -d
-docker compose exec chrisomatic chrisomatic apply
+docker compose run chrisomatic
 ```
 
 Each time you modify `chrisomatic.yml`, rerun `chrisomatic`.
 
 ```shell
-docker compose exec chrisomatic chrisomatic apply
+docker compose run chrisomatic
 ```
 
-#### What Happens during `chrisomatic apply`?
+<details>
+<summary>What if my version of docker-compose is not supported?</summary>
+
+Try to update docker-compose, obviously. But assuming you can't,
+you can achieve a similar workflow by setting the command for the `chrisomatic`
+service to be `sleep 1000000` and start it with
+
+```shell
+docker-compose exec chrisomatic chrisomatic apply
+```
+
+</details>
+
+#### What Happens during `chrisomatic`?
 
 1. Wait for CUBE to be ready to accept connections
 2. Check if superuser exists. If not:
