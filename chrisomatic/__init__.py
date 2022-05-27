@@ -1,4 +1,8 @@
-from importlib.metadata import Distribution
+from importlib.metadata import Distribution, PackageNotFoundError
 
-_pkg = Distribution.from_name(__package__)
-__version__ = _pkg.version
+
+try:
+    _pkg = Distribution.from_name(__package__)
+    __version__ = _pkg.version
+except PackageNotFoundError:
+    __version__ = "unknown"

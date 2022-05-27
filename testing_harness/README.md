@@ -4,13 +4,18 @@ This directory provides a setup for testing the client module.
 
 ## Setup
 
-1. Start [miniChRIS](https://github.com/FNNDSC/miniChRIS)
-2. Run `docker compose up -d`
+```
+pushd miniChRIS-docker
+docker-compose up -d
+popd
+```
 
 ## Teardown
 
 ```shell
-docker compose down -v --rmi local
+pushd miniChRIS-docker
+docker-compose down -v
+popd
 ```
 
 ## Testing Commands
@@ -18,11 +23,12 @@ docker compose down -v --rmi local
 ### Unit Tests
 
 ```shell
-docker compose exec dev /t/pytest
+docker compose run --rm dev
 ```
 
-### Try with generated data
+### Run Simulation
 
 ```shell
-docker compose exec dev /t/try
+docker compose run --rm dev /t/simulation.sh
 ```
+

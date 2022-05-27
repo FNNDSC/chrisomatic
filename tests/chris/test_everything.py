@@ -10,6 +10,7 @@ from chris.common.client import (
     AuthenticatedCollectionLinks,
     generic_of,
 )
+from chris.common.errors import IncorrectLoginError
 from chris.common.deserialization import CreatedUser
 from chris.cube.client import CubeClient
 from chris.cube.types import ComputeResourceName, PfconUrl
@@ -18,6 +19,13 @@ from chris.common.search import to_sequence
 from chris.cube.deserialization import ComputeResource, CubePlugin
 from tests.chris.examples.plugin_description import pl_nums2mask
 import warnings
+
+# TODO: move these helpers out to another library.
+# We want to be able to test chris without depending on chrisomatic.
+
+import aiodocker
+from chrisomatic.spec.common import User
+from chrisomatic.core.superuser import create_superuser
 
 C = TypeVar("C", bound=AuthenticatedClient)
 
@@ -93,12 +101,23 @@ async def normal_cube_client(session, cube_url, some_name) -> CubeClient:
 
 @pytest.fixture
 async def superuser_cube_client(session, cube_url, cube_superuser) -> CubeClient:
-    cm = await CubeClient.from_login(
-        url=cube_url,
-        connector=session.connector,
-        connector_owner=False,
-        **cube_superuser,
-    )
+    try:
+        cm = await CubeClient.from_login(
+            url=cube_url,
+            connector=session.connector,
+            connector_owner=False,
+            **cube_superuser,
+        )
+    except IncorrectLoginError:
+        async with aiodocker.Docker() as docker:
+            user = User(cube_superuser['username'], cube_superuser['password'], 'dev@babyMRI.org')
+            await create_superuser(docker, user)
+        cm = await CubeClient.from_login(
+            url=cube_url,
+            connector=session.connector,
+            connector_owner=False,
+            **cube_superuser,
+        )
     async with cm as client:
         yield client
     assert client
