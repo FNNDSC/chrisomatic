@@ -22,6 +22,7 @@ from chrisomatic.core.docker import (
     get_cmd,
     rich_pull_if_missing,
     PullResult,
+    NonZeroExitCodeError,
 )
 from chrisomatic.core.superclient import SuperClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
@@ -330,6 +331,8 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         try:
             return await check_output(self.docker, self.plugin.dock_image, command)
         except aiodocker.DockerContainerError:
+            return None
+        except NonZeroExitCodeError:
             return None
 
     @property
