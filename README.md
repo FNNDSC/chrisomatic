@@ -93,8 +93,9 @@ on:
      - https://chrisstore.co/api/v1/
      - https://example.com/api/v1/
   ## If unspecified, the default is ["https://chrisstore.co/api/v1/"]
-  ## Alternatively, plugin search in public instances can be disabled:
-  # public_store: []
+  ## Alternatively, plugin search in public instances can be disabled
+  ## by giving an empty value:
+  # public_store:
 
 
 chris_store:
