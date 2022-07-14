@@ -93,6 +93,14 @@ jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
+name = "casefy"
+version = "0.1.2"
+description = "Utilities for string case conversion."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "cfgv"
 version = "3.3.1"
 description = "Validate configuration and produce human readable error messages."
@@ -330,22 +338,24 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pyserde"
-version = "0.7.0"
+version = "0.8.3"
 description = "Yet another serialization library on top of dataclasses"
 category = "main"
 optional = false
-python-versions = ">=3.6.1,<4.0.0"
+python-versions = ">=3.7.0,<4.0.0"
 
 [package.dependencies]
+casefy = "*"
 jinja2 = "*"
-stringcase = "*"
 typing_inspect = ">=0.4.0"
 
 [package.extras]
 msgpack = ["msgpack"]
-all = ["msgpack", "toml", "pyyaml"]
+all = ["msgpack", "toml", "pyyaml", "numpy (>=1.21.0,<1.22.0)", "numpy (>1.21.0,<1.23.0)", "numpy (>1.21.0)", "numpy (>1.22.0)", "orjson"]
 toml = ["toml"]
 yaml = ["pyyaml"]
+numpy = ["numpy (>=1.21.0,<1.22.0)", "numpy (>1.21.0,<1.23.0)", "numpy (>1.21.0)", "numpy (>1.22.0)"]
+orjson = ["orjson"]
 
 [[package]]
 name = "pytest"
@@ -437,14 +447,6 @@ python-versions = "*"
 python-dateutil = ">=2.6.0"
 
 [[package]]
-name = "stringcase"
-version = "1.2.0"
-description = "String case converter."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -530,7 +532,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "988ec57c0478057a61a94c87af419fe59f7fe7264fac84b1f733cd197ad4e955"
+content-hash = "c2783a7820feb0461f9e2f113d62c96affb1b73dd3995c7871a988206931d5e1"
 
 [metadata.files]
 aiodocker = [
@@ -651,6 +653,10 @@ black = [
     {file = "black-22.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:373922fc66676133ddc3e754e4509196a8c392fec3f5ca4486673e685a421321"},
     {file = "black-22.1.0-py3-none-any.whl", hash = "sha256:3524739d76b6b3ed1132422bf9d82123cd1705086723bc3e235ca39fd21c667d"},
     {file = "black-22.1.0.tar.gz", hash = "sha256:a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5"},
+]
+casefy = [
+    {file = "casefy-0.1.2-py3-none-any.whl", hash = "sha256:141f5da31b3506adbe5b3071bd3c49312be89d1e5e8ed024c5b6657e9bba767e"},
+    {file = "casefy-0.1.2.tar.gz", hash = "sha256:38a10846bf1b856c9df4cc411d13735d2b688f335e7714cc8dd4b5d8483a52dd"},
 ]
 cfgv = [
     {file = "cfgv-3.3.1-py2.py3-none-any.whl", hash = "sha256:c6a0883f3917a037485059700b9e75da2464e6c27051014ad85ba6aaa5884426"},
@@ -901,8 +907,8 @@ pyparsing = [
     {file = "pyparsing-3.0.7.tar.gz", hash = "sha256:18ee9022775d270c55187733956460083db60b37d0d0fb357445f3094eed3eea"},
 ]
 pyserde = [
-    {file = "pyserde-0.7.0-py3-none-any.whl", hash = "sha256:2693c2bd53212d5d6a7d44be697a6c51b88225ae0b37391be9488b0a99cd0309"},
-    {file = "pyserde-0.7.0.tar.gz", hash = "sha256:3150e36f125f4dcb66a1569d934f41dfdc5593f0081142c021f109dbf42ff487"},
+    {file = "pyserde-0.8.3-py3-none-any.whl", hash = "sha256:c6b3bb416b31e0020146c53125c8fc206c93660475a7cd35432968162058766a"},
+    {file = "pyserde-0.8.3.tar.gz", hash = "sha256:8fff7a7e73a404844051e49a64e07e76c6178b00022d9836f993b5528298132c"},
 ]
 pytest = [
     {file = "pytest-7.0.1-py3-none-any.whl", hash = "sha256:9ce3ff477af913ecf6321fe337b93a2c0dcf2a0a1439c43f5452112c1e4280db"},
@@ -961,9 +967,6 @@ six = [
 ]
 strictyaml = [
     {file = "strictyaml-1.6.1.tar.gz", hash = "sha256:688be16ee5d1a2f94aa4abdc6d881e8e254d173d724ac88725955fe66bdb63d4"},
-]
-stringcase = [
-    {file = "stringcase-1.2.0.tar.gz", hash = "sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
