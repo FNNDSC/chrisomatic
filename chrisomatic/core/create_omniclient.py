@@ -15,8 +15,10 @@ from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
 
 
-async def create_super_client(on: On) -> tuple[Outcome, OmniClient]:
-    fact = OmniClientFactory(on=on)
+async def create_super_client(
+    on: On, docker: aiodocker.Docker
+) -> tuple[Outcome, OmniClient]:
+    fact = OmniClientFactory(on=on, docker=docker)
     task_set = TableTaskRunner(tasks=[fact])
     results = await task_set.apply()
     return results[0]
@@ -26,9 +28,9 @@ async def create_super_client(on: On) -> tuple[Outcome, OmniClient]:
 class OmniClientFactory(ChrisomaticTask[OmniClient]):
 
     on: On
+    docker: aiodocker.Docker
     connector: Optional[aiohttp.BaseConnector] = None
     connector_owner: bool = True
-    docker: aiodocker.Docker = dataclasses.field(default_factory=aiodocker.Docker)
     attempt: int = 0
 
     def initial_state(self) -> State:

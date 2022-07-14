@@ -1,10 +1,16 @@
 from inspect import cleandoc
+from typing import Optional
+
 import aiodocker
 from chrisomatic.spec.common import User
 from chrisomatic.core.docker import find_cube
 
 
-async def create_superuser(docker: aiodocker.Docker, user: User) -> None:
+async def create_superuser(docker: Optional[aiodocker.Docker], user: User) -> None:
+    if docker is None:
+        raise SuperuserCreationError(
+            "Cannot create superuser without connection to Docker."
+        )
     cube = await find_cube(docker)
     script = cleandoc(
         f"""

@@ -1,5 +1,8 @@
 import typer
 from typing import Sequence, Optional, Iterable
+
+from aiodocker import Docker
+
 from chris.common.types import ChrisUsername
 from chrisomatic.spec.common import User
 from chrisomatic.cli import console
@@ -19,6 +22,7 @@ from chrisomatic.cli.final_result import FinalResult
 
 
 async def apply(given_config: GivenConfig) -> FinalResult:
+    docker = _maybe_docker()
 
     # ------------------------------------------------------------
     # Wait for CUBE and friends to come online
@@ -39,7 +43,7 @@ async def apply(given_config: GivenConfig) -> FinalResult:
     # ------------------------------------------------------------
 
     console.rule("[bold blue]Creating Superuser Account and HTTP Sessions")
-    superuser_creation, omni_cm = await create_super_client(given_config.on)
+    superuser_creation, omni_cm = await create_super_client(given_config.on, docker)
     if superuser_creation == Outcome.FAILED:
         raise typer.Abort()
 
@@ -152,3 +156,16 @@ def to_summary(outcomes: dict[Outcome, int]) -> Text:
     summary.append(str(outcomes[Outcome.FAILED]), style=Outcome.FAILED.style)
     summary.append(" failures")
     return summary
+
+
+def _maybe_docker() -> Optional[Docker]:
+    try:
+        docker = Docker()
+        console.print(
+            "\t[dim]:whale: Connected to [italic]Docker[/italic] on "
+            f"[underline]{docker.docker_host}[/underline][/dim]\n"
+        )
+        return docker
+    except ValueError:
+        console.print(f"\t[dim]No container engine available.[/dim]\n")
+        return None
