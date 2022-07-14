@@ -2,33 +2,27 @@ import enum
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Sequence, Optional, Collection, Callable, Awaitable, Type
+from typing import Sequence, Optional, Collection, Type
 
 import aiodocker
 import aiohttp
-
 from rich.text import Text
+
+from chris.common.client import AbstractClient, P
 from chris.common.deserialization import Plugin
+from chris.common.errors import ResponseError, BadRequestError
 from chris.common.search import to_sequence
 from chris.common.types import PluginUrl, PluginName, ImageTag, ChrisUsername
-from chris.common.errors import ResponseError, BadRequestError
-from chris.common.client import AbstractClient, P
 from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AbstractChrisStoreClient, ChrisStoreClient
-from chrisomatic.core.docker import (
-    check_output,
-    get_cmd,
-    rich_pull_if_missing,
-    PullResult,
-    NonZeroExitCodeError,
-)
+from chrisomatic.core._pldesc import try_obtain_json_description
+from chrisomatic.core.helpers import RetryWrapper, R
 from chrisomatic.core.omniclient import OmniClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
 from chrisomatic.spec.given import GivenCubePlugin
-from chrisomatic.core.helpers import RetryWrapper, R
 
 
 @dataclass(frozen=True)
@@ -89,7 +83,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     plugin: GivenCubePlugin
     linked_store: Optional[ChrisStoreClient]
     other_stores: Sequence[AbstractChrisStoreClient]
-    docker: aiodocker.Docker
+    docker: Optional[aiodocker.Docker]
     cube: CubeClient
 
     def initial_state(self) -> State:
@@ -129,7 +123,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if len(errors) > 0:
             emit.status = str(errors)
             outcome = Outcome.FAILED
-
         return outcome, result
 
     # async def __register_to_parallel(self,
@@ -214,13 +207,13 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if existing_plugin is None:
             # plugin not registered, so need to register to all compute envs
             return None, self.plugin.compute_resource
-        current_computes = set(
+        current_computes = frozenset(
             c.name
             for c in await to_sequence(
                 self.cube.get_compute_resources_of(existing_plugin)
             )
         )
-        wanted_computes = set(self.plugin.compute_resource)
+        wanted_computes = frozenset(self.plugin.compute_resource)
         remaining_computes = wanted_computes - current_computes
         # emit.status = f'already registered to {current_computes}, missing from {remaining_computes}'
         return existing_plugin, remaining_computes
@@ -290,45 +283,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return uploaded_plugin
 
     async def _get_json_representation(self, emit: State) -> Optional[str]:
-        if self.plugin.dock_image is None:
-            return None
-        pull_result = await rich_pull_if_missing(
-            self.docker, self.plugin.dock_image, emit
-        )
-        if pull_result == PullResult.error:
-            return None
-        if pull_result == PullResult.pulled:
-            emit.append = True
-        guessing_methods: list[Callable[[State], Awaitable[Optional[str]]]] = [
-            self._json_from_chris_plugin_info,
-            self._json_from_old_chrisapp,
-        ]
-        for guess_method in guessing_methods:
-            json_representation = await guess_method(emit)
-            emit.append = False
-            if json_representation is not None:
-                return json_representation
-        return None
-
-    async def _json_from_chris_plugin_info(self, emit: State) -> Optional[str]:
-        return await self._try_run(emit, ("chris_plugin_info",))
-
-    async def _json_from_old_chrisapp(self, emit: State) -> Optional[str]:
-        cmd = await get_cmd(self.docker, self.plugin.dock_image)
-        if len(cmd) == 0:
-            return None
-        return await self._try_run(emit, (cmd[0], "--json"))
-
-    async def _try_run(self, emit: State, command: Sequence[str]) -> Optional[str]:
-        msg = Text("Running ")
-        msg.append(" ".join(command), style="yellow")
-        emit.status = msg
-        try:
-            return await check_output(self.docker, self.plugin.dock_image, command)
-        except aiodocker.DockerContainerError:
-            return None
-        except NonZeroExitCodeError:
-            return None
+        return await try_obtain_json_description(self.docker, self.plugin, emit)
 
     @property
     def _all_stores(self) -> Sequence[tuple[AbstractChrisStoreClient, PluginOrigin]]:

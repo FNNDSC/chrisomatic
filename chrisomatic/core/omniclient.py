@@ -23,7 +23,7 @@ class OmniClient(AsyncContextManager["OmniClient"]):
     """
 
     cube: CubeClient
-    docker: aiodocker.Docker
+    docker: Optional[aiodocker.Docker]
     store_url: Optional[ChrisURL]
     session: aiohttp.ClientSession
     public_stores: Sequence[AnonymousChrisStoreClient]
@@ -56,7 +56,10 @@ class OmniClient(AsyncContextManager["OmniClient"]):
 
     @property
     def _all_clients(self) -> Sequence[AbstractClient | aiohttp.ClientSession]:
-        return [self.cube, self.docker, *self.public_stores, *self._other_clients]
+        clients = [self.cube, *self.public_stores, *self._other_clients]
+        if self.docker is not None:
+            clients.append(self.docker)
+        return clients
 
     async def close(self):
         await asyncio.gather(*(c.close() for c in self._all_clients))

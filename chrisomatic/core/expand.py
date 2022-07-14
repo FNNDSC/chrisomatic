@@ -38,9 +38,11 @@ async def smart_expand_config(
 
 
 async def mark_if_is_image(
-    docker: aiodocker.Docker, plugin: str | GivenCubePlugin
+    docker: Optional[aiodocker.Docker], plugin: str | GivenCubePlugin
 ) -> str | GivenCubePlugin:
     if isinstance(plugin, GivenCubePlugin):
+        return plugin
+    if docker is None:
         return plugin
     if await is_local_image(docker, plugin):
         return GivenCubePlugin(dock_image=ImageTag(plugin))
