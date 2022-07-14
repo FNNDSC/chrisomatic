@@ -75,7 +75,7 @@ class GivenCubePlugin:
             return self.public_repo
         return "Unknown"
 
-    def set_owner_if_none(self, owner: ChrisUsername) -> "GivenCubePlugin":
+    def set_owner_if_none(self, owner: Optional[ChrisUsername]) -> "GivenCubePlugin":
         if self.owner:
             return self
         return dataclasses.replace(self, owner=owner)
@@ -132,7 +132,7 @@ class GivenCube(GivenBackend):
     compute_resource: list[ComputeResource]
     plugins: list[Union[str, GivenCubePlugin]]
 
-    def expand(self, default_plugin_owner: ChrisUsername) -> ExpandedCube:
+    def expand(self, default_plugin_owner: Optional[ChrisUsername]) -> ExpandedCube:
         if len(self.compute_resource) == 0 and len(self.plugins) > 0:
             raise ValidationError(
                 "Must specify at least one compute_resource for ChRIS"
@@ -147,7 +147,7 @@ class GivenCube(GivenBackend):
         )
 
     def expand_plugin(
-        self, plugin: str | GivenCubePlugin, owner: ChrisUsername
+        self, plugin: str | GivenCubePlugin, owner: Optional[ChrisUsername]
     ) -> GivenCubePlugin:
         resolved_plugin = self.resolve_plugin_type(plugin)
         return self.fill_plugin_compute_resource(resolved_plugin).set_owner_if_none(
@@ -221,6 +221,10 @@ class ExpandedConfig:
     cube: ExpandedCube
     chris_store: Optional[GivenChrisStore]
 
+    def __post_init__(self):
+        if self.on.chris_store_url is None and self.chris_store is None:
+            raise ValidationError("")
+
 
 @deserialize
 @dataclass(frozen=True)
@@ -238,7 +242,7 @@ class GivenConfig:
         ):
             raise ValidationError("You must list at least one ChRIS store user.")
 
-    def expand(self, default_plugin_owner: ChrisUsername) -> ExpandedConfig:
+    def expand(self, default_plugin_owner: Optional[ChrisUsername]) -> ExpandedConfig:
         """
         Fill default values.
         """

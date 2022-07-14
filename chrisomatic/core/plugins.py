@@ -244,16 +244,11 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         self, emit: State
     ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         query = self.plugin.to_store_search()
-        emit.status = f"searching in {self.linked_store.url}..."
-        result = await self.__get_first_plugin(self.linked_store, query, emit)
-        if result is not None:
-            return result, PluginOrigin.local_store
-
-        for client in self.other_stores:
+        for client, origin in self._all_stores:
             emit.status = f"searching in {client.url}..."
             result = await self.__get_first_plugin(client, query, emit)
             if result is not None:
-                return result, PluginOrigin.public_store
+                return result, origin
         return None, None
 
     @staticmethod
@@ -271,9 +266,9 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
 
     async def _upload_to_store(self, emit: State) -> Optional[Plugin]:
         if self.linked_store is None:
-            emit.status = Text(
-                f'No client for owner "{self.plugin.owner}"', style="bold red"
-            )
+            if self.plugin.owner:
+                msg = f'No client for owner "{self.plugin.owner}"'
+                emit.status = Text(msg, style="bold red")
             return None
         json_representation = await self._get_json_representation(emit)
         if json_representation is None:
@@ -336,8 +331,11 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             return None
 
     @property
-    def _all_stores(self) -> list[AbstractChrisStoreClient]:
-        return [self.linked_store, *self.other_stores]
+    def _all_stores(self) -> Sequence[tuple[AbstractChrisStoreClient, PluginOrigin]]:
+        stores = [(s, PluginOrigin.public_store) for s in self.other_stores]
+        if self.linked_store is not None:
+            stores.insert(0, (self.linked_store, PluginOrigin.local_store))
+        return stores
 
 
 class _RetryOnDisconnect(RetryWrapper[R]):

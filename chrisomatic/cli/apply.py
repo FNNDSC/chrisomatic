@@ -25,10 +25,11 @@ async def apply(given_config: GivenConfig) -> FinalResult:
     # ------------------------------------------------------------
 
     console.rule("[bold blue]Waiting for Backend Servers")
-    user_urls = (
-        given_config.on.cube_url + "users/",
-        given_config.on.chris_store_url + "users/",
-    )
+    user_urls = [
+        url + "users/"
+        for url in (given_config.on.cube_url, given_config.on.chris_store_url)
+        if url
+    ]
     all_good, elapseds = await wait_up(user_urls)
     if not all_good:
         raise typer.Abort()
@@ -61,13 +62,16 @@ async def apply(given_config: GivenConfig) -> FinalResult:
         # Create users
         # ------------------------------------------------------------
         console.rule("[bold blue]Creating Users")
-        store_user_creation = await create_users(
-            omniclient,
-            omniclient.store_url,
-            given_config.chris_store.users,
-            ChrisStoreClient,
-            "creating users in the ChRIS store...",
-        )
+        if omniclient.store_url:
+            store_user_creation = await create_users(
+                omniclient,
+                omniclient.store_url,
+                given_config.chris_store.users,
+                ChrisStoreClient,
+                "creating users in the ChRIS store...",
+            )
+        else:
+            store_user_creation = []
         cube_user_creation = await create_users(
             omniclient,
             omniclient.cube.url,
@@ -85,13 +89,8 @@ async def apply(given_config: GivenConfig) -> FinalResult:
         # ------------------------------------------------------------
         # Fully expand config
         # ------------------------------------------------------------
-
-        default_store_owner = get_first_username(store_clients)
-        if default_store_owner is None:
-            console.print("No ChRIS store users available.", style="bold red")
-            typer.Abort()
         config = await smart_expand_config(
-            given_config, omniclient, default_store_owner
+            given_config, omniclient, get_first_username(store_clients)
         )
 
         # ------------------------------------------------------------

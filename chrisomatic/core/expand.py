@@ -1,5 +1,6 @@
 import asyncio
 import dataclasses
+from typing import Optional
 
 import aiodocker
 from chris.common.types import ImageTag, ChrisUsername
@@ -9,7 +10,9 @@ from chrisomatic.core.omniclient import OmniClient
 
 
 async def smart_expand_config(
-    given_config: GivenConfig, omniclient: OmniClient, default_owner: ChrisUsername
+    given_config: GivenConfig,
+    omniclient: OmniClient,
+    default_owner: Optional[ChrisUsername],
 ) -> ExpandedConfig:
     """
     Expand the given config, i.e. fill in default values, but use information

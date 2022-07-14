@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 import aiodocker
-from typing import Sequence, AsyncContextManager, TypeVar, Type
+from typing import Sequence, AsyncContextManager, TypeVar, Type, Optional
 from dataclasses import dataclass, field
 from chris.common.types import ChrisURL
 from chris.common.deserialization import CreatedUser
@@ -24,7 +24,7 @@ class OmniClient(AsyncContextManager["OmniClient"]):
 
     cube: CubeClient
     docker: aiodocker.Docker
-    store_url: ChrisURL
+    store_url: Optional[ChrisURL]
     session: aiohttp.ClientSession
     public_stores: Sequence[AnonymousChrisStoreClient]
     _other_clients: list[AbstractClient] = field(default_factory=list)
