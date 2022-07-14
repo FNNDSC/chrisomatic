@@ -63,15 +63,18 @@ async def apply(given_config: GivenConfig) -> FinalResult:
         # ------------------------------------------------------------
         console.rule("[bold blue]Creating Users")
         if omniclient.store_url:
+            given_store_users = given_config.chris_store.users
             store_user_creation = await create_users(
                 omniclient,
                 omniclient.store_url,
-                given_config.chris_store.users,
+                given_store_users,
                 ChrisStoreClient,
                 "creating users in the ChRIS store...",
             )
         else:
+            given_store_users = []
             store_user_creation = []
+
         cube_user_creation = await create_users(
             omniclient,
             omniclient.cube.url,
@@ -79,9 +82,8 @@ async def apply(given_config: GivenConfig) -> FinalResult:
             CubeClient,
             "creating users in CUBE...",
         )
-        store_clients = created_users_mapping(
-            given_config.chris_store.users, store_user_creation
-        )
+
+        store_clients = created_users_mapping(given_store_users, store_user_creation)
         cube_clients = created_users_mapping(
             given_config.cube.users, cube_user_creation
         )
