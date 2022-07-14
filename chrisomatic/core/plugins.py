@@ -24,7 +24,7 @@ from chrisomatic.core.docker import (
     PullResult,
     NonZeroExitCodeError,
 )
-from chrisomatic.core.superclient import SuperClient
+from chrisomatic.core.omniclient import OmniClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
 from chrisomatic.spec.given import GivenCubePlugin
@@ -372,7 +372,7 @@ class _RetryOnPluginUpload(_RetryOnDisconnect[CubePlugin]):
 
 
 async def register_plugins(
-    superclient: SuperClient,
+    omniclient: OmniClient,
     plugins: Sequence[GivenCubePlugin],
     store_clients: dict[ChrisUsername, ChrisStoreClient],
 ) -> Sequence[tuple[Outcome, PluginRegistration]]:
@@ -383,9 +383,9 @@ async def register_plugins(
                 linked_store=(
                     store_clients[p.owner] if p.owner in store_clients else None
                 ),
-                other_stores=superclient.public_stores,
-                docker=superclient.docker,
-                cube=superclient.cube,
+                other_stores=omniclient.public_stores,
+                docker=omniclient.docker,
+                cube=omniclient.cube,
             )
             for p in plugins
         ]

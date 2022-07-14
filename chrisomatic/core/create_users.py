@@ -6,13 +6,13 @@ from chris.common.client import AuthenticatedClient
 from chris.common.errors import IncorrectLoginError, ResponseError
 from chrisomatic.spec.common import User
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
-from chrisomatic.core.superclient import SuperClient, A
+from chrisomatic.core.omniclient import OmniClient, A
 from chrisomatic.framework.taskrunner import ProgressTaskRunner
 
 
 @dataclass
 class CreateUsersTask(ChrisomaticTask[A]):
-    superclient: SuperClient
+    omniclient: OmniClient
     url: ChrisURL
     user: User
     user_type: Type[A]
@@ -22,7 +22,7 @@ class CreateUsersTask(ChrisomaticTask[A]):
 
     async def run(self, emit: State) -> tuple[Outcome, Optional[A]]:
         try:
-            client: AuthenticatedClient = await self.superclient.create_client(
+            client: AuthenticatedClient = await self.omniclient.create_client(
                 self.url, self.user, self.user_type
             )
             emit.status = client.collection_links.user
@@ -30,11 +30,11 @@ class CreateUsersTask(ChrisomaticTask[A]):
         except IncorrectLoginError:
             emit.status = "creating user..."
             try:
-                await self.superclient.create_user(self.url, self.user, self.user_type)
+                await self.omniclient.create_user(self.url, self.user, self.user_type)
             except ResponseError as e:
                 emit.status = str(e)
                 return Outcome.FAILED, None
-            client: AuthenticatedClient = await self.superclient.create_client(
+            client: AuthenticatedClient = await self.omniclient.create_client(
                 self.url, self.user, self.user_type
             )
             emit.status = client.collection_links.user
@@ -42,7 +42,7 @@ class CreateUsersTask(ChrisomaticTask[A]):
 
 
 async def create_users(
-    superclient: SuperClient,
+    omniclient: OmniClient,
     url: ChrisURL,
     users: Sequence[User],
     user_type: Type[A],
@@ -50,7 +50,7 @@ async def create_users(
 ) -> Sequence[tuple[Outcome, A]]:
     runner = ProgressTaskRunner(
         tasks=[
-            CreateUsersTask[user_type](superclient, url, user, user_type)
+            CreateUsersTask[user_type](omniclient, url, user, user_type)
             for user in users
         ],
         title=progress_title,

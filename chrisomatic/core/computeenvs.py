@@ -4,7 +4,7 @@ from chris.cube.deserialization import ComputeResource as CubeComputeResource
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.framework.taskrunner import ProgressTaskRunner
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource
-from chrisomatic.core.superclient import SuperClient
+from chrisomatic.core.omniclient import OmniClient
 
 
 @dataclass
@@ -13,7 +13,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
     Check if a compute resource already exists. If not, create it and return it.
     """
 
-    superclient: SuperClient
+    omniclient: OmniClient
     given: GivenComputeResource
     existing: Collection[CubeComputeResource]
 
@@ -32,7 +32,7 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             )
             return Outcome.FAILED, preexisting
         created: CubeComputeResource = (
-            await self.superclient.cube.create_compute_resource(
+            await self.omniclient.cube.create_compute_resource(
                 name=self.given.name,
                 compute_url=self.given.url,
                 compute_user=self.given.username,
@@ -65,12 +65,12 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
 
 
 async def create_compute_resources(
-    superclient: SuperClient,
+    omniclient: OmniClient,
     existing: Collection[CubeComputeResource],
     givens: Sequence[GivenComputeResource],
 ) -> Sequence[tuple[Outcome, CubeComputeResource]]:
     runner = ProgressTaskRunner(
         title="Adding compute resources",
-        tasks=[ComputeResourceTask(superclient, given, existing) for given in givens],
+        tasks=[ComputeResourceTask(omniclient, given, existing) for given in givens],
     )
     return await runner.apply()

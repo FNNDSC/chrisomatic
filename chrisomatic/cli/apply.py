@@ -6,9 +6,9 @@ from chrisomatic.cli import console
 from chris.store.client import ChrisStoreClient
 from chris.cube.client import CubeClient
 from chrisomatic.spec.given import GivenConfig
-from chrisomatic.core.superclient import A
+from chrisomatic.core.omniclient import A
 from chrisomatic.core.waitup import wait_up
-from chrisomatic.core.create_god import create_super_client
+from chrisomatic.core.create_omniclient import create_super_client
 from chrisomatic.core.expand import smart_expand_config
 from chrisomatic.core.computeenvs import create_compute_resources
 from chrisomatic.core.create_users import create_users
@@ -38,23 +38,23 @@ async def apply(given_config: GivenConfig) -> FinalResult:
     # ------------------------------------------------------------
 
     console.rule("[bold blue]Creating Superuser Account and HTTP Sessions")
-    superuser_creation, superclient_cm = await create_super_client(given_config.on)
+    superuser_creation, omni_cm = await create_super_client(given_config.on)
     if superuser_creation == Outcome.FAILED:
         raise typer.Abort()
 
-    async with superclient_cm as superclient:
+    async with omni_cm as omniclient:
 
         # ------------------------------------------------------------
         # Add compute resources
         # ------------------------------------------------------------
 
         console.rule("[bold blue]Compute Resources")
-        existing_compute_resources = await superclient.cube.get_all_compute_resources()
+        existing_compute_resources = await omniclient.cube.get_all_compute_resources()
         console.print(
             f"Existing compute resources: {[c.name for c in existing_compute_resources]}"
         )
         create_compute_resources_results = await create_compute_resources(
-            superclient, existing_compute_resources, given_config.cube.compute_resource
+            omniclient, existing_compute_resources, given_config.cube.compute_resource
         )
 
         # ------------------------------------------------------------
@@ -62,15 +62,15 @@ async def apply(given_config: GivenConfig) -> FinalResult:
         # ------------------------------------------------------------
         console.rule("[bold blue]Creating Users")
         store_user_creation = await create_users(
-            superclient,
-            superclient.store_url,
+            omniclient,
+            omniclient.store_url,
             given_config.chris_store.users,
             ChrisStoreClient,
             "creating users in the ChRIS store...",
         )
         cube_user_creation = await create_users(
-            superclient,
-            superclient.cube.url,
+            omniclient,
+            omniclient.cube.url,
             given_config.cube.users,
             CubeClient,
             "creating users in CUBE...",
@@ -91,7 +91,7 @@ async def apply(given_config: GivenConfig) -> FinalResult:
             console.print("No ChRIS store users available.", style="bold red")
             typer.Abort()
         config = await smart_expand_config(
-            given_config, superclient, default_store_owner
+            given_config, omniclient, default_store_owner
         )
 
         # ------------------------------------------------------------
@@ -99,7 +99,7 @@ async def apply(given_config: GivenConfig) -> FinalResult:
         # ------------------------------------------------------------
         console.rule("[bold blue]Registering plugins to CUBE")
         plugin_registrations = await register_plugins(
-            superclient, config.cube.plugins, store_clients
+            omniclient, config.cube.plugins, store_clients
         )
 
     # ------------------------------------------------------------

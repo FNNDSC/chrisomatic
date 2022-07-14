@@ -14,10 +14,12 @@ A = TypeVar("A", bound=AuthenticatedClient)
 
 
 @dataclass(frozen=True)
-class SuperClient(AsyncContextManager["SuperClient"]):
+class OmniClient(AsyncContextManager["OmniClient"]):
     """
-    A wrapper around a `CubeClient` that represents a _CUBE_ superuser.
-    It can do everything you want.
+    A wrapper around a `CubeClient` that represents a *CUBE* superuser,
+    and some ChRIS store clients as well.
+
+    I.e. `OmniClient` does everything.
     """
 
     cube: CubeClient
@@ -59,7 +61,7 @@ class SuperClient(AsyncContextManager["SuperClient"]):
     async def close(self):
         await asyncio.gather(*(c.close() for c in self._all_clients))
 
-    async def __aenter__(self) -> "SuperClient":
+    async def __aenter__(self) -> "OmniClient":
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

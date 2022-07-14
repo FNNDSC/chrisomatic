@@ -5,15 +5,15 @@ import aiodocker
 from chris.common.types import ImageTag, ChrisUsername
 
 from chrisomatic.spec.given import GivenCubePlugin, GivenConfig, ExpandedConfig
-from chrisomatic.core.superclient import SuperClient
+from chrisomatic.core.omniclient import OmniClient
 
 
 async def smart_expand_config(
-    given_config: GivenConfig, superclient: SuperClient, default_owner: ChrisUsername
+    given_config: GivenConfig, omniclient: OmniClient, default_owner: ChrisUsername
 ) -> ExpandedConfig:
     """
     Expand the given config, i.e. fill in default values, but use information
-    we are able to obtain using the `SuperClient` to make better choices.
+    we are able to obtain using the `OmniClient` to make better choices.
 
     Specifically, what that means is that:
 
@@ -23,7 +23,7 @@ async def smart_expand_config(
     """
     resolved_plugins: tuple[str | GivenCubePlugin, ...] = await asyncio.gather(
         *(
-            mark_if_is_image(superclient.docker, plugin)
+            mark_if_is_image(omniclient.docker, plugin)
             for plugin in given_config.cube.plugins
         )
     )

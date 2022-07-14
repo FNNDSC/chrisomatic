@@ -8,22 +8,22 @@ from chris.common.errors import IncorrectLoginError, ResponseError
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
-from chrisomatic.core.superclient import SuperClient
+from chrisomatic.core.omniclient import OmniClient
 from chrisomatic.framework.task import ChrisomaticTask, State
 from chrisomatic.spec.given import On
 from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.taskrunner import TableTaskRunner
 
 
-async def create_super_client(on: On) -> tuple[Outcome, SuperClient]:
-    fact = SuperClientFactory(on=on)
+async def create_super_client(on: On) -> tuple[Outcome, OmniClient]:
+    fact = OmniClientFactory(on=on)
     task_set = TableTaskRunner(tasks=[fact])
     results = await task_set.apply()
     return results[0]
 
 
 @dataclasses.dataclass(frozen=True)
-class SuperClientFactory(ChrisomaticTask[SuperClient]):
+class OmniClientFactory(ChrisomaticTask[OmniClient]):
 
     on: On
     connector: Optional[aiohttp.BaseConnector] = None
@@ -38,9 +38,9 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             status=f"checking for superuser: username={user.username}",
         )
 
-    async def run(self, emit: State) -> tuple[Outcome, Optional[SuperClient]]:
+    async def run(self, emit: State) -> tuple[Outcome, Optional[OmniClient]]:
         """
-        Constructor for `SuperClient`.
+        Constructor for `OmniClient`.
         Create a `CubeClient` with the given superuser credentials.
         If that superuser does not exist, try to create it first.
         """
@@ -56,8 +56,8 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             emit.status = "connected!"
             outcome = Outcome.NO_CHANGE
 
-            superclient = await self.__from_client(cube, emit)
-            if superclient is None:
+            omniclient = await self.__from_client(cube, emit)
+            if omniclient is None:
                 await asyncio.gather(cube.close(), self.docker.close())
                 return Outcome.FAILED, None
         except ResponseError as e:
@@ -80,15 +80,15 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
                 return Outcome.FAILED, None
             emit.status = f'Superuser "{user.username}" created.'
             second_attempt = dataclasses.replace(self, attempt=self.attempt + 1)
-            outcome, superclient = await second_attempt.run(emit)
+            outcome, omniclient = await second_attempt.run(emit)
             if outcome != Outcome.FAILED:
                 outcome = Outcome.CHANGE
                 emit.status = f'created new superuser: "{user.username}"'
-        return outcome, superclient
+        return outcome, omniclient
 
     async def __from_client(
         self, cube_client: CubeClient, emit: State
-    ) -> Optional[SuperClient]:
+    ) -> Optional[OmniClient]:
         """
         Use the created `cube_client`'s `aiohttp.BaseConnector` to create everything else.
         Returns `None` if connection with any of the public _ChRIS_ stores failed.
@@ -108,7 +108,7 @@ class SuperClientFactory(ChrisomaticTask[SuperClient]):
             connector=cube_client.s.connector, connector_owner=False
         )
         emit.status = "created client sessions."
-        return SuperClient(
+        return OmniClient(
             cube=cube_client,
             docker=self.docker,
             store_url=self.on.chris_store_url,
