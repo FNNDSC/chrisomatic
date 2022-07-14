@@ -26,7 +26,7 @@ URL of _ChRIS_ backend.
 [#chris_store_url]
 ==== on.chris_store_url
 
-Type: string
+Type: Optional[string]
 
 URL of _ChRIS_ store backend.
 
@@ -49,7 +49,7 @@ get plugins from.
 
 === chris_store
 
-_ChRIS_ store description.
+(Optional) _ChRIS_ store description.
 
 [#store-users]
 ==== chris_store.users

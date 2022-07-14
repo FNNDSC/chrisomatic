@@ -1,4 +1,4 @@
-from strictyaml import Str, Map, Regex, Optional, Seq, EmptyList, Bool
+from strictyaml import Str, Map, Regex, Optional, Seq, EmptyList, Bool, NullNone
 
 api_url = Regex(r"^https?:\/\/.+\/api\/v1\/$")
 
@@ -14,7 +14,10 @@ schema = Map(
         "on": Map(
             {
                 "cube_url": api_url,
-                "chris_store_url": api_url,
+                Optional(
+                    "chris_store_url", default=None, drop_if_none=False
+                ): NullNone()
+                | api_url,
                 "chris_superuser": user,
                 Optional(
                     "public_store", default=["https://chrisstore.co/api/v1/"]
@@ -22,7 +25,8 @@ schema = Map(
                 | Seq(api_url),
             }
         ),
-        "chris_store": Map(
+        Optional("chris_store", default=None, drop_if_none=False): NullNone()
+        | Map(
             {
                 "users": Seq(user),
                 Optional("pipelines", default=[]): EmptyList() | Seq(Str() | pipeline),

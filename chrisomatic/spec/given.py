@@ -21,7 +21,7 @@ from chrisomatic.spec.common import User, ComputeResource, Pipeline
 @dataclass(frozen=True)
 class On:
     cube_url: ChrisURL
-    chris_store_url: ChrisURL
+    chris_store_url: Optional[ChrisURL]
     chris_superuser: User
     public_store: list[ChrisURL]
 
@@ -219,7 +219,7 @@ class ExpandedConfig:
     version: str
     on: On
     cube: ExpandedCube
-    chris_store: GivenChrisStore
+    chris_store: Optional[GivenChrisStore]
 
 
 @deserialize
@@ -228,10 +228,14 @@ class GivenConfig:
     version: str
     on: On
     cube: GivenCube
-    chris_store: GivenChrisStore
+    chris_store: Optional[GivenChrisStore]
 
     def __post_init__(self):
-        if len(self.chris_store.users) == 0 and len(self.cube.plugins) > 0:
+        if (
+            self.chris_store
+            and len(self.chris_store.users) == 0
+            and len(self.cube.plugins) > 0
+        ):
             raise ValidationError("You must list at least one ChRIS store user.")
 
     def expand(self, default_plugin_owner: ChrisUsername) -> ExpandedConfig:
