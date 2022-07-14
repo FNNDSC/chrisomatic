@@ -221,10 +221,6 @@ class ExpandedConfig:
     cube: ExpandedCube
     chris_store: Optional[GivenChrisStore]
 
-    def __post_init__(self):
-        if self.on.chris_store_url is None and self.chris_store is None:
-            raise ValidationError("")
-
 
 @deserialize
 @dataclass(frozen=True)
@@ -241,6 +237,8 @@ class GivenConfig:
             and len(self.cube.plugins) > 0
         ):
             raise ValidationError("You must list at least one ChRIS store user.")
+        if self.on.chris_store_url is not None and self.chris_store is None:
+            raise ValidationError("chris_store must be defined.")
 
     def expand(self, default_plugin_owner: Optional[ChrisUsername]) -> ExpandedConfig:
         """

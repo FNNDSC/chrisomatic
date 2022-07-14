@@ -10,6 +10,7 @@ from chrisomatic.cli import Gstr_title, console
 from chrisomatic.cli.apply import apply as apply_from_config
 from chrisomatic.spec.deserialize import InputError
 from chrisomatic.framework.outcome import Outcome
+from chrisomatic.spec.given import ValidationError
 
 
 def show_version(value: bool):
@@ -68,7 +69,7 @@ def apply(
 
     try:
         config = deserialize_config(input_config, filename)
-    except YAMLValidationError as e:
+    except (ValidationError, YAMLValidationError) as e:
         print(e)
         raise typer.Abort()
 
