@@ -180,7 +180,7 @@ class GivenCube(GivenBackend):
         for compute_resource in plugin.compute_resource:
             if compute_resource not in self.compute_resource_names:
                 raise ValidationError(
-                    f"Error with plugin {plugin}: compute resource "
+                    f'Error with plugin "{plugin.title}": compute resource '
                     f"not found in {self.compute_resource_names}"
                 )
 

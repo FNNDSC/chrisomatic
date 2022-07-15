@@ -14,7 +14,7 @@ from chrisomatic.core.expand import smart_expand_config
 from chrisomatic.core.omniclient import A
 from chrisomatic.framework.outcome import Outcome
 from chrisomatic.spec.common import User
-from chrisomatic.spec.given import GivenConfig
+from chrisomatic.spec.given import GivenConfig, ValidationError
 
 
 async def agenda(given_config: GivenConfig, console: Console) -> FinalResult:
@@ -84,16 +84,20 @@ async def agenda(given_config: GivenConfig, console: Console) -> FinalResult:
         )
 
         # ------------------------------------------------------------
-        # Fully expand config
-        # ------------------------------------------------------------
-        config = await smart_expand_config(
-            given_config, actions.omniclient.docker, _get_first_username(store_clients)
-        )
-
-        # ------------------------------------------------------------
         # Register plugins to CUBE
         # ------------------------------------------------------------
         console.rule("[bold blue]Registering plugins to CUBE")
+
+        try:
+            config = await smart_expand_config(
+                given_config,
+                actions.omniclient.docker,
+                _get_first_username(store_clients),
+            )
+        except ValidationError as e:
+            console.print(e)
+            raise typer.Abort()
+
         plugin_registrations = await actions.register_plugins(
             config.cube.plugins, store_clients
         )
