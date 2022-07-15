@@ -157,6 +157,12 @@ cube:
 
 See below: how to specify [Plugins and Pipelines](#plugins-and-pipelines).
 
+#### Without a ChRIS Store
+
+If [`on.chris_store_url`](docs/schema.adoc#chris_store_url) is omitted,
+then `chrisomatic` will not be able to register plugins that do not already
+exist in any of [`on.public_store`](docs/schema.adoc#public_store).
+
 ### Running `chrisomatic`
 
 `chrisomatic` should be run as a container in the same docker network as
@@ -175,11 +181,11 @@ version: '3.9'  # note the version requirement!
 services:
   chrisomatic:
     container_name: chrisomatic
-    image: fnndsc/chrisomatic:0.2.0
+    image: fnndsc/chrisomatic:0.3.0
     networks:
       - local
     volumes:
-      - "./chrisomatic.yml:/etc/chrisomatic/chrisomatic.yml:ro"
+      - "./chrisomatic.yml:/chrisomatic.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
     userns_mode: host
     depends_on:
@@ -189,7 +195,7 @@ services:
       - tools
   chris:
     container_name: chris
-    image: ghcr.io/fnndsc/chris:3.0.0.pre2
+    image: ghcr.io/fnndsc/cube:3.0.0.a15
     ports:
       - "8000:8000"
     networks:
@@ -230,10 +236,30 @@ you can achieve a similar workflow by setting the command for the `chrisomatic`
 service to be `sleep 1000000` and start it with
 
 ```shell
-docker-compose exec chrisomatic chrisomatic apply
+docker compose exec chrisomatic chrisomatic apply
 ```
 
 </details>
+
+#### Without Docker
+
+A limited feature set is still provided in case `chrisomatic` does not
+have access to a container engine (Docker).
+
+- HTTP-Only features:
+  - Create compute resources
+  - Register plugins from ChRIS Store
+- Docker-required features:
+  - Register Python _ChRIS_ plugins not found in any ChRIS Store
+    (i.e. when `dock_image` refers to a local image)
+- Docker-required, same-host features:
+  - Create superuser
+
+Docker or Podman is still required to run `chrisomatic` itself.
+
+```shell
+podman run --rm -i docker.io/fnndsc/chrisomatic:latest chrisomatic -t - < chrisomatic.yml
+```
 
 #### What Happens during `chrisomatic`?
 
@@ -273,10 +299,6 @@ or were created from
 
 Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/interpretation.adoc).
 
-## Project Stage and Scope
-
-WIP.
-
 ### Currently Supported Features
 
 - [x] Create CUBE superuser
@@ -287,7 +309,3 @@ WIP.
 - [x] Register plugin given a docker image to CUBE
 - [ ] Add pipelines to CUBE
 - [x] very fast
-
-### Maybe Features
-
-Support provisioning of _ChRIS_ store independently?

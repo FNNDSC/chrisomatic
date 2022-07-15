@@ -11,6 +11,5 @@ WORKDIR /usr/local/src/chrisomatic
 COPY . .
 RUN poetry install --no-dev
 
-COPY docs/examples/default.yml /etc/chrisomatic/chrisomatic.yml
-WORKDIR /etc/chrisomatic
-CMD ["chrisomatic", "apply"]
+WORKDIR /
+CMD ["chrisomatic"]

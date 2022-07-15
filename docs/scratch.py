@@ -4,8 +4,7 @@ from typing import Sequence
 from dataclasses import dataclass
 from rich.progress import Progress
 from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
-from chrisomatic.framework.taskrunner import TableTaskRunner, ProgressTaskRunner
-from chrisomatic.cli import console
+from chrisomatic.framework.runner import TableTaskRunner, ProgressTaskRunner
 from chrisomatic.core.waitup import wait_up
 from chrisomatic.core.docker import rich_pull
 

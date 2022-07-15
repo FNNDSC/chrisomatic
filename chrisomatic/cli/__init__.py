@@ -5,7 +5,6 @@ Command-line interface to the `chrisomatic` program.
 import os
 import logging
 import chrisomatic
-from rich.console import Console
 
 Gstr_title = r"""
    ________    ____  _________                       __  _     
@@ -16,8 +15,6 @@ Gstr_title = r"""
 
 """
 Gstr_title += (" " * 30) + "version " + chrisomatic.__version__ + "\n"
-
-console = Console()
 
 
 if "CHRISOMATIC_DEBUG" in os.environ:

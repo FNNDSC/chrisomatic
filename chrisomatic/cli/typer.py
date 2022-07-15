@@ -2,50 +2,24 @@ import asyncio
 import typer
 import sys
 from pathlib import Path
-from typing import Optional
+
+from rich.console import Console
 from strictyaml import YAMLValidationError
-import chrisomatic
 from chrisomatic.spec.deserialize import deserialize_config
-from chrisomatic.cli import Gstr_title, console
-from chrisomatic.cli.apply import apply as apply_from_config
-from chrisomatic.spec.deserialize import InputError
+from chrisomatic.cli import Gstr_title
+from chrisomatic.cli.agenda import agenda as apply_from_config
 from chrisomatic.framework.outcome import Outcome
 from chrisomatic.spec.given import ValidationError
-
-
-def show_version(value: bool):
-    """
-    Print version.
-    """
-    if not value:
-        return
-    typer.echo(f"chrisomatic {chrisomatic.__version__}")
-    raise typer.Exit()
 
 
 app = typer.Typer(add_completion=False)
 
 
-# noinspection PyUnusedLocal
-@app.callback()
-def entry(
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-V",
-        callback=show_version,
-        is_eager=True,
-        help="Print version.",
-    )
-):
-    """
-    ChRIS backend management.
-    """
-    pass
-
-
-@app.command(context_settings={"help_option_names": ["-h", "--help"]})
+@app.command()
 def apply(
+    tty: bool = typer.Option(
+        False, "-t", "--tty", help="Force rich TTY features (such as spinners)"
+    ),
     file: Path = typer.Argument(
         exists=True,
         file_okay=True,
@@ -55,10 +29,10 @@ def apply(
         allow_dash=True,
         default="chrisomatic.yml",
         help="configuration file.",
-    )
+    ),
 ):
     """
-    Apply a configuration additively to a running ChRIS backend.
+    ChRIS backend provisioner.
     """
     if file == Path("-"):
         input_config = sys.stdin.read()
@@ -73,8 +47,9 @@ def apply(
         print(e)
         raise typer.Abort()
 
+    console = Console(force_terminal=(True if tty else None))
     console.print(Gstr_title)
-    final_result = asyncio.run(apply_from_config(config))
+    final_result = asyncio.run(apply_from_config(config, console))
     if final_result.summary[Outcome.FAILED] > 0:
         raise typer.Exit(1)
 

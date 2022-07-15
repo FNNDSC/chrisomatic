@@ -2,21 +2,20 @@ import asyncio
 import dataclasses
 from typing import Optional
 
-import aiodocker
-from chris.common.types import ImageTag, ChrisUsername
+from aiodocker import Docker, DockerError
 
+from chris.common.types import ImageTag, ChrisUsername
 from chrisomatic.spec.given import GivenCubePlugin, GivenConfig, ExpandedConfig
-from chrisomatic.core.omniclient import OmniClient
 
 
 async def smart_expand_config(
     given_config: GivenConfig,
-    omniclient: OmniClient,
+    docker: Docker,
     default_owner: Optional[ChrisUsername],
 ) -> ExpandedConfig:
     """
     Expand the given config, i.e. fill in default values, but use information
-    we are able to obtain using the `OmniClient` to make better choices.
+    we are able to obtain using Docker to make better choices.
 
     Specifically, what that means is that:
 
@@ -25,10 +24,7 @@ async def smart_expand_config(
     - TODO add all required plugins from pipelines to plugin list
     """
     resolved_plugins: tuple[str | GivenCubePlugin, ...] = await asyncio.gather(
-        *(
-            mark_if_is_image(omniclient.docker, plugin)
-            for plugin in given_config.cube.plugins
-        )
+        *(mark_if_is_image(docker, plugin) for plugin in given_config.cube.plugins)
     )
     realized_config: GivenConfig = dataclasses.replace(
         given_config,
@@ -38,7 +34,7 @@ async def smart_expand_config(
 
 
 async def mark_if_is_image(
-    docker: Optional[aiodocker.Docker], plugin: str | GivenCubePlugin
+    docker: Optional[Docker], plugin: str | GivenCubePlugin
 ) -> str | GivenCubePlugin:
     if isinstance(plugin, GivenCubePlugin):
         return plugin
@@ -49,11 +45,11 @@ async def mark_if_is_image(
     return plugin
 
 
-async def is_local_image(docker: aiodocker.Docker, name: str) -> bool:
+async def is_local_image(docker: Docker, name: str) -> bool:
     if "://" in name:
         return False
     try:
         await docker.images.inspect(name)
         return True
-    except aiodocker.DockerError:
+    except DockerError:
         return False

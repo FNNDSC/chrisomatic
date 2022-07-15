@@ -1,13 +1,12 @@
 import asyncio
-import aiohttp
-import time
 import enum
+import time
 from dataclasses import dataclass
+
+import aiohttp
 from rich.text import Text
-from rich.spinner import Spinner
-from typing import Sequence
+
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
-from chrisomatic.framework.taskrunner import TableTaskRunner, TableDisplayConfig
 
 
 class _WaitResult(str, enum.Enum):
@@ -61,23 +60,3 @@ class WaitUp(ChrisomaticTask[float]):
 
         emit.status = f"timed out after {elapsed_time:.1f}s"
         return Outcome.FAILED, elapsed_time
-
-
-async def wait_up(
-    urls: Sequence[str],
-    good_status: int = 200,
-    interval: float = 2.0,
-    timeout: float = 300.0,
-) -> tuple[bool, Sequence[float]]:
-    runner = TableTaskRunner(
-        config=TableDisplayConfig(
-            spinner=Spinner("aesthetic"),
-            spinner_width=12,
-            polling_interval=interval / 4,
-        ),
-        tasks=[WaitUp(url, good_status, interval, timeout) for url in urls],
-    )
-    results = await runner.apply()
-    all_good = all(outcome != Outcome.FAILED for outcome, _ in results)
-    elapseds = [elapsed for _, elapsed in results]
-    return all_good, elapseds

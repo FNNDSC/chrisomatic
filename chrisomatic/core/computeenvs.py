@@ -1,8 +1,8 @@
-from typing import Optional, Collection, Sequence
+from typing import Optional, Collection
 from dataclasses import dataclass
+
 from chris.cube.deserialization import ComputeResource as CubeComputeResource
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
-from chrisomatic.framework.taskrunner import ProgressTaskRunner
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource
 from chrisomatic.core.omniclient import OmniClient
 
@@ -62,15 +62,3 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             and self.given.url == preexisting.compute_url
             and self.given.description == preexisting.description
         )
-
-
-async def create_compute_resources(
-    omniclient: OmniClient,
-    existing: Collection[CubeComputeResource],
-    givens: Sequence[GivenComputeResource],
-) -> Sequence[tuple[Outcome, CubeComputeResource]]:
-    runner = ProgressTaskRunner(
-        title="Adding compute resources",
-        tasks=[ComputeResourceTask(omniclient, given, existing) for given in givens],
-    )
-    return await runner.apply()

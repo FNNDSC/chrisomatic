@@ -12,16 +12,14 @@ from chris.common.client import AbstractClient, P
 from chris.common.deserialization import Plugin
 from chris.common.errors import ResponseError, BadRequestError
 from chris.common.search import to_sequence
-from chris.common.types import PluginUrl, PluginName, ImageTag, ChrisUsername
+from chris.common.types import PluginUrl, PluginName, ImageTag
 from chris.cube.client import CubeClient
 from chris.cube.deserialization import CubePlugin
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AbstractChrisStoreClient, ChrisStoreClient
 from chrisomatic.core._pldesc import try_obtain_json_description
 from chrisomatic.core.helpers import RetryWrapper, R
-from chrisomatic.core.omniclient import OmniClient
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
-from chrisomatic.framework.taskrunner import TableTaskRunner
 from chrisomatic.spec.given import GivenCubePlugin
 
 
@@ -322,25 +320,3 @@ class _RetryOnPluginUpload(_RetryOnDisconnect[CubePlugin]):
             "This error might be expected. See "
             "https://github.com/FNNDSC/ChRIS_ultron_backEnd/issues/366"
         )
-
-
-async def register_plugins(
-    omniclient: OmniClient,
-    plugins: Sequence[GivenCubePlugin],
-    store_clients: dict[ChrisUsername, ChrisStoreClient],
-) -> Sequence[tuple[Outcome, PluginRegistration]]:
-    runner = TableTaskRunner(
-        tasks=[
-            RegisterPluginTask(
-                plugin=p,
-                linked_store=(
-                    store_clients[p.owner] if p.owner in store_clients else None
-                ),
-                other_stores=omniclient.public_stores,
-                docker=omniclient.docker,
-                cube=omniclient.cube,
-            )
-            for p in plugins
-        ]
-    )
-    return await runner.apply()

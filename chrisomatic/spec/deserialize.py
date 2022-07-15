@@ -4,10 +4,6 @@ from serde import from_dict
 from strictyaml import load
 
 
-class InputError(Exception):
-    pass
-
-
 def deserialize_config(input_config: str, filename: str):
     return _load_from_yaml(input_config, filename)
 

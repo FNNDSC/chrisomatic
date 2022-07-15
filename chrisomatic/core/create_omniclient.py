@@ -1,27 +1,19 @@
 import asyncio
-import aiohttp
-import aiodocker
-from typing import Optional, Sequence
 import dataclasses
-from chris.common.types import ChrisURL
+from typing import Optional, Sequence
+
+import aiodocker
+import aiohttp
+
 from chris.common.errors import IncorrectLoginError, ResponseError
+from chris.common.types import ChrisURL
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient
-from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
 from chrisomatic.core.omniclient import OmniClient
+from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
+from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.task import ChrisomaticTask, State
 from chrisomatic.spec.given import On
-from chrisomatic.framework.outcome import Outcome
-from chrisomatic.framework.taskrunner import TableTaskRunner
-
-
-async def create_super_client(
-    on: On, docker: aiodocker.Docker
-) -> tuple[Outcome, OmniClient]:
-    fact = OmniClientFactory(on=on, docker=docker)
-    task_set = TableTaskRunner(tasks=[fact])
-    results = await task_set.apply()
-    return results[0]
 
 
 @dataclasses.dataclass(frozen=True)

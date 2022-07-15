@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Type
+from typing import Optional, Type
 from dataclasses import dataclass
 
 from chris.common.types import ChrisURL
@@ -7,7 +7,6 @@ from chris.common.errors import IncorrectLoginError, ResponseError
 from chrisomatic.spec.common import User
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.core.omniclient import OmniClient, A
-from chrisomatic.framework.taskrunner import ProgressTaskRunner
 
 
 @dataclass
@@ -39,20 +38,3 @@ class CreateUsersTask(ChrisomaticTask[A]):
             )
             emit.status = client.collection_links.user
             return Outcome.CHANGE, client
-
-
-async def create_users(
-    omniclient: OmniClient,
-    url: ChrisURL,
-    users: Sequence[User],
-    user_type: Type[A],
-    progress_title: str,
-) -> Sequence[tuple[Outcome, A]]:
-    runner = ProgressTaskRunner(
-        tasks=[
-            CreateUsersTask[user_type](omniclient, url, user, user_type)
-            for user in users
-        ],
-        title=progress_title,
-    )
-    return await runner.apply()

@@ -3,14 +3,16 @@ Everything to do with the rich display and parallel execution of tasks.
 """
 import abc
 import asyncio
-from rich.console import RenderableType, ConsoleRenderable
-from rich.text import Text
+from dataclasses import dataclass, InitVar
+from typing import Sequence, ClassVar, TypeVar, Generic, Awaitable, Optional
+
+from rich.console import RenderableType, ConsoleRenderable, Console
 from rich.live import Live
-from rich.table import Table, Column
 from rich.progress import Progress, TaskID
 from rich.spinner import Spinner
-from typing import Sequence, ClassVar, TypeVar, Generic, Awaitable
-from dataclasses import dataclass, InitVar
+from rich.table import Table, Column
+from rich.text import Text
+
 from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
 
 _R = TypeVar("_R")
@@ -57,6 +59,7 @@ class TaskRunner(Generic[_R]):
     """
 
     tasks: Sequence[ChrisomaticTask[_R]]
+    console: Optional[Console] = None
 
     @abc.abstractmethod
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
@@ -99,6 +102,7 @@ class TableTaskRunner(TaskRunner[_R]):
         with Live(
             self._render(running_tasks),
             refresh_per_second=self.config.refresh_per_second,
+            console=self.console,
         ) as live:
             while not self._all_done(running_tasks):
                 await asyncio.sleep(self.config.polling_interval)
@@ -136,11 +140,11 @@ class ProgressTaskRunner(TaskRunner[_R]):
     It is more suitable for a set of many quick tasks.
     """
 
-    title: str
+    title: str = ""
     noisy: bool = True
 
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
-        with Progress() as progress:
+        with Progress(console=self.console) as progress:
             progress_task = progress.add_task(
                 f"[yellow]{self.title}", total=len(self.tasks)
             )
