@@ -3,7 +3,7 @@ from chris.common.types import PluginUrl
 from chris.common.client import AuthenticatedClient
 from chris.common.search import get_paginated, to_sequence
 import chris.common.decorator as http
-from chris.cube.types import ComputeResourceName, PfconUrl
+from chris.cube.types import ComputeResourceName, PfconUrl, Feed
 from chris.cube.deserialization import CubeCollectionLinks, CubePlugin, ComputeResource
 
 _T = TypeVar("_T")
@@ -26,6 +26,9 @@ class CubeClient(AuthenticatedClient[CubeCollectionLinks, CubePlugin, "CubeClien
         description: str = "",
     ) -> ComputeResource:
         ...
+
+    def get_feeds(self) -> AsyncIterator[Feed]:
+        return get_paginated(session=self.s, url=self.url, element_type=Feed)
 
     def get_compute_resources_of(
         self, plugin: CubePlugin

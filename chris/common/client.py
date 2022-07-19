@@ -75,7 +75,7 @@ class AbstractClient(Generic[_L, P], abc.ABC):
 
     collection_links: _L
     s: aiohttp.ClientSession
-    url: ChrisURL
+    url: PaginatedUrl
 
     async def close(self):
         """
@@ -163,7 +163,7 @@ class BaseClient(AbstractClient[_L, P], AsyncContextManager[_B], abc.ABC):
         links_type = generic_of(cls, CommonCollectionLinks)
         links = from_dict(links_type, body["collection_links"])
 
-        return cls(url=url, s=session, collection_links=links)
+        return cls(url=PaginatedUrl(url), s=session, collection_links=links)
 
     async def __aenter__(self) -> _B:
         return self
