@@ -2,7 +2,7 @@ import enum
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Sequence, Optional, Collection, Type
+from typing import Sequence, Optional, Collection, Type, Iterable
 
 import aiodocker
 import aiohttp
@@ -88,7 +88,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return State(title=self.plugin.title, status="checking compute resources...")
 
     async def run(self, emit: State) -> tuple[Outcome, Optional[PluginRegistration]]:
-
         # check where the plugin was already registered
         existing_plugin, compute_envs = await self._already_present(emit)
         if existing_plugin is not None:
@@ -105,81 +104,39 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             return Outcome.FAILED, None
         emit.title = plugin_in_store.name
 
-        # register to all
-        errors, registrations = await self.__register_to(
-            plugin_in_store, compute_envs, emit
-        )
+
+        # register from linked ChRIS store to CUBE
+        cube_plugin = None
+        try:
+            cube_plugin = await self.__register_to(plugin_in_store, compute_envs, emit)
+            outcome = Outcome.CHANGE
+            emit.status = cube_plugin.url
+        except BaseException as e:
+            emit.status = str(e)
+            outcome = Outcome.FAILED
+
         result = PluginRegistration(
-            plugin=registrations[0] if registrations else None,
+            plugin=cube_plugin,
             from_url=plugin_in_store.url,
             origin=origin,
         )
-        outcome = Outcome.NO_CHANGE
-        if result.plugin is not None:
-            emit.status = result.plugin.url
-            outcome = Outcome.CHANGE
-        if len(errors) > 0:
-            emit.status = str(errors)
-            outcome = Outcome.FAILED
         return outcome, result
-
-    # async def __register_to_parallel(self,
-    #                                  plugin_in_store: Plugin,
-    #                                  compute_envs: Collection[ComputeResourceName],
-    #                                  emit: State
-    #                                  ) -> tuple[list[ResponseError], list[CubePlugin]]:
-    #     """
-    #     NB: do not register same plugin to different compute resources in parallel
-    #     https://github.com/FNNDSC/ChRIS_ultron_backEnd/issues/366
-    #     """
-    #     registration_attempts: tuple[BaseException | CubePlugin, ...] = await asyncio.gather(*(
-    #         # self.cube.register_plugin(plugin_store_url=plugin_in_store.url,
-    #         #                           compute_name=compute_resource_name)
-    #         self.__register_plugin(plugin_in_store.url, compute_resource_name, emit)
-    #         for compute_resource_name in compute_envs
-    #     ), return_exceptions=True)
-    #     errors = [e for e in registration_attempts if isinstance(e, ResponseError)]
-    #     registrations = [e for e in registration_attempts if isinstance(e, CubePlugin)]
-    #     return errors, registrations
 
     async def __register_to(
         self,
         plugin_in_store: Plugin,
         compute_envs: Collection[ComputeResourceName],
         emit: State,
-    ) -> tuple[list[BaseException], list[CubePlugin]]:
+    ) -> CubePlugin:
         """
         Register a plugin from a *ChRIS* store to some compute environments by name.
 
         `compute_envs` is assumed to have at least one member.
         """
-        registrations: list[CubePlugin] = []
-        errors: list[BaseException] = []
-        for compute_resource_name in compute_envs:
-            emit.status = f'--> "{compute_resource_name}"'
-            try:
-                registered = await self.__register_plugin(
-                    plugin_in_store.url, compute_resource_name, emit
-                )
-                registrations.append(registered)
-            except BaseException as e:
-                errors.append(e)
-        return errors, registrations
-
-    async def __register_plugin(
-        self,
-        plugin_store_url: PluginUrl,
-        compute_name: ComputeResourceName,
-        emit: State,
-    ) -> CubePlugin:
-        """
-        Register a plugin to CUBE, retrying if a `ServerDisconnectedError` or `BadRequestError` occurs.
-        """
+        emit.status = f'--> "{compute_envs}"'
 
         async def register_plugin() -> CubePlugin:
-            return await self.cube.register_plugin(
-                plugin_store_url=plugin_store_url, compute_name=compute_name
-            )
+            return await self.cube.register_plugin_from_store(plugin_in_store.url, compute_envs)
 
         return await _RetryOnPluginUpload(register_plugin).call(emit)
 

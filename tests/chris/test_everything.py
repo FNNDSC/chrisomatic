@@ -168,8 +168,8 @@ async def test_upload_to_store(
         )
         return
 
-    registered_plugin: CubePlugin = await superuser_cube_client.register_plugin(
-        plugin_store_url=uploaded_plugin.url, compute_name=compute_env_name
+    registered_plugin: CubePlugin = await superuser_cube_client.register_plugin_from_store(
+        plugin_store_url=uploaded_plugin.url, compute_names=[compute_env_name]
     )
     assert registered_plugin.name == plugin_name
     assert registered_plugin.dock_image == dock_image

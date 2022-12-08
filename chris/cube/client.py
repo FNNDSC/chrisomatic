@@ -1,4 +1,4 @@
-from typing import TypeVar, AsyncIterator, Sequence
+from typing import TypeVar, AsyncIterator, Sequence, Iterable
 from chris.common.types import PluginUrl
 from chris.common.client import AuthenticatedClient
 from chris.common.search import get_paginated, to_sequence
@@ -11,10 +11,15 @@ _T = TypeVar("_T")
 
 class CubeClient(AuthenticatedClient[CubeCollectionLinks, CubePlugin, "CubeClient"]):
     @http.post("/chris-admin/api/v1/")
-    async def register_plugin(
-        self, plugin_store_url: PluginUrl, compute_name: ComputeResourceName
+    async def _register_plugin_from_store_raw(
+        self, plugin_store_url: PluginUrl, compute_names: str
     ) -> CubePlugin:
         ...
+
+    async def register_plugin_from_store(
+            self, plugin_store_url: PluginUrl, compute_names: Iterable[ComputeResourceName]
+    ) -> CubePlugin:
+        return await self._register_plugin_from_store_raw(plugin_store_url=plugin_store_url, compute_names=','.join(compute_names))
 
     @http.post("/chris-admin/api/v1/computeresources/")
     async def create_compute_resource(
