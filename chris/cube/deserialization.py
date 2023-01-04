@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Optional
+
 from serde import deserialize
 from chris.common.types import ApiUrl, UserUrl
 from chris.common.search import PaginatedUrl
@@ -11,7 +13,7 @@ from chris.cube.types import AdminUrl, ComputeResourceName, ComputeResourceId, P
 @dataclass(frozen=True)
 class CubeCollectionLinks(AuthenticatedCollectionLinks):
     chrisinstance: ApiUrl
-    admin: AdminUrl
+    admin: Optional[AdminUrl]
     files: ApiUrl
     compute_resources: ApiUrl
     uploadedfiles: ApiUrl
