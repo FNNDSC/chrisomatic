@@ -11,7 +11,13 @@ data.
 
 The schema is flexible and uses defaults where values are not specified.
 
-=== Compute Environments
+=== Compute Resource Creation
+
+xref:schema.adoc#compute_resource_name[`name`] is a required key of a xref:schema.adoc#ComputeResource[`compute_resource[*\]`]. The other fields (`url`, `username`, `password`, `description`) are optional if the compute resource already exists.
+
+Currently, _chrisomatic_ has the ability to create new compute resources. It cannot modify an existing compute resource.
+
+=== Compute Resources of a Plugin
 
 If xref:schema.adoc#plugins_compute_resource[`compute_resource`]
 is not given for a

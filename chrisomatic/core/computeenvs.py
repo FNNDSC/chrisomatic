@@ -27,10 +27,13 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             if self.same_as(preexisting):
                 return Outcome.NO_CHANGE, preexisting
             emit.status = (
-                f'Existing compute resource "{preexisting.name}" '
+                f'Existing "{preexisting.name}" '
                 "is different from given_config."
             )
             return Outcome.FAILED, preexisting
+        if not self.given.is_some():
+            emit.status = f'No configuration for "{self.given.name}"'
+            return Outcome.FAILED, None
         created: CubeComputeResource = (
             await self.omniclient.cube.create_compute_resource(
                 name=self.given.name,
@@ -57,8 +60,10 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
         Returns `True` if the given configuration describes a specified pre-existing
         compute environment.
         """
-        return (
-            self.given.name == preexisting.name
-            and self.given.url == preexisting.compute_url
-            and self.given.description == preexisting.description
-        )
+        if self.given.name != preexisting.name:
+            return False
+        if self.given.url is not None and self.given.url != preexisting.compute_url:
+            return False
+        if self.given.description is not None and self.given.description != preexisting.description:
+            return False
+        return True

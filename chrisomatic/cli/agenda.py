@@ -48,9 +48,6 @@ async def agenda(given_config: GivenConfig, console: Console) -> FinalResult:
         existing_compute_resources = (
             await actions.omniclient.cube.get_all_compute_resources()
         )
-        console.print(
-            f"Existing compute resources: {[c.name for c in existing_compute_resources]}"
-        )
         create_compute_resources_results = await actions.create_compute_resources(
             existing_compute_resources, given_config.cube.compute_resource
         )

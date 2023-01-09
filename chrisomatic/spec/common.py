@@ -1,7 +1,9 @@
+from typing import Optional
+
 from serde import serde
 from chris.common.types import ChrisUsername, ChrisPassword
 from chris.cube.types import ComputeResourceName, PfconUrl
-from dataclasses import dataclass, field
+from dataclasses import dataclass, astuple
 
 
 @serde
@@ -22,10 +24,13 @@ class User:
 @dataclass(frozen=True)
 class ComputeResource:
     name: ComputeResourceName
-    url: PfconUrl
-    username: str = "pfcon"
-    password: str = "pfcon1234"
-    description: str = ""
+    url: Optional[PfconUrl] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    description: Optional[str] = None
+
+    def is_some(self) -> bool:
+        return all(f is not None for f in astuple(self))
 
 
 @serde

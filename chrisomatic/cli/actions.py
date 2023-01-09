@@ -4,7 +4,7 @@ performed by chrisomatic.
 """
 
 from dataclasses import dataclass
-from typing import Sequence, AsyncContextManager, Collection, Type
+from typing import Sequence, AsyncContextManager, Collection, Type, Optional
 from contextlib import asynccontextmanager
 
 from aiodocker import Docker
@@ -39,7 +39,7 @@ class Actions:
         self,
         existing: Collection[CubeComputeResource],
         givens: Sequence[GivenComputeResource],
-    ) -> Sequence[tuple[Outcome, CubeComputeResource]]:
+    ) -> Sequence[tuple[Outcome, Optional[CubeComputeResource]]]:
         runner = ProgressTaskRunner(
             title="Adding compute resources",
             tasks=[

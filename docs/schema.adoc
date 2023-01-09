@@ -73,6 +73,7 @@ Type: list[<<ComputeResource,ComputeResource>>]
 [#ComputeResource]
 ===== cube.compute_resource[*] (ComputeResource)
 
+[#compute_resource_name]
 ====== cube.compute_resource[*].name
 
 Type: string

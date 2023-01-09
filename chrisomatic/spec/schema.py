@@ -57,10 +57,10 @@ schema = Map(
                     Map(
                         {
                             "name": Str(),
-                            "url": Str(),
-                            "username": Str(),
-                            "password": Str(),
-                            Optional("description", default=""): Str(),
+                            Optional("url", default=None): Str(),
+                            Optional("username", default=None): Str(),
+                            Optional("password", default=None): Str(),
+                            Optional("description", default=None): Str(),
                         }
                     )
                 ),
