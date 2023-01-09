@@ -5,6 +5,11 @@ description = "ChRIS backend provisioner with Powerpointlessness"
 authors = ["Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"]
 license = "MIT"
 
+packages = [
+    { include = "chris" },
+    { include = "chrisomatic" },
+]
+
 [tool.poetry.dependencies]
 python = "^3.10"
 typer = "^0.7.0"
