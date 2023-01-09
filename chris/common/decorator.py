@@ -1,13 +1,13 @@
 import functools
+import logging
 import urllib.parse
 from typing import Callable, Type, TypeVar, get_type_hints
 
-import aiohttp
 from serde.json import from_json
-from chris.common.types import ChrisURL
+
 from chris.common.client import AbstractClient
 from chris.common.errors import raise_for_status, ResponseError
-import logging
+from chris.common.types import ChrisURL
 
 logger = logging.getLogger(__name__)
 _R = TypeVar("_R")

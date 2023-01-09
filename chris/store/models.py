@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+
 from serde import deserialize
-from chris.common.types import ApiUrl, PluginUrl, PluginId
+
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
+from chris.common.types import ApiUrl
 
 
 @deserialize

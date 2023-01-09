@@ -27,7 +27,7 @@ from chrisomatic.framework.runner import (
 )
 from chrisomatic.spec.given import On, GivenCubePlugin
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource, User
-from chris.cube.deserialization import ComputeResource as CubeComputeResource
+from chris.cube.models import ComputeResource as CubeComputeResource
 
 
 @dataclass(frozen=True)

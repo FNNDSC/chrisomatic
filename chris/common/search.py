@@ -24,6 +24,9 @@ T = TypeVar("T")
 
 @deserialize
 class _Paginated:
+    """
+    Response from a paginated endpoint.
+    """
     count: int
     next: Optional[PaginatedUrl]
     previous: Optional[PaginatedUrl]
@@ -36,6 +39,10 @@ async def get_paginated(
     element_type: Type[T],
     max_requests: int = 100,
 ) -> AsyncGenerator[T, None]:
+    """
+    Make HTTP GET requests to a paginated endpoint. Further requests to the
+    "next" URL are made in the background as needed.
+    """
     logger.debug("GET, max_requests=%d, --> %s", max_requests, url)
     if max_requests <= 0:
         raise TooMuchPaginationException()

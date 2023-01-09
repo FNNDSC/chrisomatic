@@ -2,6 +2,9 @@ import aiohttp
 
 
 async def raise_for_status(res: aiohttp.ClientResponse) -> None:
+    """
+    Raises custom exceptions.
+    """
     if res.status < 400:
         res.raise_for_status()
         return

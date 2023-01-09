@@ -4,7 +4,7 @@ from chris.common.client import AuthenticatedClient
 from chris.common.search import get_paginated, to_sequence
 import chris.common.decorator as http
 from chris.cube.types import ComputeResourceName, PfconUrl, Feed
-from chris.cube.deserialization import CubeCollectionLinks, CubePlugin, ComputeResource
+from chris.cube.models import CubeCollectionLinks, CubePlugin, ComputeResource
 
 _T = TypeVar("_T")
 

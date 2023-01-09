@@ -4,7 +4,7 @@ import aiodocker
 from typing import Sequence, AsyncContextManager, TypeVar, Type, Optional
 from dataclasses import dataclass, field
 from chris.common.types import ChrisURL
-from chris.common.deserialization import CreatedUser
+from chris.common.models import CreatedUser
 from chris.common.client import AbstractClient, AuthenticatedClient
 from chris.cube.client import CubeClient
 from chris.store.client import AnonymousChrisStoreClient

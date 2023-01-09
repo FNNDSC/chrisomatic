@@ -4,7 +4,7 @@ and _ChRIS_ backends.
 
 Beware code smells! To work around limitations of frozen dataclasses
 and async object creation, while trying to achieve code reuse between
-`AnonymousChrisStoreClient`, ChrisStoreClient, and ChrisClient,
+`AnonymousChrisStoreClient`, `ChrisStoreClient`, and `ChrisClient`,
 I'm doing some unorthodox things in "constructor" class methods.
 
 If using more than one client in an application, it's more efficient
@@ -15,11 +15,11 @@ to use the same
 import aiohttp
 from chris import ChrisStoreClient, ChrisClient
 
-
-
 with aiohttp.TCPConnector() as connector:
     store_client = await ChrisStoreClient.from_url(
-        url='https://example.com/cube/api/v1/'
+        url='https://example.com/cube/api/v1/',
+        connector=connector,
+        connector_owner=False
     )
     cube_client = await ChrisClient.from_login(
         url='https://example.com/cube/api/v1/',
@@ -33,9 +33,8 @@ with aiohttp.TCPConnector() as connector:
 """
 
 import abc
+import functools
 from dataclasses import dataclass
-from functools import cache
-import aiohttp
 from typing import (
     Optional,
     TypeVar,
@@ -46,15 +45,17 @@ from typing import (
     ForwardRef,
     Callable,
 )
+
+import aiohttp
 import typing_inspect
 from serde import from_dict
 from serde.json import from_json
 
-from chris.common.deserialization import Plugin, CreatedUser
-from chris.common.search import get_paginated, PaginatedUrl, T
-from chris.common.errors import IncorrectLoginError, raise_for_status
-from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 from chris.common.atypes import CommonCollectionLinks, AuthenticatedCollectionLinks
+from chris.common.models import Plugin, CreatedUser
+from chris.common.errors import IncorrectLoginError, raise_for_status
+from chris.common.search import get_paginated, PaginatedUrl, T
+from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword, ChrisToken
 
 _B = TypeVar("_B", bound="BaseClient")
 _A = TypeVar("_A", bound="AnonymousClient")
@@ -289,7 +290,7 @@ class AuthenticatedClient(BaseClient[_UL, P, _C], abc.ABC):
 _T = TypeVar("_T")
 
 
-@cache
+@functools.cache
 def generic_of(c: type, t: Type[_T], subclass=False) -> Optional[Type[_T]]:
     """
     Get the actual class represented by a bound TypeVar of a generic.

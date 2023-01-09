@@ -2,13 +2,13 @@ from chris.common.client import generic_of
 from chris.common.atypes import CommonCollectionLinks
 from chris.common.client import AuthenticatedClient
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
-from chris.store.deserialization import (
+from chris.store.models import (
     AnonymousCollectionLinks,
     AuthenticatedCollectionLinks,
     StoreCollectionLinks,
 )
 from chris.cube.client import CubeClient
-from chris.cube.deserialization import CubeCollectionLinks
+from chris.cube.models import CubeCollectionLinks
 from chrisomatic.core.create_users import CreateUsersTask
 
 

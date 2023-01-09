@@ -1,7 +1,7 @@
 from typing import Optional, Collection
 from dataclasses import dataclass
 
-from chris.cube.deserialization import ComputeResource as CubeComputeResource
+from chris.cube.models import ComputeResource as CubeComputeResource
 from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource
 from chrisomatic.core.omniclient import OmniClient

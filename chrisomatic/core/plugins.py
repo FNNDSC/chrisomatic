@@ -9,12 +9,12 @@ import aiohttp
 from rich.text import Text
 
 from chris.common.client import AbstractClient, P
-from chris.common.deserialization import Plugin
+from chris.common.models import Plugin
 from chris.common.errors import ResponseError, BadRequestError
 from chris.common.search import to_sequence
 from chris.common.types import PluginUrl, PluginName, ImageTag
 from chris.cube.client import CubeClient
-from chris.cube.deserialization import CubePlugin
+from chris.cube.models import CubePlugin
 from chris.cube.types import ComputeResourceName
 from chris.store.client import AbstractChrisStoreClient, ChrisStoreClient
 from chrisomatic.core._pldesc import try_obtain_json_description

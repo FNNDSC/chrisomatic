@@ -11,12 +11,12 @@ from chris.common.client import (
     generic_of,
 )
 from chris.common.errors import IncorrectLoginError
-from chris.common.deserialization import CreatedUser
+from chris.common.models import CreatedUser
 from chris.cube.client import CubeClient
 from chris.cube.types import ComputeResourceName, PfconUrl
 from chris.store.client import AnonymousChrisStoreClient, ChrisStoreClient
 from chris.common.search import to_sequence
-from chris.cube.deserialization import ComputeResource, CubePlugin
+from chris.cube.models import ComputeResource, CubePlugin
 from tests.chris.examples.plugin_description import pl_nums2mask
 import warnings
 
