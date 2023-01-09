@@ -59,7 +59,7 @@ chris_store:
         password: chris1234
 
 cube:
-  computeresources:
+  compute_resource:
     - name: host
       url: http://localhost:5005/api/v1/
   plugins:
