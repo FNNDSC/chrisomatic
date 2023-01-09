@@ -8,6 +8,23 @@ pipeline = Map(
     {"src": Str(), Optional("owner"): Str(), Optional("locked", default=True): Bool()}
 )
 
+plugin_specific = Map(
+    {
+        Optional("url"): Regex(
+            r"https?:\/\/.+/api\/v1\/plugins\/\d+\/"
+        ),
+        Optional("name"): Str(),
+        Optional("version"): Regex(r"^[0-9.]+$"),
+        Optional("dock_image"): Str(),
+        Optional("public_repo"): Regex(r".+:\/\/.+"),
+        Optional("compute_resource", default=[]): EmptyList()
+        | Seq(Str()),
+        Optional("owner"): Str(),
+    }
+)
+
+plugins_list = Seq(Str() | plugin_specific)
+
 schema = Map(
     {
         Optional("version", default="1.0"): Regex(r"^1\.0$"),
@@ -47,24 +64,7 @@ schema = Map(
                         }
                     )
                 ),
-                Optional("plugins", default=[]): EmptyList()
-                | Seq(
-                    Str()
-                    | Map(
-                        {
-                            Optional("url"): Regex(
-                                r"https?:\/\/.+/api\/v1\/plugins\/\d+\/"
-                            ),
-                            Optional("name"): Str(),
-                            Optional("version"): Regex(r"^[0-9.]+$"),
-                            Optional("dock_image"): Str(),
-                            Optional("public_repo"): Regex(r".+:\/\/.+"),
-                            Optional("compute_resource", default=[]): EmptyList()
-                            | Seq(Str()),
-                            Optional("owner"): Str(),
-                        }
-                    )
-                ),
+                Optional("plugins", default=[]): EmptyList() | plugins_list,
             }
         ),
     }
