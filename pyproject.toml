@@ -9,7 +9,7 @@ license = "MIT"
 python = "^3.10"
 typer = "^0.7.0"
 aiohttp = "^3.8.1"
-rich = "^12.5.1"
+rich = "^13.0.1"
 
 # https://github.com/yukinarit/pyserde/issues/292
 pyserde = "0.8.3"
