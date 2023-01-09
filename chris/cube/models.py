@@ -13,7 +13,6 @@ from chris.cube.types import AdminUrl, ComputeResourceName, ComputeResourceId, P
 @dataclass(frozen=True)
 class CubeCollectionLinks(AuthenticatedCollectionLinks):
     chrisinstance: ApiUrl
-    admin: Optional[AdminUrl]
     files: ApiUrl
     compute_resources: ApiUrl
     uploadedfiles: ApiUrl
@@ -21,6 +20,7 @@ class CubeCollectionLinks(AuthenticatedCollectionLinks):
     servicefiles: ApiUrl
     filebrowser: ApiUrl
     user: UserUrl
+    admin: Optional[AdminUrl] = None
 
 
 @deserialize
