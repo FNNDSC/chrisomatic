@@ -1,16 +1,16 @@
 import asyncio
-import typer
 import sys
 from pathlib import Path
 
+import typer
 from rich.console import Console
 from strictyaml import YAMLValidationError
-from chrisomatic.spec.deserialize import deserialize_config
+
 from chrisomatic.cli import Gstr_title
 from chrisomatic.cli.agenda import agenda as apply_from_config
 from chrisomatic.framework.outcome import Outcome
+from chrisomatic.spec.deserialize import deserialize_config
 from chrisomatic.spec.given import ValidationError
-
 
 app = typer.Typer(add_completion=False)
 
@@ -41,13 +41,14 @@ def apply(
         input_config = file.read_text()
         filename = str(file)
 
+    console = Console(force_terminal=(True if tty else None))
+
     try:
-        config = deserialize_config(input_config, filename)
+        config = deserialize_config(input_config, filename, console)
     except (ValidationError, YAMLValidationError) as e:
         print(e)
         raise typer.Abort()
 
-    console = Console(force_terminal=(True if tty else None))
     console.print(Gstr_title)
     final_result = asyncio.run(apply_from_config(config, console))
     if final_result.summary[Outcome.FAILED] > 0:
