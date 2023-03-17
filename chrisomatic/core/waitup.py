@@ -50,7 +50,7 @@ class WaitUp(ChrisomaticTask[float]):
                         f"bad status={res.status} (expected {self.good_status})"
                     )
                     return Outcome.FAILED, elapsed_time
-                except aiohttp.ClientConnectorError:
+                except aiohttp.ClientOSError:
                     await asyncio.sleep(self.interval)
                     elapsed_time = time.monotonic() - start_time
                     emit.status = Text(
