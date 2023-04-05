@@ -1,6 +1,6 @@
 = _ChRIS_ Configuration YAML Spec
 Jennings <Jennings.Zhang@childrens.harvard.edu>
-:version: 1.0
+:version: 1.1
 :toc:
 
 A _ChRIS_ configuration file is a https://yaml.org/[YAML] file which describes the state of a _ChRIS_ system.
@@ -11,7 +11,7 @@ Not all fields are required. Most of them can be guessed or inferred.
 
 === version
 
-Type: Literal[1.0]
+Type: Literal[1.1]
 
 === on
 
@@ -23,13 +23,6 @@ Type: string
 
 URL of _ChRIS_ backend.
 
-[#chris_store_url]
-==== on.chris_store_url
-
-Type: Optional[string]
-
-URL of _ChRIS_ store backend.
-
 ==== on.chris_superuser
 
 Type: <<User>>
@@ -37,24 +30,14 @@ Type: <<User>>
 Admin user of _ChRIS_ backend, i.e.
 user who is able to register plugins to _ChRIS_.
 
-[#public_store]
-==== on.public_store
+[#peers]
+=== peers
 
 Type: list[string]
 
-Default: [https://chrisstore.co/api/v1/]
+Default: [https://cube.chrisproject.org/api/v1/]
 
-Specify public instance(s) of _ChRIS_ stores from where to
-get plugins from.
-
-=== chris_store
-
-(Optional) _ChRIS_ store description.
-
-[#store-users]
-==== chris_store.users
-
-Type: list[<<User>>]
+A list of public instance(s) of _ChRIS_ backends from where plugins can be found.
 
 === cube
 
@@ -99,7 +82,7 @@ Type: string
 
 Type: list[string | Plugin]
 
-If value is a string, then it may represent any of: <<plugin_url,ChRIS store url>>, <<plugin_name,plugin name>>,
+If value is a string, then it may represent any of: <<plugin_url,plugin URL of peer CUBE>>, <<plugin_name,plugin name>>,
 <<plugin_dock_image,image tag>>,
 <<plugin_public_repo,code repository URL>>.
 
@@ -108,14 +91,14 @@ If value is a string, then it may represent any of: <<plugin_url,ChRIS store url
 
 Type: str
 
-A ChRIS store URL, e.g. `https://chrisstore.co/api/v1/plugins/99/`
+A ChRIS plugin URL, e.g. `https://cube.chrisproject.org/api/v1/plugins/99/`
 
 [#plugin_name]
 ===== cube.plugins[*].name
 
 Type: str
 
-Name of a plugin in the ChRIS store, e.g. `pl-dircopy`
+Name of a plugin, e.g. `pl-dircopy`
 
 ===== cube.plugins[*].version
 
@@ -146,14 +129,6 @@ Names of which compute environments to register this plugin to.
 
 If unspecified, use <<cube_compute_resource,cube.compute_resource[0]>>.
 
-[#plugin_owner]
-====== cube.plugins[*].owner
-
-Type: Optional[str]
-
-Username of user which, if it is necessary to first upload the specified
-plugin to a _ChRIS store_, will own this plugin.
-
 ==== cube.pipelines
 
 Type: list[string | <<pipelines,Pipeline>>]
@@ -169,7 +144,7 @@ If an element of `cube.pipelines` is a string, then it is interpreted as a
 
 A `PipelineSource` is one of:
 
-- A _ChRIS_ store pipeline, e.g. `https://chrisstore.co/api/v1/pipelines/1/`
+- A _ChRIS_ pipeline URL, e.g. `https://cube.chrisproject.org/api/v1/pipelines/1/`
 - A URI (starting with `http://`, `https://`, `ipfs://`, ...) of a JSON pipeline description.
 - A path on the local filesystem to a JSON pipeline description.
 

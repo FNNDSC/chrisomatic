@@ -9,7 +9,8 @@
 It is particularly useful for the recreation of setups for testing or development,
 though it could also (work and) be useful for deployments.
 
-![Screen recording](https://ipfs.babymri.org/ipfs/QmV98NzC6St94GjHdSs7qQmxpvkMLgjCWMm4VHafP6DH3C/chrisomatic.gif)
+[//]: # (TODO REDO SCREEN RECORDING)
+
 
 ## Usage
 
@@ -36,7 +37,7 @@ This file describes your _ChRIS_ system and what to add to it.
 #### Examples
 
 In general, the examples below should almost work as-is.
-You'll probably need to change `on.cube_url` and `on.chris_store_url`.
+You'll probably need to change `on.cube_url`.
 
 ##### Basic Configuration
 
@@ -44,19 +45,13 @@ Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
 # chrisomatic.yml
-version: 1.0
+version: 1.1
 
 on:
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:
     username: chris
     password: chris1234
-
-chris_store:
-   users:
-      - username: chrisstoreuser
-        password: chris1234
 
 cube:
   compute_resource:
@@ -74,40 +69,27 @@ Most values are flexible and support union data types.
 
 ```yaml
 # chrisomatic.yml
-version: 1.0
+version: 1.1
 
 ## System information
 on:
 
   ## Backend API URLs
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
-
   ## ChRIS admin user, will be created if they do not exist.
   chris_superuser:
     username: chris
     password: chris1234
 
-  ## Public instances of the ChRIS store where to find plugins.
-  public_store:
-     - https://chrisstore.co/api/v1/
-     - https://example.com/api/v1/
-  ## If unspecified, the default is ["https://chrisstore.co/api/v1/"]
-  ## Alternatively, plugin search in public instances can be disabled
-  ## by giving an empty value:
-  # public_store:
+## Public instances of the ChRIS backend from which you can get plugins.
+peers:
+  - https://cube.chrisproject.org/api/v1/
+  - https://example.com/api/v1/
+## If unspecified, the default is ["https://cube.chrisproject.org/api/v1/"]
+## Alternatively, plugin search in public instances can be disabled
+## by giving an empty value:
+# peers:
 
-
-chris_store:
-  ## List of ChRIS store users to create. Email is optional.
-  users:
-    - username: chris
-      password: chris1234
-    - username: jennings
-      password: abetterpassword
-      email: jennings@example.com
-    - username: thirduser
-      password: thirdis3
 
 cube:
   ## List of ChRIS users to create. Email is optional.
@@ -135,8 +117,8 @@ cube:
     - docker.io/fnndsc/pl-tsdircopy
     - docker.io/fnndsc/pl-topologicalcopy
 
-      ## by store URL
-    - https://chrisstore.co/api/v1/plugins/96/
+      ## by peer URL
+    - https://cube.chrisproject.org/api/v1/plugins/99/
 
       ## by name
     - pl-dcm2niix
@@ -157,12 +139,6 @@ cube:
 
 See below: how to specify [Plugins and Pipelines](#plugins-and-pipelines).
 
-#### Without a ChRIS Store
-
-If [`on.chris_store_url`](docs/schema.adoc#chris_store_url) is omitted,
-then `chrisomatic` will not be able to register plugins that do not already
-exist in any of [`on.public_store`](docs/schema.adoc#public_store).
-
 ### Running `chrisomatic`
 
 `chrisomatic` should be run as a container in the same docker network as
@@ -170,6 +146,9 @@ the _ChRIS_ backend (CUBE). The CUBE container **should** have the label
 `org.chrisproject.role=ChRIS ultron backEnd`.
 `chrisomatic` needs the docker daemon socket `/var/lib/docker.sock`
 and a configuration file `chrisomatic.yml`.
+
+`chrisomatic` works with [Podman](https://podman.io) as a drop-in replacement for Docker.
+Either define `DOCKER_HOST=unix:///run/user/1000/podman/podman.sock`, or use a volume to bind the Podman socket to `/var/lib/docker.sock`.
 
 Usually, _CUBE_ is created using `docker-compose`.
 You should add `chrisoatic` as a service to your `docker-compose.yml`.
@@ -181,7 +160,7 @@ version: '3.9'  # note the version requirement!
 services:
   chrisomatic:
     container_name: chrisomatic
-    image: fnndsc/chrisomatic:0.3.0
+    image: fnndsc/chrisomatic
     networks:
       - local
     volumes:
@@ -190,12 +169,11 @@ services:
     userns_mode: host
     depends_on:
       - chris
-      - chris_store
     profiles:  # prevents chrisomatic from running by default
       - tools
   chris:
     container_name: chris
-    image: ghcr.io/fnndsc/cube:3.0.0.a15
+    image: ghcr.io/fnndsc/cube:5.0.0
     ports:
       - "8000:8000"
     networks:
@@ -244,13 +222,13 @@ docker compose exec chrisomatic chrisomatic apply
 #### Without Docker
 
 A limited feature set is still provided in case `chrisomatic` does not
-have access to a container engine (Docker).
+have access to a container engine (Docker or Podman).
 
 - HTTP-Only features:
   - Create compute resources
-  - Register plugins from ChRIS Store
+  - Register plugins from _ChRIS_ peers
 - Docker-required features:
-  - Register Python _ChRIS_ plugins not found in any ChRIS Store
+  - Register Python _ChRIS_ plugins without _ChRIS_ peers
     (i.e. when `dock_image` refers to a local image)
 - Docker-required, same-host features:
   - Create superuser
@@ -268,8 +246,8 @@ podman run --rm -i docker.io/fnndsc/chrisomatic:latest chrisomatic -t - < chriso
    1. Attempt to identify container on host running _CUBE_ (requires Docker)
    2. Attempt to create superuser using Django shell (requires Docker)
 3. Add compute resources.
-4. Create normal user accounts in both _ChRIS_ store and _CUBE_.
-5. Upload plugins to _ChRIS_. (requires Docker for plugins not found in a store)
+4. Create normal user accounts in _CUBE_.
+5. Upload plugins to _ChRIS_. (requires Docker for plugins not found in a peer)
 6. Upload pipelines to _ChRIS_ (not implemented).
 
 #### Plugins and Pipelines
@@ -277,19 +255,15 @@ podman run --rm -i docker.io/fnndsc/chrisomatic:latest chrisomatic -t - < chriso
 The most common use case for `chrisomatic` is to automatically
 register plugins to _ChRIS_. Plugins can be specified by any of:
 
-- ChRIS store URL, e.g. `https://chrisstore.co/api/v1/plugins/108/`
+- A public _ChRIS_ peer plugin URL, e.g. `https://cube.chrisproject.org/api/v1/plugins/108/`
 - name, e.g. `pl-dircopy`
 - container image, e.g. `ghcr.io/fnndsc/pl-dircopy:2.1.1` 
 - source code repository, e.g. `https://github.com/FNNDSC/pl-dircopy`
 
-If the plugin can be found in either the targeted _CUBE_'s paired
-_ChRIS_ store or a public _ChRIS_ store (default: https://chrisstore.co/),
-then it is registered.
+If the plugin can be found in any _ChRIS_ peer instance, then it is registered.
 
-If the plugin cannot be found in any known _ChRIS_ store, then
-`chrisomatic` will attempt to produce the plugin JSON representation,
-upload it to the configured _ChRIS_ store backend, and then register
-it to the targeted _CUBE_. `chrisomatic` supports this operation for
+If the plugin cannot be registered from a peer, then
+`chrisomatic` will attempt to produce the plugin JSON representation and upload it to _CUBE_. `chrisomatic` supports this operation for
 conventional plugins with either can be described by 
 [`chris_plugin_info`](https://github.com/FNNDSC/chris_plugin)
 or were created from
@@ -303,9 +277,8 @@ Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/in
 
 - [x] Create CUBE superuser
 - [x] Create CUBE users
-- [x] Create _ChRIS_ store users
 - [x] Add compute resources to CUBE
-- [x] Register plugins from a store to CUBE
+- [x] Register plugins from _ChRIS_ peers
 - [x] Register plugin given a docker image to CUBE
 - [ ] Add pipelines to CUBE
 - [x] very fast

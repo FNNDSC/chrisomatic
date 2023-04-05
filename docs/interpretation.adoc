@@ -4,8 +4,7 @@ This document describes how `chrisomatic` interprets a configuration file.
 
 == General Behavior
 
-`chrisomatic` operates _additively_, meaning that it will only create
-data.
+`chrisomatic` operates _additively_, meaning that it will only create data.
 
 == Default Resolution
 
@@ -29,17 +28,9 @@ xref:schema.adoc#cube_compute_resource[`cube.compute_resource`].
 ----
 on:
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:
     username: chris
     password: chris1234
-
-chris_store:
-  users:
-    - username: jennings
-      password: abetterpassword
-    - username: gideon
-      password: gideonstrumpet
 
 cube:
   compute_resource:
@@ -75,7 +66,7 @@ _plugin_ is interpreted as xref:schema.adoc#plugin_dock_image[`dock_image`].
 Else, _plugin_ will be interpreted based on patterns, matching as
 these fields in this order:
 
-1. xref:schema.adoc#plugin_url[_ChRIS_ store plugin URL], e.g. `https://chrisstore.co/api/v1/plugins/45/`
+1. xref:schema.adoc#plugin_url[_ChRIS_ plugin URL], e.g. `https://cube.chrisproject.org/api/v1/plugins/45/`
 2. xref:schema.adoc#plugin_dock_image[`dock_image`], e.g. `docker.io/fnndsc/pl-simpledsapp:1.2.3`
 3. xref:schema.adoc#plugin_public_repo[`public_repo`], e.g. `https://github.com/FNNDSC/pl-simpledsapp`
 4. xref:schema.adoc#plugin_name[plugin name], e.g. `pl-simpledsapp`
@@ -88,25 +79,22 @@ If a xref:schema.adoc#cube_plugins[Plugin] is not registered to
 its xref:schema.adoc#plugins_compute_resource[compute environments],
 `chrisomatic` will attempt to do the following:
 
-1. Search for the _plugin_ in the
-   xref:schema.adoc#chris_store_url[linked _ChRIS_ store].
-2. Search for the _plugin_ in
-   xref:schema.adoc#public_store[the list of public _ChRIS_ store instances],
-   in the specified order. (default: `["https://chrisstore.co/api/v1/"]`)
-3. Attempt to upload the _plugin_ to the
-   xref:schema.adoc#chris_store_url[linked _ChRIS_ store].
+1. Search for the _plugin_ in
+   xref:schema.adoc#peers[the list of peer _ChRIS_ backends],
+   in the specified order. (default: `["https://cube.chrisproject.org/api/v1/"]`)
+2. Attempt to run a container of the plugin to produce its JSON representation and register it directly to CUBE.
 
-Searching public _ChRIS_ store instances can be disabled (i.e. force upload to local store):
+Searching peer _ChRIS_ instances can be disabled (i.e. force local, direct registration) by providing an empty value for `peers`:
 
 [source,yaml]
 ----
 on:
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:
     username: chris
     password: chris1234
-  public_store:
+
+peers:
 ----
 
 [#plugin_representation_strategy]
@@ -124,13 +112,6 @@ these commands, and if one doesn't work, it tries the next:
 
 1. `chris_plugin_info`
 2. `{{CMD}} --json`, where `{{CMD}}` is the `CMD` set by `Dockerfile`
-
-=== Plugin Store Owner
-
-When a plugin needs to be uploaded to the local store first, and
-xref:schema.adoc#plugin_owner[`cube.plugins[*\].owner`] is not specified,
-the first user listed in xref:schema.adoc#store-users[`chris_store.users`]
-will own the uploaded plugin.
 
 === Error Handling
 

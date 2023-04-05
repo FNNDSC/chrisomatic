@@ -1,0 +1,12 @@
+== Version 1.1
+
+Dropping support for the ChRIS Store.
+
+The default and preferred behavior is to register plugins from "peers" i.e. public _ChRIS_ backend instances.
+
+- Removed `on.chris_store_url`
+- Replaced `on.public_store` with `peers`
+
+== Version 1.0
+
+Initial spec.
