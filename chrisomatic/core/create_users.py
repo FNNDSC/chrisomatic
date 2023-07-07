@@ -5,7 +5,7 @@ from chris.common.types import ChrisURL
 from chris.common.client import AuthenticatedClient
 from chris.common.errors import IncorrectLoginError, ResponseError
 from chrisomatic.spec.common import User
-from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
+from chrisomatic.framework.task import ChrisomaticTask, DeprecatedState, Outcome
 from chrisomatic.core.omniclient import OmniClient, A
 
 
@@ -16,10 +16,12 @@ class CreateUsersTask(ChrisomaticTask[A]):
     user: User
     user_type: Type[A]
 
-    def initial_state(self) -> State:
-        return State(title=self.user.username, status="checking if user exists...")
+    def first_status(self) -> DeprecatedState:
+        return DeprecatedState(
+            title=self.user.username, status="checking if user exists..."
+        )
 
-    async def run(self, emit: State) -> tuple[Outcome, Optional[A]]:
+    async def run(self, emit: DeprecatedState) -> tuple[Outcome, Optional[A]]:
         try:
             client: AuthenticatedClient = await self.omniclient.create_client(
                 self.url, self.user, self.user_type

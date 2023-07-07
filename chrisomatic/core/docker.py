@@ -3,13 +3,11 @@ Docker-related helpers.
 """
 import enum
 from typing import Optional, Sequence, AsyncContextManager
-from rich.text import Text
 from rich.progress import Progress, TaskID
 import aiodocker
 from contextlib import asynccontextmanager
 from aiodocker.containers import DockerContainer
-from chrisomatic.framework.task import State
-from enum import Enum
+from chrisomatic.framework.task import Channel
 
 
 BACKEND_CONTAINER_LABEL = "org.chrisproject.role=ChRIS_ultron_backEnd"
@@ -89,7 +87,9 @@ async def has_image(docker: aiodocker.Docker, image: str) -> bool:
         raise e
 
 
-async def rich_pull(docker: aiodocker.Docker, image: str, emit: State) -> PullResult:
+async def rich_pull(
+    docker: aiodocker.Docker, image: str, status: Channel
+) -> PullResult:
     """
     Pull an image, while creating and updating its progress as a
     [`rich.progress.Progress`](https://rich.readthedocs.io/en/latest/progress.html)
@@ -101,11 +101,11 @@ async def rich_pull(docker: aiodocker.Docker, image: str, emit: State) -> PullRe
     """
     # when pulling via docker API, if tag is not specified, then *all* tags
     # are pulled, and that's definitely not what we want!
-    emit.title = image
-    emit.status = "pulling..."
+    status.title = image
+    status.replace("pulling...")
     parsed_image = parse_image_tag(image)
     if parsed_image is None:
-        emit.status = Text("invalid tag")
+        status.replace("invalid tag")
         return PullResult.error
     repo, tag = parsed_image
 
@@ -113,7 +113,7 @@ async def rich_pull(docker: aiodocker.Docker, image: str, emit: State) -> PullRe
     # each layer will be represented by a task of the progress bar.
     layers: dict[str, TaskID] = {}
     progress = Progress()
-    emit.status = progress
+    status.replace(progress)
     try:
         async for current in docker.images.pull(repo, tag=tag, stream=True):
             if "id" not in current:
@@ -138,18 +138,18 @@ async def rich_pull(docker: aiodocker.Docker, image: str, emit: State) -> PullRe
             )
 
     except aiodocker.DockerError as e:
-        emit.status = str(e)
+        status.replace(str(e))
         return PullResult.error
 
     return PullResult.pulled
 
 
 async def rich_pull_if_missing(
-    docker: aiodocker.Docker, image: str, emit: State
+    docker: aiodocker.Docker, image: str, status: Channel
 ) -> PullResult:
     if await has_image(docker, image):
         return PullResult.not_pulled
-    return await rich_pull(docker, image, emit)
+    return await rich_pull(docker, image, status)
 
 
 def parse_image_tag(image: str) -> Optional[tuple[str, str]]:

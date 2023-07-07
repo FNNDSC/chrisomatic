@@ -12,7 +12,7 @@ from chris.store.client import AnonymousChrisStoreClient
 from chrisomatic.core.omniclient import OmniClient
 from chrisomatic.core.superuser import create_superuser, SuperuserCreationError
 from chrisomatic.framework.outcome import Outcome
-from chrisomatic.framework.task import ChrisomaticTask, State
+from chrisomatic.framework.task import ChrisomaticTask, DeprecatedState
 from chrisomatic.spec.given import On
 
 
@@ -25,14 +25,14 @@ class OmniClientFactory(ChrisomaticTask[OmniClient]):
     connector_owner: bool = True
     attempt: int = 0
 
-    def initial_state(self) -> State:
+    def first_status(self) -> DeprecatedState:
         user = self.on.chris_superuser
-        return State(
+        return DeprecatedState(
             title=f"superuser ({user.username})",
             status=f"checking for superuser: username={user.username}",
         )
 
-    async def run(self, emit: State) -> tuple[Outcome, Optional[OmniClient]]:
+    async def run(self, emit: DeprecatedState) -> tuple[Outcome, Optional[OmniClient]]:
         """
         Constructor for `OmniClient`.
         Create a `CubeClient` with the given superuser credentials.
@@ -81,7 +81,7 @@ class OmniClientFactory(ChrisomaticTask[OmniClient]):
         return outcome, omniclient
 
     async def __from_client(
-        self, cube_client: CubeClient, emit: State
+        self, cube_client: CubeClient, emit: DeprecatedState
     ) -> Optional[OmniClient]:
         """
         Use the created `cube_client`'s `aiohttp.BaseConnector` to create everything else.

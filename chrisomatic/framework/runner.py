@@ -3,8 +3,8 @@ Everything to do with the rich display and parallel execution of tasks.
 """
 import abc
 import asyncio
-from dataclasses import dataclass, InitVar
-from typing import Sequence, ClassVar, TypeVar, Generic, Awaitable, Optional
+from dataclasses import dataclass, InitVar, field
+from typing import Sequence, TypeVar, Generic, Awaitable, Optional
 
 from rich.console import RenderableType, ConsoleRenderable, Console
 from rich.live import Live
@@ -13,7 +13,7 @@ from rich.spinner import Spinner
 from rich.table import Table, Column
 from rich.text import Text
 
-from chrisomatic.framework.task import State, ChrisomaticTask, Outcome
+from chrisomatic.framework.task import Channel, ChrisomaticTask, Outcome
 
 _R = TypeVar("_R")
 
@@ -23,15 +23,16 @@ class _RunningTableTask(Generic[_R]):
 
     chrisomatic_task: InitVar[ChrisomaticTask[_R]]
     spinner: RenderableType
-    task: ClassVar[asyncio.Task]
-    state: ClassVar[State]
+    task: asyncio.Task = field(init=False)
+    status: Channel = field(init=False)
 
     def __post_init__(self, chrisomatic_task: ChrisomaticTask):
-        self.state = chrisomatic_task.initial_state()
-        self.task = asyncio.create_task(chrisomatic_task.run(self.state))
+        title, first_status = chrisomatic_task.first_status()
+        self.status = Channel(title, first_status)
+        self.task = asyncio.create_task(chrisomatic_task.run(self.status))
 
     def to_row(self) -> tuple[RenderableType, RenderableType, RenderableType]:
-        return self.__get_icon(), self.__get_title(), self.state.status
+        return self.__get_icon(), self.__get_title(), self.status.render()
 
     def done(self) -> bool:
         return self.task.done()
@@ -49,7 +50,9 @@ class _RunningTableTask(Generic[_R]):
         return self.spinner
 
     def __get_title(self) -> RenderableType:
-        return Text(self.state.title, style=self.outcome.style if self.done() else None)
+        return Text(
+            self.status.title, style=self.outcome.style if self.done() else None
+        )
 
 
 @dataclass
@@ -163,19 +166,20 @@ class ProgressTaskRunner(TaskRunner[_R]):
         """
 
         async def run_and_update() -> tuple[Outcome, _R]:
-            state = chrisomatic_task.initial_state()
-            outcome, result = await chrisomatic_task.run(state)
+            title, first_status = chrisomatic_task.first_status()
+            status_channel = Channel(title, first_status)
+            outcome, result = await chrisomatic_task.run(status_channel)
             progress.update(progress_task, advance=1)
             if self.noisy:
-                msg = self.__format_noise(outcome, state)
+                msg = self.__format_noise(outcome, status_channel)
                 progress.console.print(msg)
             return outcome, result
 
         return run_and_update()
 
     @staticmethod
-    def __format_noise(outcome: Outcome, state: State) -> RenderableType:
-        title = Text(f"[{state.title}] ", style=outcome.style)
+    def __format_noise(outcome: Outcome, status: Channel) -> RenderableType:
+        title = Text(f"[{status.title}] ", style=outcome.style)
         table = Table.grid(Column(ratio=3), Column(ratio=8), expand=True)
-        table.add_row(title, state.status)
+        table.add_row(title, status.render())
         return table

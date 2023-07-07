@@ -20,6 +20,7 @@ pyserde = "0.11.1"
 
 aiodocker = "^0.21.0"
 strictyaml = "^1.7.3"
+aiochris = {path = "../aiochris", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.0"

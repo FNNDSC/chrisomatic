@@ -13,12 +13,12 @@ from chrisomatic.core.docker import (
     check_output,
     NonZeroExitCodeError,
 )
-from chrisomatic.framework.task import State
+from chrisomatic.framework.task import DeprecatedState
 from chrisomatic.spec.given import GivenCubePlugin
 
 
 async def try_obtain_json_description(
-    docker: Optional[aiodocker.Docker], plugin: GivenCubePlugin, emit: State
+    docker: Optional[aiodocker.Docker], plugin: GivenCubePlugin, emit: DeprecatedState
 ) -> Optional[str]:
     """
     Attempt to use Docker to run containers of the plugin to extract its JSON description.
@@ -33,7 +33,10 @@ async def try_obtain_json_description(
     if pull_result == PullResult.pulled:
         emit.append = True
     guessing_methods: list[
-        Callable[[aiodocker.Docker, GivenCubePlugin, State], Awaitable[Optional[str]]]
+        Callable[
+            [aiodocker.Docker, GivenCubePlugin, DeprecatedState],
+            Awaitable[Optional[str]],
+        ]
     ] = [_json_from_chris_plugin_info, _json_from_old_chrisapp]
     for guess_method in guessing_methods:
         json_representation = await guess_method(docker, plugin, emit)
@@ -44,13 +47,13 @@ async def try_obtain_json_description(
 
 
 async def _json_from_chris_plugin_info(
-    docker: aiodocker.Docker, plugin: GivenCubePlugin, emit: State
+    docker: aiodocker.Docker, plugin: GivenCubePlugin, emit: DeprecatedState
 ) -> Optional[str]:
     return await _try_run(docker, plugin, emit, ("chris_plugin_info",))
 
 
 async def _json_from_old_chrisapp(
-    docker: aiodocker.Docker, plugin: GivenCubePlugin, emit: State
+    docker: aiodocker.Docker, plugin: GivenCubePlugin, emit: DeprecatedState
 ) -> Optional[str]:
     cmd = await get_cmd(docker, plugin.dock_image)
     if len(cmd) == 0:
@@ -61,7 +64,7 @@ async def _json_from_old_chrisapp(
 async def _try_run(
     docker: aiodocker.Docker,
     plugin: GivenCubePlugin,
-    emit: State,
+    emit: DeprecatedState,
     command: Sequence[str],
 ) -> Optional[str]:
     msg = Text("Running ")

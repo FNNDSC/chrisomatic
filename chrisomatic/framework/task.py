@@ -1,9 +1,8 @@
 import abc
 from typing import TypeVar, Generic, Optional
-from dataclasses import dataclass, InitVar, field
+from dataclasses import dataclass, field, InitVar
 from chrisomatic.framework.outcome import Outcome
-from rich.console import RenderableType
-from rich.console import Group
+from rich.console import RenderableType, Group
 from rich.highlighter import ReprHighlighter
 from rich.text import Text
 
@@ -12,36 +11,31 @@ highlighter = ReprHighlighter()
 
 
 @dataclass
-class State:
+class Channel:
     """
-    Mutable object used to relay information between `ChrisomaticTask.run`
-    and a live display.
-
-    When setting its `status` property while `append=False`, its status will be overwritten.
-    But when `append=True`, setting `status` will instead append it to a list of its
-    previous values. Getting `status` returns a
-    [`rich.group.Group`](https://rich.readthedocs.io/en/latest/group.html)
+    A channel for a task to communicate status/progress information during `ChrisomaticTask.run` to some live display.
     """
 
     title: str
-    status: InitVar[RenderableType]
-    append: bool = False
+    first_status: InitVar[Optional[RenderableType]]
     __rows: list[RenderableType] = field(init=False, default_factory=list)
 
-    def __post_init__(self, status: RenderableType):
-        self.__rows.append(status)
+    def __post_init__(self, first_status: Optional[RenderableType]):
+        if first_status is not None:
+            self.append(first_status)
 
-    @property
-    def status(self) -> RenderableType:
+    def render(self) -> RenderableType:
         return Group(*self.__rows)
 
-    @status.setter
-    def status(self, value: RenderableType):
-        highlighted = self.__highlight(value)
-        if self.append:
-            self.__rows.append(highlighted)
-        else:
-            self.__rows[-1] = highlighted
+    def append(self, s: RenderableType) -> None:
+        """Append to this status."""
+        highlighted = self.__highlight(s)
+        self.__rows.append(highlighted)
+
+    def replace(self, s: RenderableType) -> None:
+        """Set a new status."""
+        self.__rows.clear()
+        self.append(s)
 
     @staticmethod
     def __highlight(s: RenderableType) -> RenderableType:
@@ -53,10 +47,17 @@ class State:
 
 
 class ChrisomaticTask(abc.ABC, Generic[_R]):
+    """
+    A single task to do.
+    """
+
     @abc.abstractmethod
-    async def run(self, emit: State) -> tuple[Outcome, Optional[_R]]:
+    async def run(self, status: Channel) -> tuple[Outcome, Optional[_R]]:
         ...
 
     @abc.abstractmethod
-    def initial_state(self) -> State:
+    def first_status(self) -> tuple[str, RenderableType]:
+        """
+        Returns the title and initial status text for this task.
+        """
         ...

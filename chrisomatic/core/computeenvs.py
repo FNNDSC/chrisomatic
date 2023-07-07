@@ -2,7 +2,7 @@ from typing import Optional, Collection
 from dataclasses import dataclass
 
 from chris.cube.models import ComputeResource as CubeComputeResource
-from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
+from chrisomatic.framework.task import ChrisomaticTask, DeprecatedState, Outcome
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource
 from chrisomatic.core.omniclient import OmniClient
 
@@ -17,18 +17,21 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
     given: GivenComputeResource
     existing: Collection[CubeComputeResource]
 
-    def initial_state(self) -> State:
-        return State(title=self.given.name, status="checking for compute resource...")
+    def first_status(self) -> DeprecatedState:
+        return DeprecatedState(
+            title=self.given.name, status="checking for compute resource..."
+        )
 
-    async def run(self, emit: State) -> tuple[Outcome, Optional[CubeComputeResource]]:
+    async def run(
+        self, emit: DeprecatedState
+    ) -> tuple[Outcome, Optional[CubeComputeResource]]:
         preexisting = self.find_in_existing()
         if preexisting is not None:
             emit.status = preexisting.url
             if self.same_as(preexisting):
                 return Outcome.NO_CHANGE, preexisting
             emit.status = (
-                f'Existing "{preexisting.name}" '
-                "is different from given_config."
+                f'Existing "{preexisting.name}" ' "is different from given_config."
             )
             return Outcome.FAILED, preexisting
         if not self.given.is_some():
@@ -64,6 +67,9 @@ class ComputeResourceTask(ChrisomaticTask[CubeComputeResource]):
             return False
         if self.given.url is not None and self.given.url != preexisting.compute_url:
             return False
-        if self.given.description is not None and self.given.description != preexisting.description:
+        if (
+            self.given.description is not None
+            and self.given.description != preexisting.description
+        ):
             return False
         return True

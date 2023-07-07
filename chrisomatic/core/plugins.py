@@ -19,7 +19,7 @@ from chris.cube.types import ComputeResourceName
 from chris.store.client import AbstractChrisStoreClient, ChrisStoreClient
 from chrisomatic.core._pldesc import try_obtain_json_description
 from chrisomatic.core.helpers import RetryWrapper, R
-from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
+from chrisomatic.framework.task import ChrisomaticTask, DeprecatedState, Outcome
 from chrisomatic.spec.given import GivenCubePlugin
 
 
@@ -84,10 +84,14 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     docker: Optional[aiodocker.Docker]
     cube: CubeClient
 
-    def initial_state(self) -> State:
-        return State(title=self.plugin.title, status="checking compute resources...")
+    def first_status(self) -> DeprecatedState:
+        return DeprecatedState(
+            title=self.plugin.title, status="checking compute resources..."
+        )
 
-    async def run(self, emit: State) -> tuple[Outcome, Optional[PluginRegistration]]:
+    async def run(
+        self, emit: DeprecatedState
+    ) -> tuple[Outcome, Optional[PluginRegistration]]:
         # check where the plugin was already registered
         existing_plugin, compute_envs = await self._already_present(emit)
         if existing_plugin is not None:
@@ -103,7 +107,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         if plugin_in_store is None:
             return Outcome.FAILED, None
         emit.title = plugin_in_store.name
-
 
         # register from linked ChRIS store to CUBE
         cube_plugin = None
@@ -126,7 +129,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         self,
         plugin_in_store: Plugin,
         compute_envs: Collection[ComputeResourceName],
-        emit: State,
+        emit: DeprecatedState,
     ) -> CubePlugin:
         """
         Register a plugin from a *ChRIS* store to some compute environments by name.
@@ -136,12 +139,14 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         emit.status = f'--> "{compute_envs}"'
 
         async def register_plugin() -> CubePlugin:
-            return await self.cube.register_plugin_from_store(plugin_in_store.url, compute_envs)
+            return await self.cube.register_plugin_from_store(
+                plugin_in_store.url, compute_envs
+            )
 
         return await _RetryOnPluginUpload(register_plugin).call(emit)
 
     async def _already_present(
-        self, emit: State
+        self, emit: DeprecatedState
     ) -> tuple[Optional[CubePlugin], Collection[ComputeResourceName]]:
         """
         If the plugin is already registered to CUBE, return its representation in CUBE and the
@@ -174,7 +179,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
         return existing_plugin, remaining_computes
 
     async def _find_in_stores_else_upload(
-        self, emit: State
+        self, emit: DeprecatedState
     ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         try:
             found_in_store, origin = await self._find_in_store(emit)
@@ -189,7 +194,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
             return None, None
 
     async def _find_in_store(
-        self, emit: State
+        self, emit: DeprecatedState
     ) -> tuple[Optional[Plugin], Optional[PluginOrigin]]:
         query = self.plugin.to_store_search()
         for client, origin in self._all_stores:
@@ -201,7 +206,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
 
     @staticmethod
     async def __get_first_plugin(
-        client: AbstractClient[Type, P], query: dict[str, str], emit: State
+        client: AbstractClient[Type, P], query: dict[str, str], emit: DeprecatedState
     ) -> P:
         """
         Wraps `client.get_first_plugin` with `_RetryOnDisconnect`.
@@ -212,7 +217,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
 
         return await _RetryOnDisconnect[P](get_first_plugin).call(emit)
 
-    async def _upload_to_store(self, emit: State) -> Optional[Plugin]:
+    async def _upload_to_store(self, emit: DeprecatedState) -> Optional[Plugin]:
         if self.linked_store is None:
             if self.plugin.owner:
                 msg = f'No client for owner "{self.plugin.owner}"'
@@ -237,7 +242,7 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
                 return None
         return uploaded_plugin
 
-    async def _get_json_representation(self, emit: State) -> Optional[str]:
+    async def _get_json_representation(self, emit: DeprecatedState) -> Optional[str]:
         return await try_obtain_json_description(self.docker, self.plugin, emit)
 
     @property

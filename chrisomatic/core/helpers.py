@@ -4,7 +4,7 @@ import random
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Callable, Awaitable
 from rich.text import Text
-from chrisomatic.framework.task import State
+from chrisomatic.framework.task import DeprecatedState
 
 R = TypeVar("R")
 
@@ -29,7 +29,7 @@ class RetryWrapper(Generic[R], abc.ABC):
         if self.wait_min > self.wait_max:
             raise ValueError(f"wait_min > wait_max ({self.wait_min} > {self.wait_max})")
 
-    async def call(self, emit: State, attempt: int = 0) -> R:
+    async def call(self, emit: DeprecatedState, attempt: int = 0) -> R:
         try:
             return await self.fn()
         except BaseException as e:
