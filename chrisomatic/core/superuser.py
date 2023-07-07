@@ -3,7 +3,7 @@ from typing import Optional
 
 import aiodocker
 from chrisomatic.spec.common import User
-from chrisomatic.core.docker import find_cube
+from chrisomatic.core.docker import find_cube, BACKEND_CONTAINER_LABEL
 
 
 async def create_superuser(docker: Optional[aiodocker.Docker], user: User) -> None:
@@ -11,7 +11,11 @@ async def create_superuser(docker: Optional[aiodocker.Docker], user: User) -> No
         raise SuperuserCreationError(
             "Cannot create superuser without connection to Docker."
         )
-    cube = await find_cube(docker)
+    if (cube := await find_cube(docker)) is None:
+        raise SuperuserCreationError(
+            f"No container found on host {docker.docker_host} "
+            f"with label {BACKEND_CONTAINER_LABEL}"
+        )
     script = cleandoc(
         f"""
         from django.contrib.auth.models import User

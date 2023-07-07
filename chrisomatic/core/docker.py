@@ -12,7 +12,8 @@ from chrisomatic.framework.task import State
 from enum import Enum
 
 
-_CHRIS_ROLE = {"label": {"org.chrisproject.role=ChRIS ultron backEnd": True}}
+BACKEND_CONTAINER_LABEL = "org.chrisproject.role=ChRIS_ultron_backEnd"
+_CHRIS_ROLE = {"label": {BACKEND_CONTAINER_LABEL: True}}
 
 
 async def find_cube(
