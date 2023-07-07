@@ -1,4 +1,4 @@
-FROM docker.io/fnndsc/python-poetry:1.4.1
+FROM docker.io/fnndsc/python-poetry:1.5.1
 
 LABEL org.opencontainers.image.authors="Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>, FNNDSC <dev@babyMRI.org>" \
       org.opencontainers.image.title="ChRISomatic" \
