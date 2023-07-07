@@ -1,4 +1,4 @@
-FROM docker.io/fnndsc/python-poetry:1.3.1
+FROM docker.io/fnndsc/python-poetry:1.5.1
 
 WORKDIR /usr/local/src/chrisomatic
 

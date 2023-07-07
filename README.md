@@ -299,6 +299,19 @@ or were created from
 
 Read the complete [schema](docs/schema.adoc) and how it is [interpreted](docs/interpretation.adoc).
 
+## Development
+
+```shell
+# run tests
+just test
+
+# run simulation
+just sim
+
+# clean up
+just nuke
+```
+
 ### Currently Supported Features
 
 - [x] Create CUBE superuser
