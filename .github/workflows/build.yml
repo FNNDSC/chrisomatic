@@ -73,7 +73,7 @@ jobs:
             ${{ steps.determine.outputs.dock_image }}
             ghcr.io/${{ steps.determine.outputs.dock_image }}
           platforms: linux/amd64,linux/arm64,linux/ppc64le
-          push: true
+          push: ${{ github.event_name == 'push' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
