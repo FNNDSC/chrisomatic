@@ -33,9 +33,9 @@ async def agenda(given_config: GivenConfig, console: Console) -> FinalResult:
         raise typer.Abort()
 
     # ------------------------------------------------------------
-    # Create superuser account if necessary, and then create HTTP sessions
+    # Create superuser account if necessary
     # ------------------------------------------------------------
-    console.rule("[bold blue]Creating Superuser Account and HTTP Sessions")
+    console.rule("[bold blue]Creating Superuser Account")
     superuser_creation, actions = await pre_actions.create_super_client(
         given_config.on, docker
     )
