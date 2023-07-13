@@ -2,10 +2,11 @@ import asyncio
 import aiodocker
 from typing import Sequence
 from dataclasses import dataclass
+
+from rich.console import RenderableType
 from rich.progress import Progress
-from chrisomatic.framework.task import Outcome, ChrisomaticTask, State
+from chrisomatic.framework.task import Outcome, ChrisomaticTask, Channel
 from chrisomatic.framework.runner import TableTaskRunner, ProgressTaskRunner
-from chrisomatic.core.waitup import wait_up
 from chrisomatic.core.docker import rich_pull
 
 
@@ -15,30 +16,29 @@ class DemoTask(ChrisomaticTask[str]):
     stuff: Sequence[float | str]
     result: Outcome
 
-    async def run(self, emit: State) -> tuple[Outcome, str]:
+    async def run(self, status: Channel) -> tuple[Outcome, str]:
         for i in self.stuff:
             if isinstance(i, (int, float)):
                 await asyncio.sleep(i)
             else:
-                emit.status = i
+                status.replace(i)
         return self.result, self.stuff[-1]
 
-    def initial_state(self) -> State:
-        return State(self.name, "resolving user...")
+    def first_status(self) -> tuple[str, RenderableType]:
+        return self.name, "resolving user..."
 
 
 @dataclass
 class DockerPullTask(ChrisomaticTask[str]):
-    def initial_state(self) -> State:
-        return State("some progress", "some progress")
+    def first_status(self) -> tuple[str, RenderableType]:
+        return "some progress", "some progress"
 
-    async def run(self, emit: State) -> tuple[Outcome, str]:
+    async def run(self, status: Channel) -> tuple[Outcome, str]:
         async with aiodocker.Docker() as docker:
-            await rich_pull(docker, "fnndsc/pl-re-sub", emit)
-            emit.append = True
-            emit.status = "will delete now..."
+            await rich_pull(docker, "fnndsc/pl-re-sub:latest", status)
+            status.append("will delete now...")
             await docker.images.delete("fnndsc/pl-re-sub:latest")
-            emit.status = "deleted"
+            status.append("deleted")
 
         return Outcome.CHANGE, "ok"
 

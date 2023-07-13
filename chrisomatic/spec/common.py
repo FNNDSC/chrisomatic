@@ -1,16 +1,15 @@
 from typing import Optional
 
 from serde import serde
-from chris.common.types import ChrisUsername, ChrisPassword
-from chris.cube.types import ComputeResourceName, PfconUrl
+from aiochris.types import Username, Password, ComputeResourceName, PfconUrl
 from dataclasses import dataclass, astuple
 
 
 @serde
 @dataclass(frozen=True)
 class User:
-    username: ChrisUsername
-    password: ChrisPassword
+    username: Username
+    password: Password
     email: str = None
 
     def __post_init__(self):
@@ -37,5 +36,5 @@ class ComputeResource:
 @dataclass(frozen=True)
 class Pipeline:
     src: str
-    owner: ChrisUsername
+    owner: Username
     locked: bool = True

@@ -9,11 +9,21 @@ services:
     networks:
       minichris:
     userns_mode: host
+    user: root
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
       - "../:/usr/local/src/chrisomatic:ro"
       - "pytest-cache:/var/cache/pytest:rw"
       - "./scripts:/t:ro"
+#    depends_on:
+#      - volume-permissions-fix
+#
+#  volume-permissions-fix:
+#    image: alpine
+#    command: chmod 777 /var/cache/pytest
+#    volumes:
+#      - "pytest-cache:/var/cache/pytest:rw"
+
 
 networks:
   minichris:

@@ -1,18 +1,19 @@
-import re
-from functools import cached_property
-from serde import deserialize, serde, Untagged, field, to_dict
-from dataclasses import dataclass
 import dataclasses
-from chris.common.types import (
+import re
+from dataclasses import dataclass
+from functools import cached_property
+from typing import Union, Optional, Sequence, TypeGuard
+
+from aiochris.types import (
     PluginName,
     PluginVersion,
     ImageTag,
     ChrisURL,
     PluginUrl,
-    ChrisUsername,
+    ComputeResourceId,
+    ComputeResourceName,
 )
-from chris.cube.types import ComputeResourceName, ComputeResourceId
-from typing import Union, Optional, Sequence, TypeGuard
+from serde import deserialize, serde, Untagged, field, to_dict
 
 from chrisomatic.spec.common import User, ComputeResource, Pipeline
 
@@ -21,7 +22,6 @@ from chrisomatic.spec.common import User, ComputeResource, Pipeline
 @dataclass(frozen=True)
 class On:
     cube_url: ChrisURL
-    chris_store_url: Optional[ChrisURL]
     chris_superuser: User
     public_store: list[ChrisURL]
 
@@ -61,7 +61,6 @@ class GivenCubePlugin:
     version: Optional[PluginVersion] = None
     dock_image: Optional[ImageTag] = None
     public_repo: Optional[str] = None
-    owner: Optional[ChrisUsername] = None
 
     @property
     def title(self) -> str:
@@ -74,11 +73,6 @@ class GivenCubePlugin:
         if self.public_repo:
             return self.public_repo
         return "Unknown"
-
-    def set_owner_if_none(self, owner: Optional[ChrisUsername]) -> "GivenCubePlugin":
-        if self.owner:
-            return self
-        return dataclasses.replace(self, owner=owner)
 
     def to_store_search(self) -> dict[str, str]:
         """
@@ -131,8 +125,9 @@ class GivenCube(GivenBackend):
 
     compute_resource: list[ComputeResource]
     plugins: list[Union[str, GivenCubePlugin]]
+    pipelines: list
 
-    def expand(self, default_plugin_owner: Optional[ChrisUsername]) -> ExpandedCube:
+    def expand(self) -> ExpandedCube:
         if len(self.compute_resource) == 0 and len(self.plugins) > 0:
             raise ValidationError(
                 "Must specify at least one compute_resource for ChRIS"
@@ -141,18 +136,15 @@ class GivenCube(GivenBackend):
             users=self.users,
             pipelines=tuple(self.expand_pipeline(p) for p in self.pipelines),
             compute_resource=self.compute_resource,
-            plugins=tuple(
-                self.expand_plugin(p, default_plugin_owner) for p in self.plugins
-            ),
+            plugins=tuple(self.expand_plugin(p) for p in self.plugins),
         )
 
     def expand_plugin(
-        self, plugin: str | GivenCubePlugin, owner: Optional[ChrisUsername]
+        self,
+        plugin: str | GivenCubePlugin,
     ) -> GivenCubePlugin:
         resolved_plugin = self.resolve_plugin_type(plugin)
-        return self.fill_plugin_compute_resource(resolved_plugin).set_owner_if_none(
-            owner
-        )
+        return self.fill_plugin_compute_resource(resolved_plugin)
 
     def resolve_plugin_type(self, plugin: str | GivenCubePlugin) -> GivenCubePlugin:
         """
@@ -228,7 +220,7 @@ class GivenConfig:
     version: str
     on: On
     cube: GivenCube
-    chris_store: Optional[GivenChrisStore]
+    chris_store: None = None
 
     def __post_init__(self):
         if (
@@ -237,17 +229,15 @@ class GivenConfig:
             and len(self.cube.plugins) > 0
         ):
             raise ValidationError("You must list at least one ChRIS store user.")
-        if self.on.chris_store_url is not None and self.chris_store is None:
-            raise ValidationError("chris_store must be defined.")
 
-    def expand(self, default_plugin_owner: Optional[ChrisUsername]) -> ExpandedConfig:
+    def expand(self) -> ExpandedConfig:
         """
         Fill default values.
         """
         return ExpandedConfig(
             self.version,
             self.on,
-            self.cube.expand(default_plugin_owner),
+            self.cube.expand(),
             self.chris_store,
         )
 

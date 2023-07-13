@@ -1,6 +1,6 @@
 = _ChRIS_ Configuration YAML Spec
 Jennings <Jennings.Zhang@childrens.harvard.edu>
-:version: 1.0
+:version: 1.1
 :toc:
 
 A _ChRIS_ configuration file is a https://yaml.org/[YAML] file which describes the state of a _ChRIS_ system.
@@ -11,7 +11,7 @@ Not all fields are required. Most of them can be guessed or inferred.
 
 === version
 
-Type: Literal[1.0]
+Type: Literal[1.1]
 
 === on
 
@@ -22,13 +22,6 @@ Information about the _ChRIS_ system.
 Type: string
 
 URL of _ChRIS_ backend.
-
-[#chris_store_url]
-==== on.chris_store_url
-
-Type: Optional[string]
-
-URL of _ChRIS_ store backend.
 
 ==== on.chris_superuser
 
@@ -46,15 +39,6 @@ Default: [https://chrisstore.co/api/v1/]
 
 Specify public instance(s) of _ChRIS_ stores from where to
 get plugins from.
-
-=== chris_store
-
-(Optional) _ChRIS_ store description.
-
-[#store-users]
-==== chris_store.users
-
-Type: list[<<User>>]
 
 === cube
 
@@ -145,14 +129,6 @@ Type: list[str]
 Names of which compute environments to register this plugin to.
 
 If unspecified, use <<cube_compute_resource,cube.compute_resource[0]>>.
-
-[#plugin_owner]
-====== cube.plugins[*].owner
-
-Type: Optional[str]
-
-Username of user which, if it is necessary to first upload the specified
-plugin to a _ChRIS store_, will own this plugin.
 
 ==== cube.pipelines
 

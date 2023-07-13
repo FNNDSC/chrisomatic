@@ -4,14 +4,13 @@ from typing import Optional
 
 from aiodocker import Docker, DockerError
 
-from chris.common.types import ImageTag, ChrisUsername
+from aiochris.types import ImageTag, Username
 from chrisomatic.spec.given import GivenCubePlugin, GivenConfig, ExpandedConfig
 
 
 async def smart_expand_config(
     given_config: GivenConfig,
     docker: Docker,
-    default_owner: Optional[ChrisUsername],
 ) -> ExpandedConfig:
     """
     Expand the given config, i.e. fill in default values, but use information
@@ -30,7 +29,7 @@ async def smart_expand_config(
         given_config,
         cube=dataclasses.replace(given_config.cube, plugins=list(resolved_plugins)),
     )
-    return realized_config.expand(default_owner)
+    return realized_config.expand()
 
 
 async def mark_if_is_image(

@@ -21,4 +21,14 @@ up:
 down:
     cd {{minichris}} && docker compose down -v
 
+wipe:
+    just down
+    just up
+
 nuke: down clean
+
+doc:
+    poetry run pdoc -p 7777 --no-browser chrisomatic
+
+format:
+    poetry run pre-commit run --color always

@@ -4,9 +4,10 @@ import time
 from dataclasses import dataclass
 
 import aiohttp
+from rich.console import RenderableType
 from rich.text import Text
 
-from chrisomatic.framework.task import ChrisomaticTask, State, Outcome
+from chrisomatic.framework.task import ChrisomaticTask, Channel, Outcome
 
 
 class _WaitResult(str, enum.Enum):
@@ -30,12 +31,10 @@ class WaitUp(ChrisomaticTask[float]):
     interval: float
     timeout: float
 
-    def initial_state(self) -> State:
-        return State(
-            title=self.url, status=Text("checking if server is online...", style="dim")
-        )
+    def first_status(self) -> tuple[str, RenderableType]:
+        return self.url, Text("checking if server is online...", style="dim")
 
-    async def run(self, emit: State) -> tuple[Outcome, float]:
+    async def run(self, status_channel: Channel) -> tuple[Outcome, float]:
         start_time = time.monotonic()
         async with aiohttp.ClientSession() as session:
             elapsed_time = 0.0
@@ -44,19 +43,22 @@ class WaitUp(ChrisomaticTask[float]):
                     res = await session.get(self.url)
                     elapsed_time = time.monotonic() - start_time
                     if res.status == self.good_status:
-                        emit.status = f"server is ready after {elapsed_time:.1f}s"
+                        status_channel.replace(
+                            f"server is ready after {elapsed_time:.1f}s"
+                        )
                         return Outcome.NO_CHANGE, elapsed_time
-                    emit.status = (
+                    status_channel.replace(
                         f"bad status={res.status} (expected {self.good_status})"
                     )
                     return Outcome.FAILED, elapsed_time
                 except aiohttp.ClientOSError:
                     await asyncio.sleep(self.interval)
                     elapsed_time = time.monotonic() - start_time
-                    emit.status = Text(
+                    status = Text(
                         f"waiting until server is online... ({elapsed_time:.1f})",
                         style="dim",
                     )
+                    status_channel.replace(status)
 
-        emit.status = f"timed out after {elapsed_time:.1f}s"
+        status_channel.replace(f"timed out after {elapsed_time:.1f}s")
         return Outcome.FAILED, elapsed_time

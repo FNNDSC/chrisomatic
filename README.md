@@ -9,12 +9,13 @@
 It is particularly useful for the recreation of setups for testing or development,
 though it could also (work and) be useful for deployments.
 
-![Screen recording](https://ipfs.babymri.org/ipfs/QmV98NzC6St94GjHdSs7qQmxpvkMLgjCWMm4VHafP6DH3C/chrisomatic.gif)
+[//]: # (screen recording)
+https://github.com/FNNDSC/chrisomatic/assets/20404439/468626be-0ae2-4a28-8d4d-c011f45fbeb7
 
 ## Usage
 
 If you are looking for a zero-config _ChRIS_ distribution using `chrisomatic`,
-check out [_miniChRIS_](https://github.com/FNNDSC/miniChRIS).
+check out [_miniChRIS_](https://github.com/FNNDSC/miniChRIS-docker).
 _miniChRIS_ bundles a `doocker-compose.yml` for running _ChRIS_ backend (CUBE)
 services, as well as `chrisomatic` for tooling and a correct `chrisomatic.yml`
 configuration file. Refer back here for documentation on how to customize
@@ -36,7 +37,7 @@ This file describes your _ChRIS_ system and what to add to it.
 #### Examples
 
 In general, the examples below should almost work as-is.
-You'll probably need to change `on.cube_url` and `on.chris_store_url`.
+You'll probably need to change `on.cube_url`.
 
 ##### Basic Configuration
 
@@ -44,19 +45,13 @@ Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
 # chrisomatic.yml
-version: 1.0
+version: 1.1
 
 on:
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
   chris_superuser:
     username: chris
     password: chris1234
-
-chris_store:
-   users:
-      - username: chrisstoreuser
-        password: chris1234
 
 cube:
   compute_resource:
@@ -74,14 +69,13 @@ Most values are flexible and support union data types.
 
 ```yaml
 # chrisomatic.yml
-version: 1.0
+version: 1.1
 
 ## System information
 on:
 
   ## Backend API URLs
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
 
   ## ChRIS admin user, will be created if they do not exist.
   chris_superuser:
@@ -91,23 +85,11 @@ on:
   ## Public instances of the ChRIS store where to find plugins.
   public_store:
      - https://chrisstore.co/api/v1/
-     - https://example.com/api/v1/
+     - https://cube.chrisproject.org/api/v1/
   ## If unspecified, the default is ["https://chrisstore.co/api/v1/"]
   ## Alternatively, plugin search in public instances can be disabled
   ## by giving an empty value:
   # public_store:
-
-
-chris_store:
-  ## List of ChRIS store users to create. Email is optional.
-  users:
-    - username: chris
-      password: chris1234
-    - username: jennings
-      password: abetterpassword
-      email: jennings@example.com
-    - username: thirduser
-      password: thirdis3
 
 cube:
   ## List of ChRIS users to create. Email is optional.
@@ -157,12 +139,6 @@ cube:
 
 See below: how to specify [Plugins and Pipelines](#plugins-and-pipelines).
 
-#### Without a ChRIS Store
-
-If [`on.chris_store_url`](docs/schema.adoc#chris_store_url) is omitted,
-then `chrisomatic` will not be able to register plugins that do not already
-exist in any of [`on.public_store`](docs/schema.adoc#public_store).
-
 ### Running `chrisomatic`
 
 `chrisomatic` should be run as a container in the same docker network as
@@ -181,7 +157,7 @@ version: '3.9'  # note the version requirement!
 services:
   chrisomatic:
     container_name: chrisomatic
-    image: fnndsc/chrisomatic:0.3.0
+    image: fnndsc/chrisomatic
     networks:
       - local
     volumes:
@@ -190,12 +166,11 @@ services:
     userns_mode: host
     depends_on:
       - chris
-      - chris_store
     profiles:  # prevents chrisomatic from running by default
       - tools
   chris:
     container_name: chris
-    image: ghcr.io/fnndsc/cube:3.0.0.a15
+    image: ghcr.io/fnndsc/cube
     ports:
       - "8000:8000"
     networks:
@@ -205,7 +180,7 @@ services:
       DJANGO_DB_MIGRATE: "on"
       DJANGO_COLLECTSTATIC: "on"
     labels:
-      org.chrisproject.role: "ChRIS ultron backEnd"
+      org.chrisproject.role: "ChRIS_ultron_backEnd"
 
 # --snip--
 

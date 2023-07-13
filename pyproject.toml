@@ -6,7 +6,6 @@ authors = ["Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"]
 license = "MIT"
 
 packages = [
-    { include = "chris" },
     { include = "chrisomatic" },
 ]
 
@@ -21,6 +20,8 @@ pyserde = "0.11.1"
 aiodocker = "^0.21.0"
 strictyaml = "^1.7.3"
 
+aiochris = "0.3.0rc3"
+
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.0"
 black = "^23.3.0"
@@ -28,6 +29,7 @@ pre-commit = "^3.2.2"
 prospector = "^1.9.0"
 mypy = "^1.1.1"
 bandit = "^1.7.5"
+pdoc = "^14.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

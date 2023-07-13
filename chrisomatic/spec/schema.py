@@ -1,4 +1,4 @@
-from strictyaml import Str, Map, Regex, Optional, Seq, EmptyList, Bool, NullNone
+from strictyaml import Str, Map, Regex, Optional, Seq, EmptyList, Bool, Any, NullNone
 
 api_url = Regex(r"^https?:\/\/.+\/api\/v1\/$")
 
@@ -10,15 +10,12 @@ pipeline = Map(
 
 plugin_specific = Map(
     {
-        Optional("url"): Regex(
-            r"https?:\/\/.+/api\/v1\/plugins\/\d+\/"
-        ),
+        Optional("url"): Regex(r"https?:\/\/.+/api\/v1\/plugins\/\d+\/"),
         Optional("name"): Str(),
         Optional("version"): Regex(r"^[0-9.]+$"),
         Optional("dock_image"): Str(),
         Optional("public_repo"): Regex(r".+:\/\/.+"),
-        Optional("compute_resource", default=[]): EmptyList()
-        | Seq(Str()),
+        Optional("compute_resource", default=[]): EmptyList() | Seq(Str()),
         Optional("owner"): Str(),
     }
 )
@@ -27,28 +24,19 @@ plugins_list = Seq(Str() | plugin_specific)
 
 schema = Map(
     {
-        Optional("version", default="1.0"): Regex(r"^1\.0$"),
+        Optional("version", default="1.1"): Regex(r"^1\.1$"),
         "on": Map(
             {
                 "cube_url": api_url,
-                Optional(
-                    "chris_store_url", default=None, drop_if_none=False
-                ): NullNone()
-                | api_url,
                 "chris_superuser": user,
                 Optional(
-                    "public_store", default=["https://chrisstore.co/api/v1/"]
+                    "public_store", default=["https://cube.chrisproject.org/api/v1/"]
                 ): EmptyList()
                 | Seq(api_url),
+                Optional("chris_store_url", default=None, drop_if_none=True): api_url,
             }
         ),
-        Optional("chris_store", default=None, drop_if_none=False): NullNone()
-        | Map(
-            {
-                "users": Seq(user),
-                Optional("pipelines", default=[]): EmptyList() | Seq(Str() | pipeline),
-            }
-        ),
+        Optional("chris_store", default=None, drop_if_none=True): Any(),
         "cube": Map(
             {
                 Optional("users", default=[]): EmptyList() | Seq(user),

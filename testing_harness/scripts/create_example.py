@@ -17,20 +17,18 @@ now = time.asctime()
 data = {
     "on": {
         "cube_url": "http://chris:8000/api/v1/",
-        "chris_store_url": "http://chrisstore.local:8010/api/v1/",
         "chris_superuser": {"username": f"try-{stamp}", "password": f"trying1234"},
         "public_store": [],
     },
-    "chris_store": {"users": []},
     "cube": {
         "users": [],
         "compute_resource": [],
         "plugins": [
             "docker.io/fnndsc/pl-tsdircopy:1.2.1",
-            "localhost/fnndsc/pl-chrisomatic",
+            "ghcr.io/fnndsc/pl-dne:latest",
             "https://chrisstore.co/api/v1/plugins/92/",
             {
-                "dock_image": "ghcr.io/fnndsc/pl-nums2mask:1.0.0",
+                "dock_image": "ghcr.io/fnndsc/pl-unstack-folders:1.0.0",
                 "compute_resource": [f"try-{stamp}-cr-b"],
             },
             {
@@ -51,9 +49,6 @@ for letter in "abcdefgh":
             "password": "doesntmatter",
             "description": f"trial {letter} created on {now}",
         }
-    )
-    data["chris_store"]["users"].append(
-        {"username": f"try-{stamp}-{letter}", "password": f"trying1234{letter}"}
     )
     data["cube"]["users"].append(
         {"username": f"try-{stamp}-{letter * 3}", "password": f"trying1234{letter * 3}"}
