@@ -149,11 +149,6 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     ) -> tuple[Outcome, Optional[PluginRegistration]]:
         """
         Register an existing plugin to all the compute resources requested.
-
-        For example, a plugin might already exist, but only be registered to `host`, `hpc`.
-        whereas it is requested for the plugin to be registered to `host`, moc`. In this example,
-        after `register_from_self_to_others` executes, the plugin will be registered to all of
-        `host`, `hpc`, `moc`.
         """
         cr_names = await self._get_needed_compute_resources_for(p)
         if not cr_names:
@@ -209,13 +204,11 @@ class RegisterPluginTask(ChrisomaticTask[PluginRegistration]):
     async def _get_needed_compute_resources_for(
         self, p: Plugin
     ) -> Collection[ComputeResourceName]:
-        """
-        Returns the names of compute resources which the given plugin is not scheduled to,
-        but is requested to be scheduled to.
-        """
         wanted = frozenset(self.plugin.compute_resource)
         current = await self._get_compute_resources_of(p)
-        return wanted - current
+        if wanted == current:
+            return frozenset()
+        return wanted
 
     @staticmethod
     async def _get_compute_resources_of(p: Plugin) -> frozenset[ComputeResourceName]:
