@@ -56,7 +56,7 @@ class _RunningTableTask(Generic[_R]):
 
 
 @dataclass
-class TaskRunner(Generic[_R]):
+class TaskRunner(Generic[_R], abc.ABC):
     """
     A `TaskRunner` executes multiple `ChrisomaticTask` concurrently.
     """
@@ -145,9 +145,10 @@ class ProgressTaskRunner(TaskRunner[_R]):
 
     title: str = ""
     noisy: bool = True
+    transient: bool = False
 
     async def apply(self) -> Sequence[tuple[Outcome, _R]]:
-        with Progress(console=self.console) as progress:
+        with Progress(console=self.console, transient=self.transient) as progress:
             progress_task = progress.add_task(
                 f"[yellow]{self.title}", total=len(self.tasks)
             )

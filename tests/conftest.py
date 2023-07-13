@@ -3,7 +3,7 @@ import pytest
 import aiohttp
 import aiodocker
 from typing import TypedDict
-from chris.common.types import ChrisURL, ChrisUsername, ChrisPassword
+from aiochris.types import ChrisURL, Username, Password
 
 
 @pytest.fixture(scope="session")
@@ -46,13 +46,6 @@ async def in_docker_network(session: aiohttp.ClientSession) -> bool:
 
 
 @pytest.fixture(scope="session")
-def chris_store_url(in_docker_network: bool):
-    if in_docker_network:
-        return ChrisURL("http://chrisstore.local:8010/api/v1/")
-    return ChrisURL("http://localhost:8010/api/v1/")
-
-
-@pytest.fixture(scope="session")
 def cube_url(in_docker_network: bool):
     if in_docker_network:
         return minichris_cube_url
@@ -60,10 +53,10 @@ def cube_url(in_docker_network: bool):
 
 
 class UserCredentials(TypedDict):
-    username: ChrisUsername
-    password: ChrisPassword
+    username: Username
+    password: Password
 
 
 @pytest.fixture(scope="session")
 def cube_superuser() -> UserCredentials:
-    return {"username": ChrisUsername("chris"), "password": ChrisPassword("chris1234")}
+    return {"username": Username("chris"), "password": Password("chris1234")}

@@ -9,7 +9,8 @@
 It is particularly useful for the recreation of setups for testing or development,
 though it could also (work and) be useful for deployments.
 
-[//]: # (TODO REDO SCREEN RECORDING)
+[//]: # (screen recording)
+https://github.com/FNNDSC/chrisomatic/assets/20404439/468626be-0ae2-4a28-8d4d-c011f45fbeb7
 
 ## Usage
 
@@ -75,7 +76,6 @@ on:
 
   ## Backend API URLs
   cube_url: http://localhost:8000/api/v1/
-  chris_store_url: http://localhost:8010/api/v1/
 
   ## ChRIS admin user, will be created if they do not exist.
   chris_superuser:

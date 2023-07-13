@@ -1,7 +1,7 @@
 from typing import Optional
 
 from serde import serde
-from aiochris.models.types import Username, Password, ComputeResourceName, PfconUrl
+from aiochris.types import Username, Password, ComputeResourceName, PfconUrl
 from dataclasses import dataclass, astuple
 
 
@@ -36,5 +36,5 @@ class ComputeResource:
 @dataclass(frozen=True)
 class Pipeline:
     src: str
-    owner: ChrisUsername
+    owner: Username
     locked: bool = True

@@ -18,6 +18,7 @@ class Channel:
 
     title: str
     first_status: InitVar[Optional[RenderableType]]
+    __frozen_rows: list[RenderableType] = field(init=False, default_factory=list)
     __rows: list[RenderableType] = field(init=False, default_factory=list)
 
     def __post_init__(self, first_status: Optional[RenderableType]):
@@ -34,8 +35,17 @@ class Channel:
 
     def replace(self, s: RenderableType) -> None:
         """Set a new status."""
-        self.__rows.clear()
+        self.__rows.clear()  # tip: comment out this line for debugging
         self.append(s)
+
+    def keep_current(self) -> None:
+        """
+        Mark the current status buffer as permanent, so that subsequent calls to `replace` act like `append`.
+
+        You cannot undo this operation.
+        """
+        self.__frozen_rows.extend(self.__rows)
+        self.__rows.clear()
 
     @staticmethod
     def __highlight(s: RenderableType) -> RenderableType:

@@ -12,4 +12,6 @@ COPY . .
 RUN poetry install --no-dev
 
 WORKDIR /
+# needs to write to docker daemon
+USER root
 CMD ["chrisomatic"]

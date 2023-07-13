@@ -1,6 +1,7 @@
-from chris.common.types import PluginUrl, PluginName, ImageTag
-from chrisomatic.spec.given import GivenCubePlugin
+from aiochris.types import PluginName, ImageTag
+
 from chrisomatic.core.plugins import InferredPluginInfo
+from chrisomatic.spec.given import GivenCubePlugin
 
 
 def test_inferred_plugin_info():

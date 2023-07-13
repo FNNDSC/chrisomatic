@@ -3,47 +3,48 @@ Configures runner objects from `chrisomatic.framework.runner` for the tasks
 performed by chrisomatic.
 """
 
-from dataclasses import dataclass
-from typing import Sequence, AsyncContextManager, Collection, Type, Optional
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from typing import Sequence, Collection, Type, Optional
 
+from aiochris import ChrisAdminClient, AnonChrisClient
+from aiochris.models.data import UserData
+from aiochris.models.public import ComputeResource
+from aiochris.types import ChrisURL
 from aiodocker import Docker
 from rich.console import Console
 from rich.spinner import Spinner
 
-from chris.common.types import ChrisURL, ChrisUsername
-from chris.store.client import ChrisStoreClient
 from chrisomatic.core.computeenvs import ComputeResourceTask
-from chrisomatic.core.create_omniclient import OmniClientFactory
+from chrisomatic.core.connect_peers import PeerConnectionTask
+from chrisomatic.core.create_superuser import SuperUserTask
 from chrisomatic.core.create_users import CreateUsersTask
-from chrisomatic.core.omniclient import OmniClient, A
 from chrisomatic.core.plugins import RegisterPluginTask, PluginRegistration
-from chrisomatic.core.waitup import WaitUp
 from chrisomatic.framework.outcome import Outcome
 from chrisomatic.framework.runner import (
     TableTaskRunner,
     TableDisplayConfig,
     ProgressTaskRunner,
 )
-from chrisomatic.spec.given import On, GivenCubePlugin
+from chrisomatic.helpers.waitup import WaitUp
 from chrisomatic.spec.common import ComputeResource as GivenComputeResource, User
-from chris.cube.models import ComputeResource as CubeComputeResource
+from chrisomatic.spec.given import On, GivenCubePlugin
 
 
 @dataclass(frozen=True)
 class Actions:
     console: Console
-    omniclient: OmniClient
+    chris_admin: ChrisAdminClient
 
     async def create_compute_resources(
         self,
-        existing: Collection[CubeComputeResource],
+        existing: Collection[ComputeResource],
         givens: Sequence[GivenComputeResource],
-    ) -> Sequence[tuple[Outcome, Optional[CubeComputeResource]]]:
+    ) -> Sequence[tuple[Outcome, Optional[ComputeResource]]]:
         runner = ProgressTaskRunner(
             title="Adding compute resources",
             tasks=[
-                ComputeResourceTask(self.omniclient, given, existing)
+                ComputeResourceTask(self.chris_admin, given, existing)
                 for given in givens
             ],
             console=self.console,
@@ -52,14 +53,12 @@ class Actions:
 
     async def create_users(
         self,
-        url: ChrisURL,
         users: Sequence[User],
-        user_type: Type[A],
         progress_title: str,
-    ) -> Sequence[tuple[Outcome, A]]:
+    ) -> Sequence[tuple[Outcome, UserData]]:
         runner = ProgressTaskRunner(
             tasks=[
-                CreateUsersTask[user_type](self.omniclient, url, user, user_type)
+                CreateUsersTask(self.chris_admin.url, user, self.connector)
                 for user in users
             ],
             title=progress_title,
@@ -67,21 +66,40 @@ class Actions:
         )
         return await runner.apply()
 
+    async def discover_peers(
+        self, peer_urls: Collection[ChrisURL], progress_title: str
+    ) -> Sequence[AnonChrisClient]:
+        runner = ProgressTaskRunner(
+            tasks=[
+                PeerConnectionTask(url, connector=self.connector, connector_owner=False)
+                for url in peer_urls
+            ],
+            title=progress_title,
+            console=self.console,
+            noisy=False,
+            transient=True,
+        )
+        results = await runner.apply()
+
+        good = [client for outcome, client in results if outcome is not Outcome.FAILED]
+        bad = frozenset(peer_urls) - frozenset(client.url for client in good)
+        if bad:
+            self.console.print(f"[yellow]WARNING[/yellow]: broken peer {bad}")
+        return good
+
     async def register_plugins(
         self,
+        docker: Docker,
         plugins: Sequence[GivenCubePlugin],
-        store_clients: dict[ChrisUsername, ChrisStoreClient],
+        peers: Sequence[AnonChrisClient],
     ) -> Sequence[tuple[Outcome, PluginRegistration]]:
         runner = TableTaskRunner(
             tasks=[
                 RegisterPluginTask(
                     plugin=p,
-                    linked_store=(
-                        store_clients[p.owner] if p.owner in store_clients else None
-                    ),
-                    other_stores=self.omniclient.public_stores,
-                    docker=self.omniclient.docker,
-                    cube=self.omniclient.cube,
+                    other_stores=peers,
+                    docker=docker,
+                    cube=self.chris_admin,
                 )
                 for p in plugins
             ],
@@ -89,13 +107,18 @@ class Actions:
         )
         return await runner.apply()
 
+    @property
+    def connector(self):
+        return self.chris_admin.s.connector
+
 
 @dataclass(frozen=True)
 class PreActions:
     console: Console
 
-    async def wait_for_backends(self, on: On):
-        user_urls = [url + "users/" for url in (on.cube_url, on.chris_store_url) if url]
+    async def wait_for_backends(self, cube_url: ChrisURL):
+        all_urls = [cube_url]
+        user_urls = [url + "users/" for url in all_urls]
         return await self._wait_up(user_urls)
 
     async def _wait_up(
@@ -121,14 +144,11 @@ class PreActions:
 
     async def create_super_client(
         self, on: On, docker: Docker
-    ) -> tuple[Outcome, AsyncContextManager[Actions]]:
-        fact = OmniClientFactory(on=on, docker=docker)
-        task_set = TableTaskRunner(tasks=[fact], console=self.console)
-        (result,) = await task_set.apply()
-        superuser_creation, cm = result
-        return superuser_creation, self.__actions_context(cm)
-
-    @asynccontextmanager
-    async def __actions_context(self, cm: OmniClient):
-        async with cm as omniclient:
-            yield Actions(self.console, omniclient)
+    ) -> tuple[Outcome, Optional[Actions]]:
+        task = SuperUserTask(on=on, docker=docker)
+        runner = TableTaskRunner(tasks=[task], console=self.console)
+        (result,) = await runner.apply()
+        outcome, superuser_client = result
+        if outcome is Outcome.FAILED:
+            return outcome, None
+        return outcome, Actions(console=self.console, chris_admin=superuser_client)
