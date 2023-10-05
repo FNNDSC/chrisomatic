@@ -24,7 +24,7 @@ plugins_list = Seq(Str() | plugin_specific)
 
 schema = Map(
     {
-        Optional("version", default="1.2"): Regex(r"^1\.1$"),
+        Optional("version", default="1.2"): Regex(r"^1\.2$"),
         "on": Map(
             {
                 "cube_url": api_url,
