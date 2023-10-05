@@ -19,10 +19,12 @@ async def test_find_cube(docker: aiodocker.Docker):
     container_info = await cube_container.show()
     # I've renamed the container for some builds...
     # We should remove one or the other in the near future.
-    assert "fnndsc/chris" in container_info["Config"]["Image"] \
+    assert (
+        "fnndsc/chris" in container_info["Config"]["Image"]
         or "fnndsc/cube" in container_info["Config"]["Image"]
+    )
     assert "8000/tcp" in container_info["NetworkSettings"]["Ports"]
-    assert container_info["Config"]["WorkingDir"] == "/home/localuser/chris_backend"
+    assert container_info["Config"]["WorkingDir"] == "/opt/app-root/src"
 
 
 @pytest.fixture(scope="session")
@@ -42,7 +44,7 @@ async def test_is_local_image(
     assert await is_local_image(docker, example1)
     assert await is_local_image(docker, example2)
     assert not await is_local_image(docker, "docker.io/chrisomatic/dne")
-    assert not await is_local_image(docker, "https://chrisstore.co/api/v1/")
+    assert not await is_local_image(docker, "https://cube.chrisproject.org/api/v1/")
 
 
 async def test_check_output_nonzero(docker: aiodocker.Docker):

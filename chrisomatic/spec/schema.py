@@ -24,7 +24,7 @@ plugins_list = Seq(Str() | plugin_specific)
 
 schema = Map(
     {
-        Optional("version", default="1.1"): Regex(r"^1\.1$"),
+        Optional("version", default="1.2"): Regex(r"^1\.1$"),
         "on": Map(
             {
                 "cube_url": api_url,
@@ -33,10 +33,8 @@ schema = Map(
                     "public_store", default=["https://cube.chrisproject.org/api/v1/"]
                 ): EmptyList()
                 | Seq(api_url),
-                Optional("chris_store_url", default=None, drop_if_none=True): api_url,
             }
         ),
-        Optional("chris_store", default=None, drop_if_none=True): Any(),
         "cube": Map(
             {
                 Optional("users", default=[]): EmptyList() | Seq(user),
@@ -49,6 +47,7 @@ schema = Map(
                             Optional("username", default=None): Str(),
                             Optional("password", default=None): Str(),
                             Optional("description", default=None): Str(),
+                            Optional("innetwork", default=None): Bool(),
                         }
                     )
                 ),

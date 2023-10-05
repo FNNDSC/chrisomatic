@@ -35,7 +35,7 @@ user who is able to register plugins to _ChRIS_.
 
 Type: list[string]
 
-Default: [https://chrisstore.co/api/v1/]
+Default: [https://cube.chrisproject.org/api/v1/]
 
 Specify public instance(s) of _ChRIS_ stores from where to
 get plugins from.
@@ -83,7 +83,7 @@ Type: string
 
 Type: list[string | Plugin]
 
-If value is a string, then it may represent any of: <<plugin_url,ChRIS store url>>, <<plugin_name,plugin name>>,
+If value is a string, then it may represent any of: <<plugin_url,peer CUBE plugin url>>, <<plugin_name,plugin name>>,
 <<plugin_dock_image,image tag>>,
 <<plugin_public_repo,code repository URL>>.
 
@@ -92,14 +92,14 @@ If value is a string, then it may represent any of: <<plugin_url,ChRIS store url
 
 Type: str
 
-A ChRIS store URL, e.g. `https://chrisstore.co/api/v1/plugins/99/`
+A peer CUBE plugin URL, e.g. `https://cube.chrisproject.org/api/v1/plugins/99/`
 
 [#plugin_name]
 ===== cube.plugins[*].name
 
 Type: str
 
-Name of a plugin in the ChRIS store, e.g. `pl-dircopy`
+Name of a plugin in a peer CUBE, e.g. `pl-dircopy`
 
 ===== cube.plugins[*].version
 
@@ -145,7 +145,7 @@ If an element of `cube.pipelines` is a string, then it is interpreted as a
 
 A `PipelineSource` is one of:
 
-- A _ChRIS_ store pipeline, e.g. `https://chrisstore.co/api/v1/pipelines/1/`
+- A _ChRIS_ store pipeline, e.g. `https://cube.chrisproject.org/api/v1/pipelines/1/`
 - A URI (starting with `http://`, `https://`, `ipfs://`, ...) of a JSON pipeline description.
 - A path on the local filesystem to a JSON pipeline description.
 

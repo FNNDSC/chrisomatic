@@ -211,7 +211,6 @@ class ExpandedConfig:
     version: str
     on: On
     cube: ExpandedCube
-    chris_store: Optional[GivenChrisStore]
 
 
 @deserialize
@@ -220,15 +219,6 @@ class GivenConfig:
     version: str
     on: On
     cube: GivenCube
-    chris_store: None = None
-
-    def __post_init__(self):
-        if (
-            self.chris_store
-            and len(self.chris_store.users) == 0
-            and len(self.cube.plugins) > 0
-        ):
-            raise ValidationError("You must list at least one ChRIS store user.")
 
     def expand(self) -> ExpandedConfig:
         """
@@ -238,7 +228,6 @@ class GivenConfig:
             self.version,
             self.on,
             self.cube.expand(),
-            self.chris_store,
         )
 
 

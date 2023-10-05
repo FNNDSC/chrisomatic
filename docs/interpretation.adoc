@@ -13,7 +13,7 @@ The schema is flexible and uses defaults where values are not specified.
 
 === Compute Resource Creation
 
-xref:schema.adoc#compute_resource_name[`name`] is a required key of a xref:schema.adoc#ComputeResource[`compute_resource[*\]`]. The other fields (`url`, `username`, `password`, `description`) are optional if the compute resource already exists.
+xref:schema.adoc#compute_resource_name[`name`] is a required key of a xref:schema.adoc#ComputeResource[`compute_resource[*\]`]. The other fields (`url`, `username`, `password`, `description`, `innetwork`) are optional if the compute resource already exists.
 
 Currently, _chrisomatic_ has the ability to create new compute resources. It cannot modify an existing compute resource.
 
@@ -67,7 +67,7 @@ _plugin_ is interpreted as xref:schema.adoc#plugin_dock_image[`dock_image`].
 Else, _plugin_ will be interpreted based on patterns, matching as
 these fields in this order:
 
-1. xref:schema.adoc#plugin_url[_ChRIS_ store plugin URL], e.g. `https://chrisstore.co/api/v1/plugins/45/`
+1. xref:schema.adoc#plugin_url[peer CUBE plugin URL], e.g. `https://cube.chrisproject.org/api/v1/plugins/45/`
 2. xref:schema.adoc#plugin_dock_image[`dock_image`], e.g. `docker.io/fnndsc/pl-simpledsapp:1.2.3`
 3. xref:schema.adoc#plugin_public_repo[`public_repo`], e.g. `https://github.com/FNNDSC/pl-simpledsapp`
 4. xref:schema.adoc#plugin_name[plugin name], e.g. `pl-simpledsapp`
@@ -81,11 +81,11 @@ its xref:schema.adoc#plugins_compute_resource[compute environments],
 `chrisomatic` will attempt to do the following:
 
 1. Search for the _plugin_ in
-   xref:schema.adoc#public_store[the list of public _ChRIS_ store instances],
-   in the specified order. (default: `["https://chrisstore.co/api/v1/"]`)
+   xref:schema.adoc#public_store[the list of public CUBE instances],
+   in the specified order. (default: `["https://cube.chrisproject.org/api/v1/"]`)
 2. Attempt to upload the _plugin_ to CUBE.
 
-Searching public _ChRIS_ store instances can be disabled (i.e. force upload to local store):
+Searching public CUBE instances can be disabled (i.e. force upload to local store):
 
 [source,yaml]
 ----

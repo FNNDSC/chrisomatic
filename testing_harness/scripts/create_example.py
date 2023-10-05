@@ -26,7 +26,7 @@ data = {
         "plugins": [
             "docker.io/fnndsc/pl-tsdircopy:1.2.1",
             "ghcr.io/fnndsc/pl-dne:latest",
-            "https://chrisstore.co/api/v1/plugins/92/",
+            "https://cube.chrisproject.org/api/v1/plugins/92/",
             {
                 "dock_image": "ghcr.io/fnndsc/pl-unstack-folders:1.0.0",
                 "compute_resource": [f"try-{stamp}-cr-b"],

@@ -97,7 +97,7 @@ class PluginRegistration:
     plugin: Optional[Plugin]
     """Plugin object from CUBE"""
     from_url: Optional[PluginUrl]
-    """The ChRIS store URL which this plugin is from."""
+    """The peer CUBE URL which this plugin is from."""
     origin: Optional[PluginOrigin]
     """Where the plugin came from"""
 

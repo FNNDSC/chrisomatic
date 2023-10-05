@@ -53,7 +53,7 @@ tasks = (
         name="pl-nums2mask",
         stuff=(
             1.5,
-            "checking chrisstore.co...",
+            "checking cube.chrisproject.org...",
             0.9,
             "found in ChRIS store",
             0.8,

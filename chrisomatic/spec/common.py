@@ -27,6 +27,7 @@ class ComputeResource:
     username: Optional[str] = None
     password: Optional[str] = None
     description: Optional[str] = None
+    innetwork: Optional[bool] = None
 
     def is_some(self) -> bool:
         return all(f is not None for f in astuple(self))

@@ -45,7 +45,7 @@ Here is an example which reflects a minimal working _CUBE_:
 
 ```yaml
 # chrisomatic.yml
-version: 1.1
+version: 1.2
 
 on:
   cube_url: http://localhost:8000/api/v1/
@@ -57,6 +57,7 @@ cube:
   compute_resource:
     - name: host
       url: http://localhost:5005/api/v1/
+      innetwork: true
   plugins:
     - pl-dircopy
     - pl-tsdircopy
@@ -82,11 +83,10 @@ on:
     username: chris
     password: chris1234
 
-  ## Public instances of the ChRIS store where to find plugins.
+  ## Public instances of CUBE where to find plugins.
   public_store:
-     - https://chrisstore.co/api/v1/
      - https://cube.chrisproject.org/api/v1/
-  ## If unspecified, the default is ["https://chrisstore.co/api/v1/"]
+  ## If unspecified, the default is ["https://cube.chrisproject.org/api/v1/"]
   ## Alternatively, plugin search in public instances can be disabled
   ## by giving an empty value:
   # public_store:
@@ -105,6 +105,7 @@ cube:
       username: pfcon
       password: pfcon1234
       description: Local compute environment
+      innetwork: true
     - name: moc
       url: https://example.com/api/v1/
       username: fake
@@ -117,8 +118,8 @@ cube:
     - docker.io/fnndsc/pl-tsdircopy
     - docker.io/fnndsc/pl-topologicalcopy
 
-      ## by store URL
-    - https://chrisstore.co/api/v1/plugins/96/
+      ## by CUBE plugin URL
+    - https://cube.chrisproject.org/api/v1/plugins/96/
 
       ## by name
     - pl-dcm2niix
@@ -223,9 +224,9 @@ have access to a container engine (Docker).
 
 - HTTP-Only features:
   - Create compute resources
-  - Register plugins from ChRIS Store
+  - Register plugins from peer CUBEs
 - Docker-required features:
-  - Register Python _ChRIS_ plugins not found in any ChRIS Store
+  - Register Python _ChRIS_ plugins not found in any peer CUBEs
     (i.e. when `dock_image` refers to a local image)
 - Docker-required, same-host features:
   - Create superuser
@@ -243,8 +244,8 @@ podman run --rm -i docker.io/fnndsc/chrisomatic:latest chrisomatic -t - < chriso
    1. Attempt to identify container on host running _CUBE_ (requires Docker)
    2. Attempt to create superuser using Django shell (requires Docker)
 3. Add compute resources.
-4. Create normal user accounts in both _ChRIS_ store and _CUBE_.
-5. Upload plugins to _ChRIS_. (requires Docker for plugins not found in a store)
+4. Create normal user accounts in _CUBE_.
+5. Upload plugins to _ChRIS_. (requires Docker for plugins not found in a peer CUBE)
 6. Upload pipelines to _ChRIS_ (not implemented).
 
 #### Plugins and Pipelines
@@ -252,19 +253,17 @@ podman run --rm -i docker.io/fnndsc/chrisomatic:latest chrisomatic -t - < chriso
 The most common use case for `chrisomatic` is to automatically
 register plugins to _ChRIS_. Plugins can be specified by any of:
 
-- ChRIS store URL, e.g. `https://chrisstore.co/api/v1/plugins/108/`
+- Peer CUBE URL, e.g. `https://cube.chrisproject.org/api/v1/plugins/108/`
 - name, e.g. `pl-dircopy`
 - container image, e.g. `ghcr.io/fnndsc/pl-dircopy:2.1.1` 
 - source code repository, e.g. `https://github.com/FNNDSC/pl-dircopy`
 
-If the plugin can be found in either the targeted _CUBE_'s paired
-_ChRIS_ store or a public _ChRIS_ store (default: https://chrisstore.co/),
+If the plugin can be found in a peer instance of CUBE (default: https://cube.chrisproject.org/),
 then it is registered.
 
-If the plugin cannot be found in any known _ChRIS_ store, then
-`chrisomatic` will attempt to produce the plugin JSON representation,
-upload it to the configured _ChRIS_ store backend, and then register
-it to the targeted _CUBE_. `chrisomatic` supports this operation for
+If the plugin cannot be found in any known _ChRIS_ peer, then
+`chrisomatic` will attempt to produce the plugin JSON representation
+and register it to CUBE. `chrisomatic` supports this operation for
 conventional plugins with either can be described by 
 [`chris_plugin_info`](https://github.com/FNNDSC/chris_plugin)
 or were created from
@@ -291,9 +290,7 @@ just nuke
 
 - [x] Create CUBE superuser
 - [x] Create CUBE users
-- [x] Create _ChRIS_ store users
 - [x] Add compute resources to CUBE
-- [x] Register plugins from a store to CUBE
 - [x] Register plugin given a docker image to CUBE
 - [ ] Add pipelines to CUBE
 - [x] very fast

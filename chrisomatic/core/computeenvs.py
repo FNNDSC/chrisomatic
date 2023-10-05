@@ -41,6 +41,7 @@ class ComputeResourceTask(ChrisomaticTask[ComputeResource]):
             compute_user=self.given.username,
             compute_password=self.given.password,
             description=self.given.description,
+            compute_innetwork=self.given.innetwork,
         )
         status.replace(created_compute_resource.url)
         return Outcome.CHANGE, created_compute_resource
