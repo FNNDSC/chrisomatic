@@ -10,78 +10,66 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - name: Get git tag
-        id: git_info
-        if: startsWith(github.ref, 'refs/tags/')
-        run: echo "tag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
-      - name: Decide image tag name
-        id: determine
-        env:
-          git_tag: ${{ steps.git_info.outputs.tag }}
-        run: |
-          repo="${GITHUB_REPOSITORY,,}"  # to lower case
-          # if build triggered by tag, use tag name
-          tag="${git_tag:-latest}"
+    - uses: actions/checkout@v4
+    - name: Decide image tags
+      id: info
+      shell: python
+      run: |
+        import os
+        import itertools
+        
+        registries = ['docker.io', 'ghcr.io']
+        repos = ['${{ github.repository }}'.lower()]
+        if '${{ github.ref_type }}' == 'branch':
+            tags = ['latest']
+        elif '${{ github.ref_type }}' == 'tag':
+            version = '${{ github.ref_name }}'
+            tags = ['latest', version]
+        else:
+            tags = []
 
-          # if tag is a version number prefixed by 'v', remove the 'v'
-          if [[ "$tag" =~ ^v[0-9].* ]]; then
-            tag="${tag:1}"
-          fi
+        def join_tag(t):
+            registry, repo, tag = t
+            return f'{registry}/{repo}:{tag}'
 
-          dock_image=$repo:$tag
-          echo $dock_image
-          echo "dock_image=$dock_image" >> $GITHUB_OUTPUT
-          echo "repo=$repo" >> $GITHUB_OUTPUT
+        product = itertools.product(registries, repos, tags)
+        tags_csv = ','.join(map(join_tag, product))
+        push = 'true' if tags_csv else 'false'
 
-      - uses: actions/checkout@v3
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
-        with:
-          driver-opts: network=host
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+            out.write(f'tags={tags_csv}\n')
+            out.write(f'push={push}\n')
 
-      - name: Login to DockerHub
-        id: dockerhub_login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        id: docker_build
-        with:
-          context: .
-          file: ./Dockerfile
-          tags: |
-            ${{ steps.determine.outputs.dock_image }}
-            ghcr.io/${{ steps.determine.outputs.dock_image }}
-          platforms: linux/amd64,linux/arm64,linux/ppc64le
-          push: ${{ github.event_name == 'push' }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-
-      - name: Update DockerHub description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          short-description: ${{ steps.pluginmeta.outputs.title }}
-          readme-filepath: ./README.md
-          repository: ${{ steps.determine.outputs.repo }}
+    - uses: docker/setup-buildx-action@v3
+    - name: Login to DockerHub
+      if: github.event_name == 'push' || github.event_name == 'release'
+      id: dockerhub_login
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+    - name: Login to GitHub Container Registry
+      if: github.event_name == 'push' || github.event_name == 'release'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        tags: ${{ steps.info.outputs.tags }}
+        push: ${{ steps.info.outputs.push }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Update DockerHub description
+      uses: peter-evans/dockerhub-description@v3
+      if: ${{ steps.info.outputs.push }}
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        short-description: ${{ github.event.repository.description }}
