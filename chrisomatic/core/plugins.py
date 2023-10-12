@@ -61,12 +61,17 @@ class InferredPluginInfo:
 
     def fill(self, json_representation: str) -> str:
         """
-        Adds inferred values for `name`, `dock_image`, and `public_repo` to the given plugin JSON representation.
+        If necessary, adds inferred values for `name`, `dock_image`, and `public_repo` to the given plugin JSON representation.
 
         These fields are typically missing from automatically self-generated plugin JSON representations due to
         historical reasons and technical debt.
 
         https://github.com/FNNDSC/CHRIS_docs/commit/5078aaf934bdbe313e85367f88aff7c14730a1d4
+
+        This is necessary for Python-based _ChRIS_ plugins built on top of:
+
+        - [`chris_plugin`](https://pypi.org/project/chris_plugin/) prior to [version 0.3.0](https://github.com/FNNDSC/chris_plugin/releases/tag/v0.3.0)
+        - [`chrisapp`](https://github.com/FNNDSC/chrisapp)
         """
         obj = json.loads(json_representation)
         self.__set_if_missing(obj, "name", self.name)

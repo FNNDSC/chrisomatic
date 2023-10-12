@@ -36,10 +36,14 @@ async def try_obtain_json_description(
         status.keep_current()
     guessing_methods: list[
         Callable[
-            [aiodocker.Docker, GivenCubePlugin, DeprecatedState],
+            [aiodocker.Docker, GivenCubePlugin, Channel],
             Awaitable[Optional[str]],
         ]
-    ] = [_json_from_chris_plugin_info, _json_from_old_chrisapp]
+    ] = [
+        _json_from_chris_plugin_info_post030,
+        _json_from_chris_plugin_info_pre030,
+        _json_from_old_chrisapp,
+    ]
     for guess_method in guessing_methods:
         json_representation = await guess_method(docker, plugin, status)
         if json_representation is not None:
@@ -47,9 +51,26 @@ async def try_obtain_json_description(
     return None
 
 
-async def _json_from_chris_plugin_info(
+async def _json_from_chris_plugin_info_post030(
     docker: aiodocker.Docker, plugin: GivenCubePlugin, status: Channel
 ) -> Optional[str]:
+    """
+    Run `chris_plugin_info` with its usage since version 0.3.0
+    """
+    command = ["chris_plugin_info", "--dock-image", plugin.dock_image]
+    if plugin.public_repo:
+        command.extend(["--public-repo", plugin.public_repo])
+    if plugin.name:
+        command.extend(["--name", plugin.name])
+    return await _try_run(docker, plugin, status, command)
+
+
+async def _json_from_chris_plugin_info_pre030(
+    docker: aiodocker.Docker, plugin: GivenCubePlugin, status: Channel
+) -> Optional[str]:
+    """
+    Run `chris_plugin_info` with its usage from before version 0.3.0
+    """
     return await _try_run(docker, plugin, status, ("chris_plugin_info",))
 
 
