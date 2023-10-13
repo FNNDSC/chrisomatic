@@ -47,7 +47,7 @@ schema = Map(
                             Optional("username", default=None): Str(),
                             Optional("password", default=None): Str(),
                             Optional("description", default=None): Str(),
-                            Optional("innetwork", default=None): Bool(),
+                            Optional("innetwork", default=False): Bool(),
                         }
                     )
                 ),

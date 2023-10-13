@@ -78,6 +78,10 @@ Type: string
 
 Type: string
 
+====== cube.compute_resource[*].innetwork
+
+Type: bool
+
 [#cube_plugins]
 ==== cube.plugins
 
