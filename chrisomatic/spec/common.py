@@ -2,7 +2,7 @@ from typing import Optional
 
 from serde import serde
 from aiochris.types import Username, Password, ComputeResourceName, PfconUrl
-from dataclasses import dataclass, astuple
+from dataclasses import dataclass, astuple, asdict
 
 
 @serde
@@ -29,8 +29,8 @@ class ComputeResource:
     description: Optional[str] = None
     innetwork: Optional[bool] = None
 
-    def is_some(self) -> bool:
-        return all(f is not None for f in astuple(self))
+    def get_missing(self) -> list[str]:
+        return [k for k, v in asdict(self).items() if v is None]
 
 
 @serde

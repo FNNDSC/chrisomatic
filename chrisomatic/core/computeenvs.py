@@ -32,8 +32,9 @@ class ComputeResourceTask(ChrisomaticTask[ComputeResource]):
                 f'Existing "{preexisting.name}" ' "is different from given_config."
             )
             return Outcome.FAILED, preexisting
-        if not self.given.is_some():
-            status.replace(f'No configuration for "{self.given.name}"')
+        missing = self.given.get_missing()
+        if missing:
+            status.replace(f"Missing configurations: {missing}")
             return Outcome.FAILED, None
         created_compute_resource = await self.cube.create_compute_resource(
             name=self.given.name,
