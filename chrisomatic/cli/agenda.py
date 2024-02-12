@@ -17,7 +17,9 @@ from chrisomatic.spec.given import GivenConfig, ValidationError
 async def agenda(given_config: GivenConfig, console: Console) -> FinalResult:
     docker = _maybe_docker(console)
     pre_actions = PreActions(console)
-    closables = [docker]
+    closables = []
+    if docker:
+        closables.append(docker)
 
     async def close_all():
         closings = (client.close() for client in closables)

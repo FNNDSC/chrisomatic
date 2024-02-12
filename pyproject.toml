@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chrisomatic"
-version = "0.8.0"
+version = "0.8.1"
 description = "ChRIS backend provisioner with Powerpointlessness"
 authors = ["Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"]
 license = "MIT"
