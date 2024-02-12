@@ -28,7 +28,7 @@ schema = Map(
         "on": Map(
             {
                 "cube_url": api_url,
-                "chris_superuser": user,
+                Optional("chris_superuser"): user,
                 Optional(
                     "public_store", default=["https://cube.chrisproject.org/api/v1/"]
                 ): EmptyList()

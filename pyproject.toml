@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chrisomatic"
-version = "0.8.0a1"
+version = "0.8.0"
 description = "ChRIS backend provisioner with Powerpointlessness"
 authors = ["Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"]
 license = "MIT"
@@ -20,7 +20,7 @@ pyserde = "^0.12.1"
 aiodocker = "^0.21.0"
 strictyaml = "^1.7.3"
 
-aiochris = "0.5.0a1"
+aiochris = "0.5.0a3"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.0"
