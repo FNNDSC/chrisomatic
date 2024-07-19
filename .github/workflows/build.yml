@@ -62,6 +62,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
+        platforms: linux/amd64,linux/ppc64le,linux/arm64
         tags: ${{ steps.info.outputs.tags }}
         push: ${{ steps.info.outputs.push }}
         cache-from: type=gha
