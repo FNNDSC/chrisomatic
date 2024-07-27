@@ -1,6 +1,6 @@
 [project]
 name = "chrisomatic"
-version = "0.9.0"
+version = "0.0.0"  # version is set by `rye version` in .github/workflows/build.yml
 description = "ChRIS backend provisioner"
 authors = [
     { name = "Jennings Zhang", email = "Jennings.Zhang@childrens.harvard.edu" }
