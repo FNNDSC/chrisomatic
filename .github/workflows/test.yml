@@ -1,0 +1,55 @@
+name: Test
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '.github/workflows/test.yml'
+      - '**.py'
+  pull_request:
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Spin up ChRIS
+        uses: FNNDSC/miniChRIS-docker@master
+        with:
+          # for testing, we need to create plugin instances, but we don't need the plugins to actually run.
+          services: chris
+      - name: Build
+        run: docker compose build
+      - name: Test
+        id: test
+        continue-on-error: true  # we want to upload coverage, even on failure
+        run: docker compose run -T test pytest --color=yes --cov=chrisomatic --cov-report=xml
+      - name: Copy coverage.xml from container
+        run: docker cp "$(docker compose ps -a test -q | tail -n 1):/app/coverage.xml" coverage.xml
+      - name: Upload test coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run example
+        run: |
+          set +e
+          docker compose run -T test sh -c '
+          export PYTHONPATH=$PWD
+          /app/scripts/create_example.py | coverage run -m chrisomatic.cli -
+          '
+          if [ "$?" = '0' ]; then
+            echo '::error::Expected run to fail, but it did not.'
+            exit 1
+          fi
+          docker compose run -T test coverage xml -o - > simulation_coverage.xml
+      - name: Upload simulation coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./simulation_coverage.xml
+          flags: simulation
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

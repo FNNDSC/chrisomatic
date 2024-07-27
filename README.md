@@ -3,6 +3,7 @@
 [![Version](https://img.shields.io/docker/v/fnndsc/chrisomatic?sort=semver)](https://hub.docker.com/r/fnndsc/chrisomatic)
 [![MIT License](https://img.shields.io/github/license/fnndsc/chrisomatic)](https://github.com/FNNDSC/chrisomatic/blob/master/LICENSE)
 [![Build](https://github.com/FNNDSC/chrisomatic/actions/workflows/build.yml/badge.svg)](https://github.com/FNNDSC/chrisomatic/actions)
+[![codecov](https://codecov.io/gh/FNNDSC/chrisomatic/graph/badge.svg?token=U2UPF27JEV)](https://codecov.io/gh/FNNDSC/chrisomatic)
 
 `chrisomatic` is a tool for automatic administration of _ChRIS_ backends.
 It is particularly useful for the recreation of setups for testing or development,

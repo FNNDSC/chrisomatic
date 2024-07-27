@@ -26,7 +26,7 @@ jobs:
         run: |
           import os
           import itertools
-          
+
           registries = ['docker.io', 'ghcr.io']
           repos = ['${{ github.repository }}'.lower()]
           if '${{ github.ref_type }}' == 'branch':
@@ -40,11 +40,11 @@ jobs:
           def join_tag(t):
               registry, repo, tag = t
               return f'{registry}/{repo}:{tag}'
-  
+
           product = itertools.product(registries, repos, tags)
           tags_csv = ','.join(map(join_tag, product))
-          push = 'true' if tags_csv else 'false'
-  
+          push = 'true' if len(tags) >= 2 else 'false'
+
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               out.write(f'tags={tags_csv}\n')
               out.write(f'push={push}\n')
