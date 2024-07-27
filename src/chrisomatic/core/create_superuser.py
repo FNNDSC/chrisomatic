@@ -4,7 +4,7 @@ from typing import Optional
 import aiodocker
 import aiohttp
 from aiochris import ChrisAdminClient
-from aiochris.errors import IncorrectLoginError, ResponseError
+from aiochris.errors import IncorrectLoginError, StatusError
 from rich.console import RenderableType
 
 from chrisomatic.helpers.superuser import create_superuser, SuperuserCreationError
@@ -58,7 +58,7 @@ class SuperUserTask(ChrisomaticTask[ChrisAdminClient]):
             superuser = await self.connect()
             status.replace("connected!")
             return superuser
-        except ResponseError as e:
+        except StatusError as e:
             status.replace(str(e))
             return None
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass, astuple, asdict
 class User:
     username: Username
     password: Password
-    email: str = None
+    email: Optional[str] = None
 
     def __post_init__(self):
         if self.email is None:

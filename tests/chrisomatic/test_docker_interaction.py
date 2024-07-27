@@ -63,7 +63,7 @@ async def test_check_output(docker: aiodocker.Docker):
 
 
 async def test_get_cmd(docker: aiodocker.Docker):
-    assert await get_cmd(docker, "postgres:13") == ["postgres"]
+    assert await get_cmd(docker, "postgres:16") == ["postgres"]
     assert await get_cmd(docker, "rabbitmq:3") == ["rabbitmq-server"]
 
 

@@ -1,3 +1,0 @@
-[submodule "testing_harness/miniChRIS-docker"]
-	path = testing_harness/miniChRIS-docker
-	url = https://github.com/FNNDSC/miniChRIS-docker.git

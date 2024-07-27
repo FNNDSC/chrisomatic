@@ -1,8 +1,9 @@
 import dataclasses
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Union, Optional, Sequence, TypeGuard
+from typing import Union, Optional, TypeGuard
 
 from aiochris.types import (
     PluginName,

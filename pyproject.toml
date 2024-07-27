@@ -1,42 +1,42 @@
-[tool.poetry]
+[project]
 name = "chrisomatic"
-version = "0.8.3"
-description = "ChRIS backend provisioner with Powerpointlessness"
-authors = ["Jennings Zhang <Jennings.Zhang@childrens.harvard.edu>"]
-license = "MIT"
-
-packages = [
-    { include = "chrisomatic" },
+version = "0.9.0"
+description = "ChRIS backend provisioner"
+authors = [
+    { name = "Jennings Zhang", email = "Jennings.Zhang@childrens.harvard.edu" }
 ]
+dependencies = [
+    "typer>=0.12.3",
+    "aiohttp>=3.9.5",
+    "rich>=13.7.1",
+    "pyserde>=0.19.3",
+    "aiodocker>=0.22.2",
+    "strictyaml>=1.7.3",
+    "aiochris>=0.8.0",
+]
+readme = "README.md"
+requires-python = "== 3.12.3"
 
-[tool.poetry.dependencies]
-python = "^3.10"
-typer = "^0.9.0"
-aiohttp = "^3.8.4"
-rich = "^13.4.2"
-
-pyserde = "^0.12.1"
-
-aiodocker = "^0.21.0"
-strictyaml = "^1.7.3"
-
-aiochris = "0.5.0a5"
-
-[tool.poetry.group.dev.dependencies]
-pytest-asyncio = "^0.21.0"
-black = "^23.3.0"
-pre-commit = "^3.2.2"
-prospector = "^1.9.0"
-mypy = "^1.1.1"
-bandit = "^1.7.5"
-pdoc = "^14.0.0"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
+[project.scripts]
 chrisomatic = "chrisomatic.cli.typer:app"
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
+[tool.rye.scripts]
+test = "docker compose run --rm --build dev"
+simulate = "docker compose run --rm --build dev /app/scripts/simulation.sh"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=8.3.2",
+    "pytest-asyncio>=0.23.8",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chrisomatic"]
