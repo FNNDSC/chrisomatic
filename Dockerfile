@@ -1,6 +1,6 @@
 # Build instructions: see https://rye.astral.sh/guide/docker/
 
-FROM python:3.12.3-alpine
+FROM registry.access.redhat.com/ubi9/python-312
 
 RUN --mount=source=dist,target=/dist PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir /dist/*.whl
 
